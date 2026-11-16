@@ -104,9 +104,13 @@ export async function insertFamilyOrder(
   const guardianId = over.guardianId ?? (await insertGuardian(db));
   const studentId = await insertStudent(db, guardianId);
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO orders (teacher_id, guardian_id, student_id, service_id, lessons, total_cents, idempotency_key)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-    [teacherId, guardianId, studentId, serviceId, over.lessons ?? 1, over.total_cents ?? 12100, randomUUID()],
+    `INSERT INTO orders (teacher_id, guardian_id, student_id, service_id, lessons, total_cents, idempotency_key,
+                         commission_bps)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+    [
+      teacherId, guardianId, studentId, serviceId, over.lessons ?? 1, over.total_cents ?? 12100, randomUUID(),
+      over.commission_bps ?? 500,
+    ],
   );
   return { guardianId, studentId, orderId: rows[0]!.id };
 }

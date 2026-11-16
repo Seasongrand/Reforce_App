@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "check": "tsc --noEmit && vitest run",
-    "test:perf": "PERF=1 vitest run tests/db/search.perf.test.ts --silent=false"
+    "test:perf": "PERF=1 vitest run tests/db/search.perf.test.ts --silent=false",
+    "db:types": "kysely-codegen --dialect postgres --out-file src/db/types.ts --include-pattern \"public.*\" --type-mapping \"{\\\"timestamptz\\\":\\\"string\\\",\\\"timestamp\\\":\\\"string\\\",\\\"date\\\":\\\"string\\\"}\""
   },
   "dependencies": {
     "dotenv": "^18.0.10",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
+    "kysely-codegen": "^0.20.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
