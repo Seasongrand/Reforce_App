@@ -80,7 +80,7 @@ const activeCount = async (teacherId: string) =>
   ])).rows[0]!.n;
 
 describe('20 sessões simultâneas no mesmo horário', () => {
-  it('só com a restrição: 1 grava e 19 recebem 23P01', async () => {
+  it('só com a restrição: 1 grava e 19 são recusadas (23P01, ou 40P01 se houver impasse)', async () => {
     const { teacherId, slot } = await setup(20);
     const results = await raceN(20, async (c, i, ready) => {
       await c.query('BEGIN');
@@ -92,7 +92,11 @@ describe('20 sessões simultâneas no mesmo horário', () => {
     expect(results.filter((r) => r.ok)).toHaveLength(1);
     const failures = results.filter((r) => !r.ok);
     expect(failures).toHaveLength(19);
-    expect(failures.every((r) => !r.ok && r.code === '23P01')).toBe(true);
+    // O apêndice registrou 19 × 23P01. Com as 20 transações realmente simultâneas, o
+    // PostgreSQL às vezes encontra um impasse entre as perdedoras e as recusa com
+    // 40P01 (deadlock_detected), depois de ~1 s por rodada. Nos dois casos a reserva
+    // é recusada e só uma fica gravada; é por isso que a aplicação usa a trava.
+    expect(failures.every((r) => !r.ok && (r.code === '23P01' || r.code === '40P01'))).toBe(true);
     expect(await activeCount(teacherId)).toBe(1);
   });
 
