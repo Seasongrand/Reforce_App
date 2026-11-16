@@ -39,6 +39,17 @@ Valores que eu escolhi, sem base no documento, e que você pode querer revisar:
 
 ## 3. Credenciais e homologações
 
+### Domínio `reforce.app.br` (registrado em 16/11/2026)
+
+O domínio destrava várias aprovações da semana 0 (§5). Falta:
+
+- **Endereço de produção:** `APP_BASE_URL=https://reforce.app.br`. Os links das mensagens, da página do professor e da sala saem dele.
+- **E-mail:** verificar o domínio no provedor de e-mail (registros SPF, DKIM e DMARC no DNS) e definir o remetente, por exemplo `SES_FROM=Reforce <naoresponda@reforce.app.br>`.
+- **Google:** a verificação do app pede política de privacidade no mesmo domínio da página inicial e o domínio verificado no Google Search Console (§3.3). As páginas de termos de uso e de política de privacidade ainda não existem no sistema.
+- **Meta (WhatsApp):** a verificação da empresa costuma pedir um site no domínio da empresa.
+- **Hospedagem:** apontar o DNS para o contêiner web, com HTTPS.
+
+
 O sistema roda inteiro com adaptadores falsos. Cada adaptador real entra quando a credencial chegar; escolher um deles antes disso falha na inicialização com mensagem clara.
 
 - **Asaas** (`PAYMENT_PROVIDER=asaas`): conta principal com CNPJ, chave de API (`ASAAS_API_KEY`), token do webhook (`ASAAS_WEBHOOK_TOKEN`) e homologação de subcontas e da Conta Escrow. Peça na semana 0, por causa do teto de 10 subcontas e R$ 2.000 por subconta na avaliação inicial (§3.4).
