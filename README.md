@@ -76,6 +76,8 @@ Os testes rodam contra **PostgreSQL real** (o do Compose), nunca contra simulaç
 | `npm run test:perf` | Volume com 2.000 professores sintéticos; imprime os tempos medidos |
 | `npm run test:e2e` | Playwright: o fluxo completo no navegador, com web e worker reais, no banco `aulas_e2e` e na porta 3200 |
 
+A integração contínua (`.github/workflows/ci.yml`, GitHub Actions) roda a verificação de tipos, `npm test`, o build de produção e `npm run test:e2e` em todo pull request e em todo push na `main`, com um PostgreSQL 16 de verdade.
+
 Para o teste de ponta a ponta, o Chromium do Playwright precisa estar instalado (`npx playwright install chromium`, se a máquina ainda não tiver).
 
 ## Estrutura

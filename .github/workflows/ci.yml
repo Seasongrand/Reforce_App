@@ -1,0 +1,81 @@
+# Integração contínua: roda em todo pull request e em todo push na main.
+# Os testes usam um PostgreSQL 16 de verdade (serviço do Actions), na mesma
+# porta 5433 do docker-compose.yml, para dispensar configuração extra.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    name: Tipos, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aulas
+          POSTGRES_PASSWORD: aulas
+          POSTGRES_DB: aulas
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U aulas -d aulas"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verificação de tipos
+        run: npm run typecheck
+      - name: Testes (apêndice, concorrência e domínio)
+        run: npm test
+      - name: Build de produção
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+
+  ponta-a-ponta:
+    name: Fluxo completo (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aulas
+          POSTGRES_PASSWORD: aulas
+          POSTGRES_DB: aulas
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U aulas -d aulas"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Navegador do Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Fluxo completo com web e worker reais
+        run: npm run test:e2e
