@@ -4,6 +4,16 @@
   --color-brand: #1f5f8b;
   --color-brand-dark: #154561;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Site (lista de espera e privacidade), direção C */
+  --color-site-muted: #4b4880;
+  --color-site-line: #e4e0ff;
+  --color-site-field: #c9c4f2;
+  --color-site-on-dark: #dddbff;
+}
+
+@theme inline {
+  --font-site: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
