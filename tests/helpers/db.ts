@@ -30,6 +30,18 @@ export async function truncateAll(): Promise<void> {
        FROM pg_tables
       WHERE schemaname = 'public' AND tablename <> 'schema_migrations'`,
   );
-  if (rows.length === 0) return;
-  await testPool().query(`TRUNCATE ${rows.map((r) => r.t).join(', ')} RESTART IDENTITY CASCADE`);
+  if (rows.length > 0) {
+    await testPool().query(`TRUNCATE ${rows.map((r) => r.t).join(', ')} RESTART IDENTITY CASCADE`);
+  }
+  await testPool().query(`DELETE FROM graphile_worker._private_jobs; DELETE FROM graphile_worker._private_job_queues;`);
+}
+
+/** Tarefas enfileiradas no Graphile Worker (identificador e conteúdo). */
+export async function queuedJobs(): Promise<Array<{ task: string; payload: Record<string, unknown> }>> {
+  const { rows } = await testPool().query<{ task: string; payload: Record<string, unknown> }>(
+    `SELECT t.identifier AS task, j.payload
+       FROM graphile_worker._private_jobs j JOIN graphile_worker._private_tasks t ON t.id = j.task_id
+      ORDER BY j.id`,
+  );
+  return rows;
 }
