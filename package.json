@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "check": "tsc --noEmit && vitest run",
     "test:perf": "PERF=1 vitest run tests/db/search.perf.test.ts --silent=false",
-    "db:types": "kysely-codegen --dialect postgres --out-file src/db/types.ts --include-pattern \"public.*\" --type-mapping \"{\\\"timestamptz\\\":\\\"string\\\",\\\"timestamp\\\":\\\"string\\\",\\\"date\\\":\\\"string\\\"}\""
+    "db:types": "kysely-codegen --dialect postgres --out-file src/db/types.ts --include-pattern \"public.*\" --type-mapping \"{\\\"timestamptz\\\":\\\"string\\\",\\\"timestamp\\\":\\\"string\\\",\\\"date\\\":\\\"string\\\"}\"",
+    "worker": "tsx src/worker/index.ts"
   },
   "dependencies": {
     "dotenv": "^18.0.10",

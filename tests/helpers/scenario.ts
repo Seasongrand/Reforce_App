@@ -95,3 +95,50 @@ export const activeBookings = async (teacherId: string) =>
     `SELECT count(*)::int AS n FROM bookings WHERE teacher_id = $1 AND status IN ('held','confirmed')`,
     [teacherId],
   )).rows[0]!.n as number;
+
+/** Reserva, cobra e paga (webhook falso) uma aula: devolve os ids. */
+export async function paidLesson(
+  o: {
+    service?: ServiceOpts;
+    withAddress?: boolean;
+    guardianTz?: string;
+    guardianOptIn?: boolean;
+    teacherOptIn?: boolean;
+    startsAt?: Temporal.Instant;
+    now?: Temporal.Instant;
+    teacherAddress?: string;
+  } = {},
+) {
+  const { holdSlots } = await import('@/domain/booking/hold');
+  const { startPayment } = await import('@/domain/payment/charge');
+  const { handlePaymentWebhook } = await import('@/domain/payment/webhook');
+  const { FakePaymentProvider } = await import('@/providers/payment/fake');
+  const now = o.now ?? NOW;
+  const t = await listedTeacher({ service: o.service });
+  await testPool().query(
+    `UPDATE teachers SET display_name = 'Ana Souza', phone_e164 = '+5511977776666',
+            whatsapp_opt_in_at = CASE WHEN $2 THEN now() END, teaching_address = $3 WHERE id = $1`,
+    [t.teacherId, o.teacherOptIn ?? true, o.teacherAddress ?? 'Rua das Flores, 100, Pinheiros'],
+  );
+  const f = await family({ withAddress: o.withAddress });
+  await testPool().query(
+    `UPDATE guardians SET name = 'Maria Lima', phone_e164 = $2, timezone = $3,
+            whatsapp_opt_in_at = CASE WHEN $4 THEN now() END WHERE id = $1`,
+    [f.guardianId, `+55119${Math.floor(Math.random() * 1e8).toString().padStart(8, '0')}`, o.guardianTz ?? 'America/Sao_Paulo', o.guardianOptIn ?? true],
+  );
+  await testPool().query(`UPDATE students SET first_name = 'Joana', grade = '9ano' WHERE id = $1`, [f.studentId]);
+  const deps = testDeps();
+  const r = await holdSlots(deps, {
+    teacherId: t.teacherId, serviceId: t.serviceId, guardianId: f.guardianId, studentId: f.studentId,
+    addressId: f.addressId, startsAt: [o.startsAt ?? TUE_14], idempotencyKey: crypto.randomUUID(),
+  }, now);
+  if (!r.ok) throw new Error(`esperava reserva, veio ${r.reason}`);
+  const p = await startPayment(deps, { orderId: r.orderId, guardianId: f.guardianId, method: 'pix' }, now);
+  const charge = (await testPool().query(`SELECT provider_charge_id FROM payments WHERE id = $1`, [p.paymentId])).rows[0]!
+    .provider_charge_id as string;
+  const { headers, body } = (deps.providers.payment as InstanceType<typeof FakePaymentProvider>).simulateEvent(
+    charge, 'payment.paid',
+  );
+  await handlePaymentWebhook(deps, headers, body, now.add({ minutes: 1 }));
+  return { ...t, ...f, orderId: r.orderId, bookingId: r.bookingIds[0]!, paymentId: p.paymentId, chargeId: charge };
+}

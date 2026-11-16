@@ -6,6 +6,8 @@ import { sql } from 'kysely';
 import type { Temporal } from 'temporal-polyfill';
 import { enqueue } from '@/worker/enqueue';
 import type { Deps } from './deps';
+import { sendDueNotifications } from './notifications/send';
+import { retryDeferredWebhooks } from './payment/webhook';
 
 /** Reservas temporárias vencidas liberam o horário; a cobrança é cancelada (§1). */
 export async function expireHolds(deps: Deps, now: Temporal.Instant): Promise<{ bookings: number; charges: number }> {
@@ -40,4 +42,23 @@ export async function expireHolds(deps: Deps, now: Temporal.Instant): Promise<{ 
     charges += Number(r.numAffectedRows ?? 0);
   }
   return { bookings, charges };
+}
+
+/** Tudo o que roda a cada minuto, em ordem. Cada etapa isolada: uma falha não para as outras. */
+export async function runMinuteSweeps(deps: Deps, now: Temporal.Instant): Promise<Record<string, unknown>> {
+  const steps: Array<[string, () => Promise<unknown>]> = [
+    ['expireHolds', () => expireHolds(deps, now)],
+    ['retryDeferredWebhooks', () => retryDeferredWebhooks(deps, now)],
+    ['sendDueNotifications', () => sendDueNotifications(deps, now)],
+  ];
+  const out: Record<string, unknown> = {};
+  for (const [name, fn] of steps) {
+    try {
+      out[name] = await fn();
+    } catch (err) {
+      console.error(`[varredura] ${name} falhou:`, err);
+      out[name] = { error: (err as Error).message };
+    }
+  }
+  return out;
 }
