@@ -31,7 +31,7 @@ describe('liberação de repasses', () => {
   it('dois processos simultâneos: um pega 3, o outro 1; disputado e não vencido ficam retidos', async () => {
     const teacherId = await insertTeacher(db());
     const serviceId = await insertService(db(), teacherId);
-    const due = [];
+    const due: string[] = [];
     for (let d = 10; d <= 13; d++) {
       due.push((await payoutFor(teacherId, serviceId, `2026-11-${d} 14:00-03`, `2026-11-${d + 1} 15:00-03`)).payoutId);
     }

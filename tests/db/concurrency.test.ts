@@ -8,7 +8,7 @@ import { Temporal } from 'temporal-polyfill';
 import { weeklyOccurrences } from '@/time/recurrence';
 import { raceN } from '../helpers/concurrency';
 import { closeTestPool, newClient, testPool, truncateAll } from '../helpers/db';
-import { insertBooking, insertFamilyOrder, insertService, insertTeacher, pgErrorCode } from '../helpers/fixtures';
+import { insertBooking, insertFamilyOrder, insertService, insertTeacher, pgErrorCode, type FamilyOrder } from '../helpers/fixtures';
 
 const db = () => testPool();
 beforeEach(truncateAll);
@@ -65,7 +65,7 @@ const insertParams = (s: Slot) => [...params(s), s.orderId, s.studentId, s.servi
 async function setup(n: number) {
   const teacherId = await insertTeacher(db());
   const serviceId = await insertService(db(), teacherId);
-  const families = [];
+  const families: FamilyOrder[] = [];
   for (let i = 0; i < n; i++) families.push(await insertFamilyOrder(db(), teacherId, serviceId));
   const slot = (i: number, localStart = '2026-11-17 14:00'): Slot => ({
     teacherId, serviceId, orderId: families[i]!.orderId, studentId: families[i]!.studentId,
