@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { config } from '@/config';
 import { SUBJECTS } from '@/domain/catalog';
 import { EDUCATION, MODALITIES, STAGES } from '@/domain/waitlist';
-import { WaitlistForm } from '@/components/WaitlistForm';
+import { WaitlistForm } from '@/components/site/WaitlistForm';
 import { Benefits } from '@/components/site/Benefits';
 import { FORM_LEAD, FORM_TITLE } from '@/components/site/content';
 import { Faq } from '@/components/site/Faq';
@@ -51,6 +51,7 @@ function WaitlistLanding() {
               stages={options(STAGES)}
               modalities={options(MODALITIES)}
               education={options(EDUCATION)}
+              inviteUrl={config().appBaseUrl}
             />
           </div>
         </div>
