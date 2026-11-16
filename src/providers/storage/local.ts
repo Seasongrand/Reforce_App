@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Temporal } from 'temporal-polyfill';
 import { hmacHex, safeEqualHex } from '../signing';
@@ -54,6 +54,17 @@ export class LocalEncryptedStorage implements FileStorage {
 
   async delete(key: string): Promise<void> {
     await rm(this.pathFor(key), { force: true });
+  }
+
+  async list(prefix: string): Promise<string[]> {
+    const clean = prefix.replace(/\/+$/, '');
+    const dir = path.dirname(this.pathFor(`${clean}/x`));
+    try {
+      const names = await readdir(dir);
+      return names.filter((n) => n.endsWith('.enc')).map((n) => `${clean}/${n.slice(0, -4)}`).sort();
+    } catch {
+      return [];
+    }
   }
 
   signedUrl(key: string, ttlSeconds: number, now: Temporal.Instant): string {
