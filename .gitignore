@@ -11,3 +11,4 @@ playwright-report/
 next-env.d.ts
 var/test-private/
 .next/
+var/e2e-private/

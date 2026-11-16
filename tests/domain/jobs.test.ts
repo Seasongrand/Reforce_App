@@ -57,7 +57,12 @@ describe('worker', () => {
     const l = await paidLesson();
     expect((await queuedJobs()).map((j) => j.task)).toEqual(expect.arrayContaining(['video.create_room']));
     await runQueuedJobsOnce(TEST_DATABASE_URL, () => deps(), fixedClock(NOW));
-    expect(await queuedJobs()).toEqual([]);
+    // se sobrar tarefa, a mensagem mostra tentativas e erro (falha intermitente vista uma vez, em 16/11)
+    const left = await testPool().query(
+      `SELECT t.identifier, j.attempts, j.last_error, j.locked_at, j.run_at
+         FROM graphile_worker._private_jobs j JOIN graphile_worker._private_tasks t ON t.id = j.task_id`,
+    );
+    expect(left.rows, JSON.stringify(left.rows)).toEqual([]);
     const { rows } = await testPool().query(`SELECT video_room FROM lesson_sessions WHERE booking_id = $1`, [l.bookingId]);
     expect(rows[0]!.video_room).toBeTruthy();
     void appDb;
