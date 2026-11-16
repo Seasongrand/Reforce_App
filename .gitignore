@@ -9,3 +9,4 @@ playwright-report/
 .superpowers/
 *.tsbuildinfo
 next-env.d.ts
+var/test-private/

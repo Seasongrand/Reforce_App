@@ -118,6 +118,36 @@ export interface CalendarConnections {
   token_ciphertext: Buffer | null;
 }
 
+export interface DevCalendarBusy {
+  during: string;
+  id: Generated<Int8>;
+  teacher_id: string;
+}
+
+export interface DevClock {
+  id: Generated<boolean>;
+  offset_ms: Generated<Int8>;
+}
+
+export interface DevOutbox {
+  body: string;
+  channel: string;
+  created_at: Generated<string>;
+  id: Generated<Int8>;
+  recipient: string;
+  subject: string | null;
+  template: string | null;
+}
+
+export interface DevProviderCalls {
+  created_at: Generated<string>;
+  id: Generated<Int8>;
+  operation: string;
+  payload: Json | null;
+  provider: string;
+  ref: string;
+}
+
 export interface Disputes {
   booking_id: string;
   id: Generated<string>;
@@ -392,6 +422,10 @@ export interface DB {
   bookings: Bookings;
   bookings_tz_drift: BookingsTzDrift;
   calendar_connections: CalendarConnections;
+  dev_calendar_busy: DevCalendarBusy;
+  dev_clock: DevClock;
+  dev_outbox: DevOutbox;
+  dev_provider_calls: DevProviderCalls;
   disputes: Disputes;
   external_busy: ExternalBusy;
   grade_levels: GradeLevels;

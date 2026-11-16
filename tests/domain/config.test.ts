@@ -5,6 +5,7 @@ const base = {
   DATABASE_URL: 'postgres://u:p@localhost:5433/aulas',
   APP_BASE_URL: 'http://localhost:3000',
   SESSION_SECRET: 's'.repeat(32),
+  FILE_ENCRYPTION_KEY: 'a'.repeat(64),
 };
 
 describe('configuração', () => {
@@ -42,5 +43,24 @@ describe('configuração', () => {
 
   it('não sobe em produção com as ferramentas de desenvolvimento ligadas', () => {
     expect(() => loadConfig({ ...base, NODE_ENV: 'production', DEV_TOOLS: '1' })).toThrow(/DEV_TOOLS/);
+  });
+});
+
+describe('configuração de provedores', () => {
+  const env = { ...base, FILE_ENCRYPTION_KEY: 'a'.repeat(64) };
+
+  it('usa adaptadores falsos por padrão', () => {
+    const c = loadConfig(env);
+    expect(c.providers).toEqual({
+      payment: 'fake', video: 'fake', whatsapp: 'fake', email: 'fake', calendar: 'fake', geocoding: 'fake',
+    });
+  });
+
+  it('não sobe em produção com adaptador falso', () => {
+    expect(() => loadConfig({ ...env, NODE_ENV: 'production' })).toThrow(/PAYMENT_PROVIDER/);
+  });
+
+  it('exige chave de cifragem de 32 bytes em hexadecimal', () => {
+    expect(() => loadConfig({ ...env, FILE_ENCRYPTION_KEY: 'curta' })).toThrow(/FILE_ENCRYPTION_KEY/);
   });
 });

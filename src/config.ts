@@ -7,6 +7,10 @@ import { z } from 'zod';
 
 type Env = Record<string, string | undefined>;
 
+const PROVIDER_KEYS = [
+  'PAYMENT_PROVIDER', 'VIDEO_PROVIDER', 'WHATSAPP_PROVIDER', 'EMAIL_PROVIDER', 'CALENDAR_PROVIDER', 'GEOCODING_PROVIDER',
+] as const;
+
 const int = (def: number, min: number, max: number) => z.coerce.number().int().min(min).max(max).default(def);
 
 const schema = z
@@ -32,6 +36,19 @@ const schema = z
     // Decisões de 16/11/2026: falta do aluno paga 100% ao professor; piso começa em 0
     STUDENT_NO_SHOW_TEACHER_PCT: int(100, 0, 100),
     PRICE_FLOOR_CENTS: int(0, 0, 10_000_000),
+    // Provedores (§3): 'fake' até as credenciais reais chegarem
+    PAYMENT_PROVIDER: z.enum(['fake', 'asaas']).default('fake'),
+    VIDEO_PROVIDER: z.enum(['fake', 'daily', 'whereby']).default('fake'),
+    WHATSAPP_PROVIDER: z.enum(['fake', 'meta']).default('fake'),
+    EMAIL_PROVIDER: z.enum(['fake', 'ses']).default('fake'),
+    CALENDAR_PROVIDER: z.enum(['fake', 'google']).default('fake'),
+    GEOCODING_PROVIDER: z.enum(['fake']).default('fake'),
+    // Documentos de verificação: cifrados em disco (AES-256-GCM), fora do banco
+    FILE_ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/, 'deve ter 64 caracteres hexadecimais (32 bytes)'),
+    FILE_STORAGE_DIR: z.string().default('var/private'),
+    // Só para os adaptadores falsos
+    FAKE_WEBHOOK_SECRET: z.string().min(16).default('segredo-dos-webhooks-falsos-dev'),
+    FAKE_FAIL: z.string().default(''),
   })
   .superRefine((e, ctx) => {
     if (e.PIX_EXPIRY_LEAD_MINUTES >= e.HOLD_MINUTES) {
@@ -43,6 +60,11 @@ const schema = z
     }
     if (e.NODE_ENV === 'production' && e.DEV_TOOLS === '1') {
       ctx.addIssue({ code: 'custom', path: ['DEV_TOOLS'], message: 'não pode ser 1 em produção' });
+    }
+    if (e.NODE_ENV === 'production') {
+      for (const k of PROVIDER_KEYS) {
+        if (e[k] === 'fake') ctx.addIssue({ code: 'custom', path: [k], message: 'adaptador falso não pode rodar em produção' });
+      }
     }
   });
 
@@ -61,6 +83,19 @@ export interface AppConfig {
   calendarFreeBusyTimeoutMs: number;
   studentNoShowTeacherPct: number;
   priceFloorCents: number;
+  providers: {
+    payment: 'fake' | 'asaas';
+    video: 'fake' | 'daily' | 'whereby';
+    whatsapp: 'fake' | 'meta';
+    email: 'fake' | 'ses';
+    calendar: 'fake' | 'google';
+    geocoding: 'fake';
+  };
+  fileEncryptionKeyHex: string;
+  fileStorageDir: string;
+  fakeWebhookSecret: string;
+  /** Operações em que os adaptadores falsos simulam falha (ex.: releaseEscrow,freeBusy). */
+  fakeFail: string[];
 }
 
 export function loadConfig(env: Env): AppConfig {
@@ -87,6 +122,18 @@ export function loadConfig(env: Env): AppConfig {
     calendarFreeBusyTimeoutMs: e.CALENDAR_FREEBUSY_TIMEOUT_MS,
     studentNoShowTeacherPct: e.STUDENT_NO_SHOW_TEACHER_PCT,
     priceFloorCents: e.PRICE_FLOOR_CENTS,
+    providers: {
+      payment: e.PAYMENT_PROVIDER,
+      video: e.VIDEO_PROVIDER,
+      whatsapp: e.WHATSAPP_PROVIDER,
+      email: e.EMAIL_PROVIDER,
+      calendar: e.CALENDAR_PROVIDER,
+      geocoding: e.GEOCODING_PROVIDER,
+    },
+    fileEncryptionKeyHex: e.FILE_ENCRYPTION_KEY,
+    fileStorageDir: e.FILE_STORAGE_DIR,
+    fakeWebhookSecret: e.FAKE_WEBHOOK_SECRET,
+    fakeFail: e.FAKE_FAIL.split(',').map((x) => x.trim()).filter(Boolean),
   };
 }
 
