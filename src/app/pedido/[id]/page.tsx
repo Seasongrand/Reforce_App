@@ -6,6 +6,7 @@ import { ActionForm } from '@/components/ActionForm';
 import { Countdown } from '@/components/Countdown';
 import { OrderPoller } from '@/components/OrderPoller';
 import { orderView } from '@/domain/public/order';
+import { devToolsEnabled } from '@/domain/dev';
 import { formatBRL } from '@/lib/money';
 import { bothTimes, formatTime } from '@/time/zoned';
 import { appDeps, now } from '@/server/app';
@@ -28,7 +29,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const pending = v.payment?.status === 'pending' ? v.payment : null;
   const qr = pending?.pixPayload ? await QRCode.toDataURL(pending.pixPayload, { margin: 1, width: 240 }) : null;
   let devChargeId: string | null = null;
-  if (deps.config.devTools && pending) {
+  if (devToolsEnabled(deps.config) && pending) {
     devChargeId = (await deps.db.selectFrom('payments').select('provider_charge_id').where('order_id', '=', id)
       .where('status', '=', 'pending').executeTakeFirst())?.provider_charge_id ?? null;
   }
