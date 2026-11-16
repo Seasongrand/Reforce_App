@@ -18,7 +18,10 @@ const schema = z
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, 'deve ser uma URL postgres://'),
     APP_BASE_URL: z.string().regex(/^https?:\/\//, 'deve ser uma URL http(s)://').default('http://localhost:3000'),
-    SESSION_SECRET: z.string().min(32, 'deve ter pelo menos 32 caracteres'),
+    // 'lista_de_espera': só a página inicial com a lista de professores; o marketplace fica desligado
+    SITE_MODE: z.enum(['completo', 'lista_de_espera']).default('completo'),
+    // obrigatórios no site completo (sessões e documentos); dispensáveis na lista de espera
+    SESSION_SECRET: z.string().min(32, 'deve ter pelo menos 32 caracteres').optional(),
     DEV_TOOLS: z.enum(['0', '1']).default('0'),
     // §2.4: reserva temporária de 10 minutos; QR do PIX expira 1 minuto antes
     HOLD_MINUTES: int(10, 1, 60),
@@ -44,11 +47,14 @@ const schema = z
     CALENDAR_PROVIDER: z.enum(['fake', 'google']).default('fake'),
     GEOCODING_PROVIDER: z.enum(['fake']).default('fake'),
     // Documentos de verificação: cifrados em disco (AES-256-GCM), fora do banco
-    FILE_ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/, 'deve ter 64 caracteres hexadecimais (32 bytes)'),
+    FILE_ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/, 'deve ter 64 caracteres hexadecimais (32 bytes)').optional(),
     FILE_STORAGE_DIR: z.string().default('var/private'),
     // Só para os adaptadores falsos
     FAKE_WEBHOOK_SECRET: z.string().min(16).default('segredo-dos-webhooks-falsos-dev'),
     FAKE_FAIL: z.string().default(''),
+    // Exportação da lista de espera (CSV), protegida por senha; sem senha, a exportação não existe
+    WAITLIST_EXPORT_PASSWORD: z.string().min(16, 'deve ter pelo menos 16 caracteres').optional(),
+    CONTACT_EMAIL: z.string().regex(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, 'e-mail inválido').default('contato@reforce.app.br'),
   })
   .superRefine((e, ctx) => {
     if (e.PIX_EXPIRY_LEAD_MINUTES >= e.HOLD_MINUTES) {
@@ -61,7 +67,14 @@ const schema = z
     if (e.NODE_ENV === 'production' && e.DEV_TOOLS === '1') {
       ctx.addIssue({ code: 'custom', path: ['DEV_TOOLS'], message: 'não pode ser 1 em produção' });
     }
-    if (e.NODE_ENV === 'production') {
+    if (e.SITE_MODE === 'completo') {
+      if (!e.SESSION_SECRET) ctx.addIssue({ code: 'custom', path: ['SESSION_SECRET'], message: 'obrigatório no site completo' });
+      if (!e.FILE_ENCRYPTION_KEY) {
+        ctx.addIssue({ code: 'custom', path: ['FILE_ENCRYPTION_KEY'], message: 'obrigatório no site completo' });
+      }
+    }
+    // a lista de espera não usa pagamento, vídeo nem mensagens: adaptador falso não chega a ser chamado
+    if (e.NODE_ENV === 'production' && e.SITE_MODE === 'completo') {
       for (const k of PROVIDER_KEYS) {
         if (e[k] === 'fake') ctx.addIssue({ code: 'custom', path: [k], message: 'adaptador falso não pode rodar em produção' });
       }
@@ -70,6 +83,7 @@ const schema = z
 
 export interface AppConfig {
   nodeEnv: 'development' | 'test' | 'production';
+  siteMode: 'completo' | 'lista_de_espera';
   databaseUrl: string;
   appBaseUrl: string;
   sessionSecret: string;
@@ -96,6 +110,8 @@ export interface AppConfig {
   fakeWebhookSecret: string;
   /** Operações em que os adaptadores falsos simulam falha (ex.: releaseEscrow,freeBusy). */
   fakeFail: string[];
+  waitlistExportPassword: string | null;
+  contactEmail: string;
 }
 
 export function loadConfig(env: Env): AppConfig {
@@ -109,9 +125,10 @@ export function loadConfig(env: Env): AppConfig {
   const e = parsed.data;
   return {
     nodeEnv: e.NODE_ENV,
+    siteMode: e.SITE_MODE,
     databaseUrl: e.DATABASE_URL,
     appBaseUrl: e.APP_BASE_URL.replace(/\/$/, ''),
-    sessionSecret: e.SESSION_SECRET,
+    sessionSecret: e.SESSION_SECRET ?? '',
     devTools: e.DEV_TOOLS === '1',
     holdMinutes: e.HOLD_MINUTES,
     pixExpiryLeadMinutes: e.PIX_EXPIRY_LEAD_MINUTES,
@@ -130,10 +147,12 @@ export function loadConfig(env: Env): AppConfig {
       calendar: e.CALENDAR_PROVIDER,
       geocoding: e.GEOCODING_PROVIDER,
     },
-    fileEncryptionKeyHex: e.FILE_ENCRYPTION_KEY,
+    fileEncryptionKeyHex: e.FILE_ENCRYPTION_KEY ?? '',
     fileStorageDir: e.FILE_STORAGE_DIR,
     fakeWebhookSecret: e.FAKE_WEBHOOK_SECRET,
     fakeFail: e.FAKE_FAIL.split(',').map((x) => x.trim()).filter(Boolean),
+    waitlistExportPassword: e.WAITLIST_EXPORT_PASSWORD ?? null,
+    contactEmail: e.CONTACT_EMAIL,
   };
 }
 

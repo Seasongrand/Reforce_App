@@ -33,6 +33,7 @@
     "react-dom": "^19.3.1",
     "server-only": "^0.0.1",
     "temporal-polyfill": "^1.0.8",
+    "tsx": "^4.23.15",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -45,7 +46,6 @@
     "@types/react-dom": "^19.3.0",
     "kysely-codegen": "^0.20.0",
     "tailwindcss": "^4.3.5",
-    "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
   }

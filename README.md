@@ -109,6 +109,27 @@ docs/               especificação, plano de implementação e pendências
 
 Cada serviço externo tem uma interface em `src/providers/<serviço>/types.ts`, e `src/providers/index.ts` escolhe o adaptador pela variável `*_PROVIDER`. Para plugar o Asaas, por exemplo: implemente `PaymentProvider` em `src/providers/payment/asaas.ts`, leia as credenciais do ambiente, ligue o adaptador em `providers()` e troque `PAYMENT_PROVIDER=asaas`. Escolher um adaptador real ainda não implementado falha na inicialização, com mensagem clara. Em produção (`NODE_ENV=production`), adaptador falso e `DEV_TOOLS=1` são recusados.
 
-## Produção
+## Produção na Railway
+
+O site está configurado para a Railway (`railway.json`). A cada merge na `main`, a Railway faz o build, roda as migrações e a carga inicial antes de trocar a versão (`npm run db:migrate && npm run db:seed`) e só coloca no ar se `/api/saude` responder.
+
+**Enquanto não há provedores reais**, o site roda em `SITE_MODE=lista_de_espera`: a página inicial mostra a lista de espera de professores e todas as outras rotas respondem 404. A planilha das inscrições fica em `https://reforce.app.br/api/lista-de-espera.csv`; o navegador pede a senha (`WAITLIST_EXPORT_PASSWORD`; o usuário pode ser qualquer um).
+
+Configuração inicial, feita uma vez no painel da Railway:
+
+1. **New Project → Deploy from GitHub repo** e escolha `Seasongrand/Reforce_App` (autorize o app da Railway no GitHub).
+2. No projeto, **+ New → Database → PostgreSQL**.
+3. No serviço do site, em **Variables**:
+   - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` (referência ao banco criado no passo 2)
+   - `SITE_MODE` = `lista_de_espera`
+   - `APP_BASE_URL` = `https://reforce.app.br`
+   - `WAITLIST_EXPORT_PASSWORD` = uma senha sua, com 16 caracteres ou mais
+   - `CONTACT_EMAIL` = um e-mail que exista, para pedidos sobre dados pessoais
+4. Em **Settings → Networking**, clique em **Generate Domain** para testar no endereço `*.up.railway.app`.
+5. Ainda em **Networking**, adicione os domínios próprios `reforce.app.br` e `www.reforce.app.br`. A Railway mostra os registros de DNS a criar. Se o painel do Registro.br não aceitar o registro na raiz (`reforce.app.br`, sem `www`), passe o DNS do domínio para o Cloudflare (gratuito), que aceita esse tipo de registro na raiz.
+
+**Quando o marketplace abrir:** troque `SITE_MODE` para `completo`, defina `SESSION_SECRET`, `FILE_ENCRYPTION_KEY` e as credenciais dos provedores reais, e crie um segundo serviço a partir do mesmo repositório para o worker, com o comando `npm run worker` e as mesmas variáveis.
+
+## Produção (outras hospedagens)
 
 Um contêiner web (`npm run build` e `npm start`) e um worker (`npm run worker`), com PostgreSQL 16+ gerenciado que ofereça `btree_gist`, `unaccent`, `cube` e `earthdistance`. Rode `npm run db:migrate` a cada deploy; o executor usa trava e é idempotente.

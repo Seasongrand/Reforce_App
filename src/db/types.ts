@@ -405,6 +405,23 @@ export interface TeacherVerifications {
   valid_until: string | null;
 }
 
+export interface TeacherWaitlist {
+  city: string;
+  consent_at: string;
+  created_at: Generated<string>;
+  education: string;
+  email: string;
+  id: Generated<string>;
+  modalities: string[];
+  name: string;
+  notes: string | null;
+  phone_e164: string | null;
+  stages: string[];
+  state: string;
+  subject_ids: number[];
+  updated_at: Generated<string>;
+}
+
 export interface WebhookEvents {
   id: Generated<Int8>;
   payload: Json;
@@ -450,6 +467,7 @@ export interface DB {
   teacher_search: TeacherSearch;
   teacher_subjects: TeacherSubjects;
   teacher_verifications: TeacherVerifications;
+  teacher_waitlist: TeacherWaitlist;
   teachers: Teachers;
   teachers_listed: TeachersListed;
   webhook_events: WebhookEvents;

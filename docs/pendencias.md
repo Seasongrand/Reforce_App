@@ -47,7 +47,9 @@ O domínio destrava várias aprovações da semana 0 (§5). Falta:
 - **E-mail:** verificar o domínio no provedor de e-mail (registros SPF, DKIM e DMARC no DNS) e definir o remetente, por exemplo `SES_FROM=Reforce <naoresponda@reforce.app.br>`.
 - **Google:** a verificação do app pede política de privacidade no mesmo domínio da página inicial e o domínio verificado no Google Search Console (§3.3). As páginas de termos de uso e de política de privacidade ainda não existem no sistema.
 - **Meta (WhatsApp):** a verificação da empresa costuma pedir um site no domínio da empresa.
-- **Hospedagem:** apontar o DNS para o contêiner web, com HTTPS.
+- **Hospedagem (Railway):** o site está configurado para a Railway, no modo lista de espera. Falta criar o projeto e o banco, definir as variáveis e apontar o DNS (passo a passo no README, “Produção na Railway”). Se o Registro.br não aceitar o registro na raiz do domínio, o DNS precisa ir para o Cloudflare.
+- **E-mail de contato:** a política de privacidade da lista de espera mostra `CONTACT_EMAIL` (padrão `contato@reforce.app.br`). A caixa precisa existir, ou ser um redirecionamento para o seu e-mail.
+- **Política de privacidade da lista de espera:** o texto em `/privacidade` é provisório e factual, escrito por mim. Precisa de revisão jurídica, e a política completa entra antes da abertura.
 
 
 O sistema roda inteiro com adaptadores falsos. Cada adaptador real entra quando a credencial chegar; escolher um deles antes disso falha na inicialização com mensagem clara.
