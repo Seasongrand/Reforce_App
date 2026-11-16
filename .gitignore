@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.env
+.env.local
+var/
+coverage/
+test-results/
+playwright-report/
+.superpowers/
+*.tsbuildinfo
+next-env.d.ts
+var/test-private/
+.next/
+var/e2e-private/

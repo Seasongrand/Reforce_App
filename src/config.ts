@@ -1,0 +1,146 @@
+/**
+ * Configuração da aplicação, lida do ambiente e validada na inicialização.
+ * Valores que a especificação marca como sugestão ou hipótese têm o valor
+ * sugerido como padrão e estão listados em docs/pendencias.md.
+ */
+import { z } from 'zod';
+
+type Env = Record<string, string | undefined>;
+
+const PROVIDER_KEYS = [
+  'PAYMENT_PROVIDER', 'VIDEO_PROVIDER', 'WHATSAPP_PROVIDER', 'EMAIL_PROVIDER', 'CALENDAR_PROVIDER', 'GEOCODING_PROVIDER',
+] as const;
+
+const int = (def: number, min: number, max: number) => z.coerce.number().int().min(min).max(max).default(def);
+
+const schema = z
+  .object({
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, 'deve ser uma URL postgres://'),
+    APP_BASE_URL: z.string().regex(/^https?:\/\//, 'deve ser uma URL http(s)://').default('http://localhost:3000'),
+    SESSION_SECRET: z.string().min(32, 'deve ter pelo menos 32 caracteres'),
+    DEV_TOOLS: z.enum(['0', '1']).default('0'),
+    // §2.4: reserva temporária de 10 minutos; QR do PIX expira 1 minuto antes
+    HOLD_MINUTES: int(10, 1, 60),
+    PIX_EXPIRY_LEAD_MINUTES: int(1, 0, 59),
+    // Resumo executivo: 15% busca, 5% link do professor (hipóteses)
+    COMMISSION_MARKETPLACE_BPS: int(1500, 0, 10_000),
+    COMMISSION_TEACHER_LINK_BPS: int(500, 0, 10_000),
+    // §1: prazos de 24 h e 15 min são sugestões
+    DISPUTE_WINDOW_HOURS: int(24, 0, 24 * 30),
+    TEACHER_NO_SHOW_MINUTES: int(15, 1, 240),
+    // §3.7: renovar a certidão a cada 6 meses
+    CRIMINAL_RECORD_VALIDITY_MONTHS: int(6, 1, 24),
+    // §2.4: livre/ocupado com limite de 2 segundos
+    CALENDAR_FREEBUSY_TIMEOUT_MS: int(2000, 100, 30_000),
+    // Decisões de 16/11/2026: falta do aluno paga 100% ao professor; piso começa em 0
+    STUDENT_NO_SHOW_TEACHER_PCT: int(100, 0, 100),
+    PRICE_FLOOR_CENTS: int(0, 0, 10_000_000),
+    // Provedores (§3): 'fake' até as credenciais reais chegarem
+    PAYMENT_PROVIDER: z.enum(['fake', 'asaas']).default('fake'),
+    VIDEO_PROVIDER: z.enum(['fake', 'daily', 'whereby']).default('fake'),
+    WHATSAPP_PROVIDER: z.enum(['fake', 'meta']).default('fake'),
+    EMAIL_PROVIDER: z.enum(['fake', 'ses']).default('fake'),
+    CALENDAR_PROVIDER: z.enum(['fake', 'google']).default('fake'),
+    GEOCODING_PROVIDER: z.enum(['fake']).default('fake'),
+    // Documentos de verificação: cifrados em disco (AES-256-GCM), fora do banco
+    FILE_ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/, 'deve ter 64 caracteres hexadecimais (32 bytes)'),
+    FILE_STORAGE_DIR: z.string().default('var/private'),
+    // Só para os adaptadores falsos
+    FAKE_WEBHOOK_SECRET: z.string().min(16).default('segredo-dos-webhooks-falsos-dev'),
+    FAKE_FAIL: z.string().default(''),
+  })
+  .superRefine((e, ctx) => {
+    if (e.PIX_EXPIRY_LEAD_MINUTES >= e.HOLD_MINUTES) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['PIX_EXPIRY_LEAD_MINUTES'],
+        message: 'deve ser menor que HOLD_MINUTES',
+      });
+    }
+    if (e.NODE_ENV === 'production' && e.DEV_TOOLS === '1') {
+      ctx.addIssue({ code: 'custom', path: ['DEV_TOOLS'], message: 'não pode ser 1 em produção' });
+    }
+    if (e.NODE_ENV === 'production') {
+      for (const k of PROVIDER_KEYS) {
+        if (e[k] === 'fake') ctx.addIssue({ code: 'custom', path: [k], message: 'adaptador falso não pode rodar em produção' });
+      }
+    }
+  });
+
+export interface AppConfig {
+  nodeEnv: 'development' | 'test' | 'production';
+  databaseUrl: string;
+  appBaseUrl: string;
+  sessionSecret: string;
+  devTools: boolean;
+  holdMinutes: number;
+  pixExpiryLeadMinutes: number;
+  commissionBps: { marketplace: number; teacher_link: number };
+  disputeWindowHours: number;
+  teacherNoShowMinutes: number;
+  criminalRecordValidityMonths: number;
+  calendarFreeBusyTimeoutMs: number;
+  studentNoShowTeacherPct: number;
+  priceFloorCents: number;
+  providers: {
+    payment: 'fake' | 'asaas';
+    video: 'fake' | 'daily' | 'whereby';
+    whatsapp: 'fake' | 'meta';
+    email: 'fake' | 'ses';
+    calendar: 'fake' | 'google';
+    geocoding: 'fake';
+  };
+  fileEncryptionKeyHex: string;
+  fileStorageDir: string;
+  fakeWebhookSecret: string;
+  /** Operações em que os adaptadores falsos simulam falha (ex.: releaseEscrow,freeBusy). */
+  fakeFail: string[];
+}
+
+export function loadConfig(env: Env): AppConfig {
+  // variável definida mas vazia conta como ausente
+  const clean = Object.fromEntries(Object.entries(env).filter(([, v]) => v !== undefined && v !== ''));
+  const parsed = schema.safeParse(clean);
+  if (!parsed.success) {
+    const lines = parsed.error.issues.map((i) => `${i.path.join('.') || '(raiz)'}: ${i.message}`);
+    throw new Error(`Configuração inválida:\n  ${lines.join('\n  ')}`);
+  }
+  const e = parsed.data;
+  return {
+    nodeEnv: e.NODE_ENV,
+    databaseUrl: e.DATABASE_URL,
+    appBaseUrl: e.APP_BASE_URL.replace(/\/$/, ''),
+    sessionSecret: e.SESSION_SECRET,
+    devTools: e.DEV_TOOLS === '1',
+    holdMinutes: e.HOLD_MINUTES,
+    pixExpiryLeadMinutes: e.PIX_EXPIRY_LEAD_MINUTES,
+    commissionBps: { marketplace: e.COMMISSION_MARKETPLACE_BPS, teacher_link: e.COMMISSION_TEACHER_LINK_BPS },
+    disputeWindowHours: e.DISPUTE_WINDOW_HOURS,
+    teacherNoShowMinutes: e.TEACHER_NO_SHOW_MINUTES,
+    criminalRecordValidityMonths: e.CRIMINAL_RECORD_VALIDITY_MONTHS,
+    calendarFreeBusyTimeoutMs: e.CALENDAR_FREEBUSY_TIMEOUT_MS,
+    studentNoShowTeacherPct: e.STUDENT_NO_SHOW_TEACHER_PCT,
+    priceFloorCents: e.PRICE_FLOOR_CENTS,
+    providers: {
+      payment: e.PAYMENT_PROVIDER,
+      video: e.VIDEO_PROVIDER,
+      whatsapp: e.WHATSAPP_PROVIDER,
+      email: e.EMAIL_PROVIDER,
+      calendar: e.CALENDAR_PROVIDER,
+      geocoding: e.GEOCODING_PROVIDER,
+    },
+    fileEncryptionKeyHex: e.FILE_ENCRYPTION_KEY,
+    fileStorageDir: e.FILE_STORAGE_DIR,
+    fakeWebhookSecret: e.FAKE_WEBHOOK_SECRET,
+    fakeFail: e.FAKE_FAIL.split(',').map((x) => x.trim()).filter(Boolean),
+  };
+}
+
+let cached: AppConfig | undefined;
+
+/** Configuração do processo, lida uma vez de process.env. */
+export function config(): AppConfig {
+  cached ??= loadConfig(process.env);
+  return cached;
+}

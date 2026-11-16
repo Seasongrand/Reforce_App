@@ -1,0 +1,52 @@
+{
+  "name": "aulas-particulares",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "db:migrate": "tsx scripts/migrate.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check": "tsc --noEmit && vitest run",
+    "test:perf": "PERF=1 vitest run tests/db/search.perf.test.ts --silent=false",
+    "db:types": "kysely-codegen --dialect postgres --out-file src/db/types.ts --include-pattern \"public.*\" --type-mapping \"{\\\"timestamptz\\\":\\\"string\\\",\\\"timestamp\\\":\\\"string\\\",\\\"date\\\":\\\"string\\\"}\"",
+    "worker": "tsx src/worker/index.ts",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:seed": "tsx scripts/seed.ts",
+    "test:e2e": "playwright test --trace off"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.10",
+    "graphile-worker": "^0.18.0",
+    "kysely": "^0.29.9",
+    "libphonenumber-js": "^1.13.16",
+    "next": "^16.4.6",
+    "pg": "^8.23.1",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "server-only": "^0.0.1",
+    "temporal-polyfill": "^1.0.8",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "kysely-codegen": "^0.20.0",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

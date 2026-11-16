@@ -1,0 +1,275 @@
+/**
+ * Fábricas de dados para os testes de banco. Tudo em SQL direto, sem passar
+ * pela aplicação, para que os testes do apêndice exercitem só o esquema.
+ */
+import { randomUUID } from 'node:crypto';
+
+export interface Queryable {
+  query<R extends Record<string, unknown> = Record<string, unknown>>(
+    text: string,
+    values?: unknown[],
+  ): Promise<{ rows: R[]; rowCount: number | null }>;
+}
+
+let seq = 0;
+const next = () => ++seq;
+
+export async function insertTeacher(
+  db: Queryable,
+  over: Partial<{
+    slug: string;
+    display_name: string;
+    timezone: string;
+    min_notice_min: number;
+    horizon_days: number;
+    slot_step_min: number;
+    max_lessons_per_day: number | null;
+  }> = {},
+): Promise<string> {
+  const n = next();
+  const { rows } = await db.query<{ id: string }>(
+    `INSERT INTO teachers (slug, display_name, timezone, min_notice_min, horizon_days, slot_step_min, max_lessons_per_day)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+    [
+      over.slug ?? `prof-${n}-${randomUUID().slice(0, 8)}`,
+      over.display_name ?? `Professor ${n}`,
+      over.timezone ?? 'America/Sao_Paulo',
+      over.min_notice_min ?? 120,
+      over.horizon_days ?? 60,
+      over.slot_step_min ?? 30,
+      over.max_lessons_per_day ?? null,
+    ],
+  );
+  return rows[0]!.id;
+}
+
+export async function insertService(
+  db: Queryable,
+  teacherId: string,
+  over: Partial<{
+    subject: string;
+    duration_min: number;
+    price_cents: number;
+    modality: 'online' | 'at_teacher' | 'at_student';
+    buffer_before_min: number;
+    buffer_after_min: number;
+  }> = {},
+): Promise<string> {
+  const { rows } = await db.query<{ id: string }>(
+    `INSERT INTO services (teacher_id, subject, duration_min, price_cents, modality, buffer_before_min, buffer_after_min)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+    [
+      teacherId,
+      over.subject ?? 'matematica',
+      over.duration_min ?? 60,
+      over.price_cents ?? 12100,
+      over.modality ?? 'online',
+      over.buffer_before_min ?? 0,
+      over.buffer_after_min ?? 0,
+    ],
+  );
+  return rows[0]!.id;
+}
+
+export async function insertGuardian(db: Queryable, over: Partial<{ name: string; phone_e164: string }> = {}) {
+  const n = next();
+  const { rows } = await db.query<{ id: string }>(
+    `INSERT INTO guardians (name, phone_e164) VALUES ($1, $2) RETURNING id`,
+    [over.name ?? `Responsável ${n}`, over.phone_e164 ?? `+55119${String(Date.now() % 1e8).padStart(8, '0')}${n}`],
+  );
+  return rows[0]!.id;
+}
+
+export async function insertStudent(db: Queryable, guardianId: string): Promise<string> {
+  const { rows } = await db.query<{ id: string }>(
+    `INSERT INTO students (guardian_id, first_name, grade) VALUES ($1, 'Aluno', '9ano') RETURNING id`,
+    [guardianId],
+  );
+  return rows[0]!.id;
+}
+
+export interface FamilyOrder {
+  guardianId: string;
+  studentId: string;
+  orderId: string;
+}
+
+/** Responsável + aluno + pedido aguardando pagamento, para um serviço. */
+export async function insertFamilyOrder(
+  db: Queryable,
+  teacherId: string,
+  serviceId: string,
+  over: Partial<{ guardianId: string; lessons: number; total_cents: number; commission_bps: number }> = {},
+): Promise<FamilyOrder> {
+  const guardianId = over.guardianId ?? (await insertGuardian(db));
+  const studentId = await insertStudent(db, guardianId);
+  const { rows } = await db.query<{ id: string }>(
+    `INSERT INTO orders (teacher_id, guardian_id, student_id, service_id, lessons, total_cents, idempotency_key,
+                         commission_bps)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+    [
+      teacherId, guardianId, studentId, serviceId, over.lessons ?? 1, over.total_cents ?? 12100, randomUUID(),
+      over.commission_bps ?? 500,
+    ],
+  );
+  return { guardianId, studentId, orderId: rows[0]!.id };
+}
+
+/**
+ * Grava uma aula. O intervalo bloqueado é calculado como na aplicação:
+ * [início - intervalo antes, início + duração + intervalo depois).
+ * `startsAt` é um literal timestamptz, por exemplo '2026-11-17 14:00-03'.
+ */
+export async function insertBooking(
+  db: Queryable,
+  b: {
+    orderId: string;
+    teacherId: string;
+    studentId: string;
+    serviceId: string;
+    startsAt: string;
+    durationMin?: number;
+    bufferBeforeMin?: number;
+    bufferAfterMin?: number;
+    status?: string;
+    holdExpiresAt?: string | null;
+    modality?: 'online' | 'at_teacher' | 'at_student';
+    addressId?: string | null;
+  },
+): Promise<string> {
+  const status = b.status ?? 'confirmed';
+  const holdExpiresAt = b.holdExpiresAt !== undefined ? b.holdExpiresAt : status === 'held' ? '2999-01-01Z' : null;
+  const { rows } = await db.query<{ id: string }>(
+    `INSERT INTO bookings (order_id, teacher_id, student_id, service_id, starts_at, ends_at, blocked,
+                           local_start, timezone, status, hold_expires_at, modality, address_id)
+     SELECT $1, t.id, $3, $4, s, s + make_interval(mins => $6::int),
+            tstzrange(s - make_interval(mins => $7::int), s + make_interval(mins => $6::int + $8::int), '[)'),
+            s AT TIME ZONE t.timezone, t.timezone, $9::booking_status, $10::timestamptz, $11, $12
+       FROM teachers t, LATERAL (SELECT $5::timestamptz AS s) x
+      WHERE t.id = $2
+     RETURNING id`,
+    [
+      b.orderId,
+      b.teacherId,
+      b.studentId,
+      b.serviceId,
+      b.startsAt,
+      b.durationMin ?? 60,
+      b.bufferBeforeMin ?? 0,
+      b.bufferAfterMin ?? 0,
+      status,
+      holdExpiresAt,
+      b.modality ?? 'online',
+      b.addressId ?? null,
+    ],
+  );
+  if (!rows[0]) throw new Error('insertBooking: professor não encontrado');
+  return rows[0].id;
+}
+
+/** Captura o código de erro do PostgreSQL de uma promessa que deve falhar. */
+export async function pgErrorCode(p: Promise<unknown>): Promise<string | undefined> {
+  try {
+    await p;
+  } catch (err) {
+    return (err as { code?: string }).code;
+  }
+  return undefined;
+}
+
+export async function pgErrorMessage(p: Promise<unknown>): Promise<string | undefined> {
+  try {
+    await p;
+  } catch (err) {
+    return (err as Error).message;
+  }
+  return undefined;
+}
+
+/** Regra semanal: dia ISO (1 = segunda), início e fim em hora local ('14:00'). */
+export async function insertRule(db: Queryable, teacherId: string, weekday: number, start: string, end: string) {
+  await db.query(
+    `INSERT INTO availability_rules (teacher_id, weekday, start_local, end_local) VALUES ($1, $2, $3, $4)`,
+    [teacherId, weekday, start, end],
+  );
+}
+
+/** Lista de horários livres como ISO UTC, para comparar com valores esperados. */
+export async function freeSlots(
+  db: Queryable,
+  teacherId: string,
+  serviceId: string,
+  from: string,
+  to: string,
+  now: string,
+): Promise<string[]> {
+  const { rows } = await db.query<{ s: Date }>(
+    `SELECT s FROM free_slots($1, $2, $3::date, $4::date, $5::timestamptz) AS s`,
+    [teacherId, serviceId, from, to, now],
+  );
+  return rows.map((r) => r.s.toISOString());
+}
+
+/** Converte '2026-11-17 15:00' em São Paulo (-03) para ISO UTC. */
+export const sp = (local: string) => new Date(`${local.replace(' ', 'T')}:00-03:00`).toISOString();
+
+/** Catálogo mínimo usado nos testes de busca. */
+export async function seedTestCatalog(db: Queryable) {
+  await db.query(`INSERT INTO subjects (id, slug, name) VALUES
+    (1, 'matematica', 'Matemática'), (2, 'fisica', 'Física'), (3, 'quimica', 'Química'), (4, 'redacao', 'Redação')
+    ON CONFLICT DO NOTHING`);
+  await db.query(`INSERT INTO grade_levels (id, slug, name, stage) VALUES
+    (9, '9ano', '9º ano', 'fund2'), (10, '1serie', '1ª série', 'medio')
+    ON CONFLICT DO NOTHING`);
+}
+
+export interface ListedTeacherOpts {
+  name?: string;
+  bio?: string;
+  subjects?: Array<[number, number]>; // [subject_id, grade_level_id]
+  criminalRecordExpired?: boolean;
+  lat?: number | null;
+  lng?: number | null;
+  radiusKm?: number | null;
+  modality?: 'online' | 'at_teacher' | 'at_student';
+  priceCents?: number;
+  bufferAfterMin?: number;
+}
+
+/**
+ * Professor aprovado, com as três verificações (a certidão pode estar vencida),
+ * disciplinas, um serviço, regra de terça 14h–18h, e índice de busca refeito.
+ */
+export async function insertListedTeacher(db: Queryable, o: ListedTeacherOpts = {}) {
+  const teacherId = await insertTeacher(db, { display_name: o.name ?? 'Professora' });
+  await db.query(
+    `UPDATE teachers SET status = 'approved', bio = $2, base_lat = $3, base_lng = $4, travel_radius_km = $5 WHERE id = $1`,
+    [teacherId, o.bio ?? null, o.lat ?? null, o.lng ?? null, o.radiusKm ?? null],
+  );
+  await db.query(
+    `INSERT INTO teacher_verifications (teacher_id, kind, status, decided_at, valid_until) VALUES
+       ($1, 'identity', 'approved', now(), NULL),
+       ($1, 'education', 'approved', now(), NULL),
+       ($1, 'criminal_record', 'approved', now(), CASE WHEN $2 THEN current_date - 1 ELSE current_date + 180 END)`,
+    [teacherId, o.criminalRecordExpired ?? false],
+  );
+  for (const [s, g] of o.subjects ?? [[1, 9]]) {
+    await db.query(`INSERT INTO teacher_subjects (teacher_id, subject_id, grade_level_id) VALUES ($1, $2, $3)`, [
+      teacherId, s, g,
+    ]);
+  }
+  const serviceId = await insertService(db, teacherId, {
+    modality: o.modality ?? 'online',
+    price_cents: o.priceCents ?? 12100,
+    buffer_after_min: o.bufferAfterMin ?? 0,
+  });
+  await db.query(`UPDATE services SET subject_id = $2 WHERE id = $1`, [serviceId, (o.subjects ?? [[1, 9]])[0]![0]]);
+  await insertRule(db, teacherId, 2, '14:00', '18:00');
+  await db.query(`SELECT refresh_teacher_search($1)`, [teacherId]);
+  return { teacherId, serviceId };
+}
+
+/** Desloca um ponto para o norte em `km`, no modelo de Terra do earthdistance. */
+export function northOf(lat: number, km: number): number {
+  return lat + (km / 6378.168) * (180 / Math.PI);
+}
