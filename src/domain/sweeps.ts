@@ -8,6 +8,9 @@ import { enqueue } from '@/worker/enqueue';
 import type { Deps } from './deps';
 import { sendDueNotifications } from './notifications/send';
 import { retryDeferredWebhooks } from './payment/webhook';
+import { closeLessons } from './lessons/close';
+import { releaseDuePayouts } from './payouts/release';
+import { reconcileReleasing } from './payouts/reconcile';
 
 /** Reservas temporárias vencidas liberam o horário; a cobrança é cancelada (§1). */
 export async function expireHolds(deps: Deps, now: Temporal.Instant): Promise<{ bookings: number; charges: number }> {
@@ -50,6 +53,9 @@ export async function runMinuteSweeps(deps: Deps, now: Temporal.Instant): Promis
     ['expireHolds', () => expireHolds(deps, now)],
     ['retryDeferredWebhooks', () => retryDeferredWebhooks(deps, now)],
     ['sendDueNotifications', () => sendDueNotifications(deps, now)],
+    ['closeLessons', () => closeLessons(deps, now)],
+    ['releaseDuePayouts', () => releaseDuePayouts(deps, now)],
+    ['reconcileReleasing', () => reconcileReleasing(deps, now)],
   ];
   const out: Record<string, unknown> = {};
   for (const [name, fn] of steps) {

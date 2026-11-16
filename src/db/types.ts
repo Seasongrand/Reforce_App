@@ -243,6 +243,7 @@ export interface Payments {
   platform_fee_cents: Generated<number>;
   provider: string;
   provider_charge_id: string;
+  refunded_cents: Generated<number>;
   status: Generated<string>;
 }
 

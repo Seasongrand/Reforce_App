@@ -21,7 +21,10 @@ export function buildTaskList(makeDeps: () => Deps, clock: ClockSource): TaskLis
   const withNow = async <T>(fn: (deps: Deps, now: ReturnType<Clock['now']>) => Promise<T>) =>
     fn(makeDeps(), (await clock()).now());
   return {
-    'payment.refund': async (p) => { await withNow((d, n) => refundPayment(d, str(p, 'paymentId'), n)); },
+    'payment.refund': async (p) => {
+      const amount = (p as Record<string, unknown> | null)?.amountCents;
+      await withNow((d, n) => refundPayment(d, str(p, 'paymentId'), n, typeof amount === 'number' ? amount : undefined));
+    },
     'video.create_room': async (p) => { await withNow((d, n) => createVideoRoom(d, str(p, 'bookingId'), n)); },
     'calendar.create_event': async (p) => { await withNow((d, n) => createCalendarEvent(d, str(p, 'bookingId'), n)); },
     'search.refresh_teacher': async (p) => { await withNow((d, n) => refreshTeacher(d, str(p, 'teacherId'), n)); },

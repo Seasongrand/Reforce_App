@@ -20,7 +20,7 @@ WITH due AS (
    LIMIT $2
    FOR UPDATE SKIP LOCKED
 )
-UPDATE payouts p SET status = 'releasing'
+UPDATE payouts p SET status = 'releasing', release_attempted_at = $1::timestamptz
   FROM due WHERE p.id = due.id
 RETURNING p.id, p.provider_escrow_id`;
 
