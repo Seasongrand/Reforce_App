@@ -7,6 +7,7 @@ import type { Deps } from '@/domain/deps';
 import { createCalendarEvent, createVideoRoom, refreshAllListed, refreshTeacher } from '@/domain/jobs';
 import { refundPayment } from '@/domain/payment/refund';
 import { runMinuteSweeps } from '@/domain/sweeps';
+import { expireVerifications } from '@/domain/staff/review';
 import type { Clock } from '@/time/clock';
 
 type ClockSource = () => Clock | Promise<Clock>;
@@ -30,6 +31,7 @@ export function buildTaskList(makeDeps: () => Deps, clock: ClockSource): TaskLis
     'search.refresh_teacher': async (p) => { await withNow((d, n) => refreshTeacher(d, str(p, 'teacherId'), n)); },
     'sweep_minute': async () => { await withNow(runMinuteSweeps); },
     'sweep_refresh_all': async () => { await withNow(refreshAllListed); },
+    'sweep_daily': async () => { await withNow(expireVerifications); },
   };
 }
 
@@ -37,6 +39,7 @@ export function buildTaskList(makeDeps: () => Deps, clock: ClockSource): TaskLis
 export const CRONTAB = [
   '* * * * * sweep_minute ?max=1',
   '7 * * * * sweep_refresh_all ?max=1',
+  '13 9 * * * sweep_daily ?max=1', // 06h13 em São Paulo
 ].join('\n');
 
 export const quietLogger = new Logger(() => () => {});
