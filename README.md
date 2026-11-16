@@ -111,11 +111,11 @@ Cada serviço externo tem uma interface em `src/providers/<serviço>/types.ts`, 
 
 ## Produção na Railway
 
-O site roda na Railway, no projeto `bountiful-growth`: um serviço `Reforce_App` (este repositório) e um `Postgres`. Está no ar em https://reforceapp-production.up.railway.app. A cada merge na `main`, a Railway faz o build, roda as migrações e a carga inicial antes de trocar a versão e só coloca no ar se `/api/saude` responder.
+O site roda na Railway, no projeto `bountiful-growth`: um serviço `Reforce_App` (este repositório) e um `Postgres`. Está no ar em https://reforce.up.railway.app, enquanto o domínio próprio não estiver pronto (veja `docs/pendencias.md`). A cada merge na `main`, a Railway faz o build, roda as migrações e a carga inicial antes de trocar a versão e só coloca no ar se `/api/saude` responder.
 
 A configuração do deploy fica no próprio serviço, na Railway, e não no repositório. O arquivo `railway.json` (Config as Code) foi descontinuado pela Railway: serviços novos não o leem, e os antigos deixam de ler em 01/12/2026. O substituto (Infrastructure as Code, `.railway/railway.ts`) é aplicado pela linha de comando da Railway e não foi adotado.
 
-**Enquanto não há provedores reais**, o site roda em `SITE_MODE=lista_de_espera`: a página inicial mostra a lista de espera de professores e todas as outras rotas respondem 404. A planilha das inscrições fica em `https://reforce.app.br/api/lista-de-espera.csv`; o navegador pede a senha (`WAITLIST_EXPORT_PASSWORD`; o usuário pode ser qualquer um).
+**Enquanto não há provedores reais**, o site roda em `SITE_MODE=lista_de_espera`: a página inicial mostra a lista de espera de professores e todas as outras rotas respondem 404. A planilha das inscrições fica em `/api/lista-de-espera.csv` (hoje, https://reforce.up.railway.app/api/lista-de-espera.csv); o navegador pede a senha (`WAITLIST_EXPORT_PASSWORD`; o usuário pode ser qualquer um).
 
 Configuração inicial, feita uma vez no painel da Railway:
 
@@ -131,8 +131,14 @@ Configuração inicial, feita uma vez no painel da Railway:
    - **Pre-deploy Command:** `npm run db:migrate && npm run db:seed`
    - **Custom Start Command:** `npm run start`
    - **Healthcheck Path:** `/api/saude` (tempo limite de 120 segundos)
-5. Em **Settings → Networking**, clique em **Generate Domain** para testar no endereço `*.up.railway.app`.
-6. Ainda em **Networking**, adicione os domínios próprios `reforce.app.br` e `www.reforce.app.br`. A Railway mostra os registros de DNS a criar. Se o painel do Registro.br não aceitar o registro na raiz (`reforce.app.br`, sem `www`), passe o DNS do domínio para o Cloudflare (gratuito), que aceita esse tipo de registro na raiz.
+5. Em **Settings → Networking**, clique em **Generate Domain** para ter um endereço `*.up.railway.app`. O nome pode ser trocado ali mesmo; o deste projeto é `reforce.up.railway.app`.
+6. Ainda em **Networking**, adicione o domínio próprio `reforce.app.br`. No plano de teste, a Railway aceita um só domínio próprio por serviço; o `www` é redirecionado pelo Cloudflare. A Railway pede um CNAME na raiz, que o DNS do Registro.br não aceita, por isso o DNS do domínio fica no Cloudflare (gratuito):
+   - CNAME `@` para o endereço que a Railway mostrar, com proxy ligado;
+   - TXT `_railway-verify` com o valor que a Railway mostrar (sem ele, o domínio responde 404);
+   - CNAME `www` para `reforce.app.br`, com proxy ligado;
+   - **SSL/TLS** em **Full** (não “Full (strict)”, que não funciona com a Railway);
+   - uma **Redirect Rule** do modelo “Redirect from WWW to root”;
+   - no Registro.br, os servidores DNS trocados pelos dois que o Cloudflare indicar.
 
 **Quando o marketplace abrir:** troque `SITE_MODE` para `completo`, defina `SESSION_SECRET`, `FILE_ENCRYPTION_KEY` e as credenciais dos provedores reais, e crie um segundo serviço a partir do mesmo repositório para o worker, com o comando `npm run worker` e as mesmas variáveis.
 
