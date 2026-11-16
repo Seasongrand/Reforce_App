@@ -136,3 +136,24 @@ export async function saveAddress(deps: Deps, guardianId: string, a: AddressInpu
     RETURNING id`.execute(deps.db);
   return { addressId: r.rows[0]!.id };
 }
+
+/** Aluno de um responsável já identificado: escolhe um existente ou cria pelo primeiro nome. */
+export async function ensureStudent(
+  deps: Deps,
+  guardianId: string,
+  input: { studentId?: string | null; firstName?: string | null; grade?: string | null },
+): Promise<string> {
+  if (input.studentId) {
+    const s = await deps.db.selectFrom('students').select('id').where('id', '=', input.studentId)
+      .where('guardian_id', '=', guardianId).executeTakeFirst();
+    if (!s) throw new DomainError('invalid', 'aluno não encontrado');
+    return s.id;
+  }
+  const firstName = (input.firstName ?? '').trim().split(/\s+/)[0] ?? '';
+  if (firstName.length < 2) throw new DomainError('invalid', 'informe o primeiro nome do aluno');
+  if (!GRADE_LEVELS.some((g) => g.slug === input.grade)) throw new DomainError('invalid', 'escolha a série do aluno');
+  const r = await sql<{ id: string }>`
+    INSERT INTO students (guardian_id, first_name, grade) VALUES (${guardianId}, ${firstName}, ${input.grade}) RETURNING id`
+    .execute(deps.db);
+  return r.rows[0]!.id;
+}
