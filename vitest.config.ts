@@ -8,6 +8,7 @@ export default defineConfig({
     exclude: ['tests/**/*.perf.test.ts', 'node_modules/**'],
     globalSetup: ['tests/helpers/global-setup.ts'],
     fileParallelism: false,
+    isolate: false,
     testTimeout: 60_000,
     hookTimeout: 120_000,
   },
