@@ -12,7 +12,7 @@ export function ActionForm({
   className,
 }: {
   action: (prev: unknown, form: FormData) => Promise<ActionState<unknown>>;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   submitLabel: string;
   successMessage?: string;
   className?: string;

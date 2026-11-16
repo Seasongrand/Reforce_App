@@ -51,6 +51,8 @@ export default async function TeacherHome() {
         <Link className="btn-secondary" href="/professor/cadastro">Perfil</Link>
         <Link className="btn-secondary" href="/professor/verificacao">Documentos</Link>
         <Link className="btn-secondary" href="/professor/recebimento">Conta de recebimento</Link>
+        <Link className="btn-secondary" href="/professor/agenda">Agenda</Link>
+        <Link className="btn-secondary" href="/professor/servicos">Serviços</Link>
       </nav>
     </div>
   );
