@@ -181,3 +181,30 @@ export async function pgErrorMessage(p: Promise<unknown>): Promise<string | unde
   }
   return undefined;
 }
+
+/** Regra semanal: dia ISO (1 = segunda), início e fim em hora local ('14:00'). */
+export async function insertRule(db: Queryable, teacherId: string, weekday: number, start: string, end: string) {
+  await db.query(
+    `INSERT INTO availability_rules (teacher_id, weekday, start_local, end_local) VALUES ($1, $2, $3, $4)`,
+    [teacherId, weekday, start, end],
+  );
+}
+
+/** Lista de horários livres como ISO UTC, para comparar com valores esperados. */
+export async function freeSlots(
+  db: Queryable,
+  teacherId: string,
+  serviceId: string,
+  from: string,
+  to: string,
+  now: string,
+): Promise<string[]> {
+  const { rows } = await db.query<{ s: Date }>(
+    `SELECT s FROM free_slots($1, $2, $3::date, $4::date, $5::timestamptz) AS s`,
+    [teacherId, serviceId, from, to, now],
+  );
+  return rows.map((r) => r.s.toISOString());
+}
+
+/** Converte '2026-11-17 15:00' em São Paulo (-03) para ISO UTC. */
+export const sp = (local: string) => new Date(`${local.replace(' ', 'T')}:00-03:00`).toISOString();
