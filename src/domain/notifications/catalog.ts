@@ -5,6 +5,7 @@ export const TEMPLATES = {
   lembrete_1h_responsavel: 'guardian',
   pagamento_tardio_reembolso: 'guardian',
   falta_professor_reembolso: 'guardian',
+  falta_aluno_devolvida: 'guardian',
   confirmacao_professor: 'teacher',
 } as const;
 
