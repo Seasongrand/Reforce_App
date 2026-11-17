@@ -4,7 +4,7 @@ import { TeacherPhoto } from './TeacherPhoto';
 /** Resumo da aula escolhida, presente em todos os passos da reserva. */
 export function LessonSummary({
   photoUrl, teacherName, subject, when, priceCents,
-}: { photoUrl: string | null; teacherName: string; subject: string; when: string; priceCents: number }) {
+}: { photoUrl: string | null; teacherName: string; subject: string; when: React.ReactNode; priceCents: number }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-violet-50 p-3.5" data-testid="resumo-reserva">
       <TeacherPhoto photoUrl={photoUrl} name={teacherName} size={52} />

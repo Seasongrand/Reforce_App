@@ -212,7 +212,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // 5. Uma segunda família tenta o mesmo horário: recebe "ocupado", nunca um QR.
   const fam2 = await (await browser.newContext()).newPage();
   await identifyAndReserve(fam2, slotUrl, { email: 'outra.e2e@exemplo.com', phone: '(11) 98888-2222' });
-  await expect(fam2.locator('.error')).toContainText('acabou de ser reservado');
+  await expect(fam2.getByTestId('ocupado')).toContainText('acabou de ser reservado');
   await expect(fam2.getByTestId('pix')).toHaveCount(0);
 
   // 6. A aula acontece: professora e aluno entram na sala (falsa) no horário.

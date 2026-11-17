@@ -3,10 +3,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Temporal } from 'temporal-polyfill';
 import { BookingForm } from '@/components/BookingForm';
+import { LessonSummary } from '@/components/aluno/LessonSummary';
+import { LocalWhen } from '@/components/aluno/LocalWhen';
+import { Stepper } from '@/components/aluno/Stepper';
 import { GRADE_LEVELS } from '@/domain/catalog';
 import { publicTeacherPage } from '@/domain/public/teacher-page';
-import { formatBRL } from '@/lib/money';
-import { formatPtBr } from '@/time/zoned';
 import { appDeps, now } from '@/server/app';
 import { currentSubject } from '@/server/session';
 import { confirmAndHoldAction, holdAsGuardianAction, identifyAction } from './actions';
@@ -31,7 +32,6 @@ export default async function ReservePage({
     start = null;
   }
   if (!service || !start) notFound();
-
   const guardianId = await currentSubject('guardian');
   const students = guardianId
     ? (await deps.db.selectFrom('students').select(['id', 'first_name']).where('guardian_id', '=', guardianId).execute())
@@ -42,25 +42,22 @@ export default async function ReservePage({
         .map((a) => ({ id: a.id, label: `${a.street}${a.number ? `, ${a.number}` : ''}, ${a.city}` }))
     : [];
   const stillFree = service.slots.includes(start.toString());
-
   return (
-    <div className="space-y-6">
-      <Link href={`/p/${slug}`} className="text-sm text-brand">← {page.name}</Link>
-      <h1 className="text-2xl font-semibold">Reservar aula</h1>
-      <div className="card text-sm" data-testid="resumo-reserva">
-        <p><strong>{service.subject}</strong> com {page.name}, {MODALITY[service.modality]}, {service.durationMin} minutos</p>
-        <p>{formatPtBr(start, page.timezone)} (horário de {page.timezone === 'America/Sao_Paulo' ? 'São Paulo' : page.timezone})</p>
-        <p>{formatBRL(service.priceCents)}</p>
-      </div>
-      {!stillFree && <p className="notice">Este horário pode não estar mais livre. Se estiver ocupado, mostramos os mais próximos.</p>}
+    <div className="space-y-5">
+      <Link href={`/p/${slug}`} className="inline-flex min-h-11 items-center text-sm font-medium text-indigo-600">← {page.name}</Link>
+      <Stepper current={2} />
+      <LessonSummary
+        photoUrl={page.photoUrl} teacherName={page.name} subject={service.subject} priceCents={service.priceCents}
+        when={<><LocalWhen iso={start.toString()} teacherTz={page.timezone} /> · {MODALITY[service.modality]} · {service.durationMin} min</>} />
+      {!stillFree && (
+        <p className="notice">Este horário pode não estar mais livre. Se estiver ocupado, mostramos os mais próximos.</p>
+      )}
       <BookingForm
         slug={slug} serviceId={service.id} startsAt={start.toString()} idempotencyKey={randomUUID()}
         atStudent={service.modality === 'at_student'} grades={GRADE_LEVELS.map((g) => ({ slug: g.slug, name: g.name }))}
         loggedIn={guardianId !== null && students.length > 0} students={students} addresses={addresses}
+        holdMinutes={deps.config.holdMinutes}
         identify={identifyAction} confirmAndHold={confirmAndHoldAction} holdAsGuardian={holdAsGuardianAction} />
-      <p className="text-xs text-slate-500">
-        Ao reservar, o horário fica preso por {deps.config.holdMinutes} minutos enquanto você paga.
-      </p>
     </div>
   );
 }
