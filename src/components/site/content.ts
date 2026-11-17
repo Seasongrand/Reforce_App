@@ -1,7 +1,7 @@
 /**
  * Textos da página da lista de espera (direção C), aprovados na especificação
  * docs/superpowers/specs/2026-11-16-lista-de-espera-visual-design.md.
- * Só promessas que o sistema cumpre; nenhum valor de comissão.
+ * Só promessas que o sistema cumpre. As comissões da FAQ vêm da configuração.
  */
 export const HERO = {
   badge: 'Lista de espera aberta para os primeiros professores',
@@ -42,28 +42,59 @@ export const BENEFITS = [
 ] as const;
 
 export const FAQ_TITLE = 'Perguntas frequentes';
+/**
+ * {busca} e {link} viram as comissões configuradas (COMMISSION_MARKETPLACE_BPS e
+ * COMMISSION_TEACHER_LINK_BPS), para a página nunca prometer outro valor (ver faqWithCommission).
+ */
 export const FAQ = [
   {
     q: 'Quanto custa para o professor?',
-    a: 'Entrar na lista de espera não custa nada. Quando você der aulas pela Reforce, a plataforma fica com uma porcentagem de cada aula paga. Você conhece o valor antes de aceitar participar.',
+    a: 'Entrar na lista de espera é grátis. Quando você der aulas, a Reforce fica com {busca} de cada aula paga por alunos que chegam pela busca do site e com só {link} das aulas dos alunos que você mesmo traz pelo seu link. As tarifas do PIX e do cartão ficam por conta da Reforce. Qualquer outro custo é informado antes de você aceitar participar.',
   },
-  { q: 'Quando eu recebo?', a: 'O aluno paga na hora da reserva. O valor fica guardado e é liberado para você 24 horas depois da aula, se ninguém contestar.' },
-  { q: 'Preciso ter CNPJ?', a: 'Não. Dá para receber como pessoa física, com o seu CPF, em uma conta no seu nome.' },
+  {
+    q: 'Quem define o preço da aula?',
+    a: 'Você. Para cada tipo de aula que oferece, você define o seu preço, e é esse valor que o aluno vê na sua página e paga. A comissão sai desse valor: o aluno não paga nada a mais.',
+  },
+  {
+    q: 'Quando eu recebo?',
+    a: 'O aluno paga na reserva e o valor fica guardado até a aula. Pago por PIX, ele é liberado para você 24 horas depois da aula. Pago no cartão, é liberado quando a operadora do cartão repassa o dinheiro, em cerca de 30 dias. Se o responsável contestar a aula nessas 24 horas, a equipe confere o registro de presença antes de liberar.',
+  },
+  {
+    q: 'Preciso ter CNPJ?',
+    a: 'Não. Pelo seu painel, você abre uma conta de recebimento no Asaas, nosso parceiro de pagamentos, no seu nome, com o seu CPF (ou CNPJ, se tiver). De lá, você transfere para o seu banco quando quiser. Os impostos sobre o que você ganha continuam por sua conta, como em qualquer aula particular.',
+  },
   {
     q: 'Posso levar os alunos que já tenho?',
-    a: 'Sim. Mande o link da sua página para eles: a reserva, o pagamento e os lembretes passam a ser feitos pela plataforma.',
+    a: 'Sim, e é o jeito mais barato de usar a Reforce. Mande o link da sua página para eles: quem chega pelo seu link fica marcado como seu aluno e paga só {link} de comissão, mesmo que depois encontre você pela busca. A reserva, o pagamento e os lembretes passam a ser feitos pela plataforma.',
   },
-  { q: 'Como é a aula online?', a: 'Na sala da própria Reforce, direto no navegador do computador ou do celular. Não precisa de Zoom, de Meet nem de instalar nada.' },
+  {
+    q: 'Como é a aula online?',
+    a: 'Na sala de vídeo da própria Reforce, direto no navegador do computador ou do celular: sem Zoom, sem Meet e sem instalar nada. A sala abre 10 minutos antes do horário e registra quem entrou, e é esse registro que confirma a aula e libera o seu pagamento. A aula não é gravada.',
+  },
+  {
+    q: 'E a aula presencial?',
+    a: 'Pode ser no seu endereço ou na casa do aluno, até a distância que você escolher (até 100 km), com o tempo de deslocamento já contado na sua agenda. O endereço do aluno só aparece para você depois do pagamento. Na chegada, o aluno informa o código da aula, que você digita no painel para registrar a presença. Na primeira aula, um adulto precisa estar em casa.',
+  },
   {
     q: 'E se o aluno faltar?',
-    a: 'Você recebe a aula inteira. Se o aluno justificar a falta, você pode devolver o valor a ele pelo seu painel, em até 24 horas depois da aula. Se quem faltar for você, o aluno recebe o dinheiro de volta.',
+    a: 'Você recebe a aula inteira. Na aula online, a falta fica registrada pela sala: você entrou e o aluno não. Na presencial, sem o código da aula, a equipe confere o que aconteceu. Se o aluno justificar a falta, você pode devolver o valor a ele pelo seu painel, em até 24 horas depois da aula. Se quem faltar for você, ou se você entrar na sala mais de 15 minutos atrasado, o aluno recebe o dinheiro de volta inteiro.',
   },
   {
     q: 'Quem pode participar?',
-    a: 'Professores de qualquer disciplina, do 6º ano ao pré-vestibular, que passem pela verificação de identidade, antecedentes criminais e formação. A plataforma abre aos poucos, por cidade e disciplina; quem está na lista é avisado primeiro.',
+    a: 'Professores de qualquer disciplina, do 6º ano ao pré-vestibular, inclusive quem ainda está cursando a faculdade. Para ganhar o selo de verificado, você envia documento com foto e uma selfie, a certidão de antecedentes criminais da Polícia Federal (gratuita, no gov.br) e o diploma, o histórico ou a declaração de matrícula. A equipe confere tudo antes de liberar o seu perfil, e a certidão precisa ser renovada quando vence.',
   },
-  { q: 'Quando a plataforma abre?', a: 'Estamos formando o primeiro grupo de professores. Quem está na lista é avisado primeiro.' },
-] as const;
+  {
+    q: 'Quando a plataforma abre?',
+    a: 'Estamos formando o primeiro grupo de professores. A abertura é por cidade, quando houver professores verificados suficientes para atender os alunos; a aula online pode atender alunos de todo o Brasil. Quem está na lista recebe primeiro, por e-mail e WhatsApp, o convite para criar a conta e fazer a verificação.',
+  },
+];
+
+const pct = (bps: number) => `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(bps / 100)}%`;
+
+/** Perguntas frequentes com as comissões configuradas no lugar de {busca} e {link}. */
+export function faqWithCommission(bps: { marketplace: number; teacher_link: number }) {
+  return FAQ.map(({ q, a }) => ({ q, a: a.replaceAll('{busca}', pct(bps.marketplace)).replaceAll('{link}', pct(bps.teacher_link)) }));
+}
 
 export const FORM_TITLE = 'Garanta seu lugar entre os primeiros';
 export const FORM_LEAD =

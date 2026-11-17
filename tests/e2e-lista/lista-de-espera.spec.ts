@@ -21,9 +21,11 @@ test('página da lista de espera: seções, perguntas e celular', async ({ page,
   ]) {
     await expect(page.getByRole('heading', { name: h })).toBeVisible();
   }
-  await expect(page.locator('details')).toHaveCount(8);
+  await expect(page.locator('details')).toHaveCount(10);
+  await page.getByText('Quanto custa para o professor?').click();
+  await expect(page.getByText('a Reforce fica com 15% de cada aula paga por alunos que chegam pela busca')).toBeVisible();
   await page.getByText('Preciso ter CNPJ?').click();
-  await expect(page.getByText('Dá para receber como pessoa física')).toBeVisible();
+  await expect(page.getByText('no seu nome, com o seu CPF (ou CNPJ, se tiver)')).toBeVisible();
   await page.getByText('E se o aluno faltar?').click();
   await expect(page.getByText('Se o aluno justificar a falta, você pode devolver o valor a ele pelo seu painel')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);

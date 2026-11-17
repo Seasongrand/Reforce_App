@@ -9,7 +9,7 @@ O que o código trata como configuração provisória, ou que depende de uma dec
 | Cidade de lançamento | Não afeta a Fase 1 (não há busca pública). O raio de atendimento é por professor | Definir a cidade do presencial |
 | Disciplinas | O marketplace abre com o catálogo do documento: Matemática, Física, Química e Redação (`src/domain/catalog.ts`). A lista de espera já aceita as 16 disciplinas do 6º ano ao pré-vestibular (`WAITLIST_SUBJECTS`, mesmos ids para as quatro) | Decidir quais entram na abertura; ampliar o catálogo é editar `catalog.ts` com os ids da lista de espera e rodar `npm run db:seed` |
 | Séries | 6º ao 9º ano, 1ª a 3ª série do ensino médio e pré-vestibular | Confirmar |
-| Comissão | `COMMISSION_MARKETPLACE_BPS=1500` (15%) e `COMMISSION_TEACHER_LINK_BPS=500` (5%), hipóteses do documento. Na Fase 1, toda família chega pelo link do professor e paga 5% | Confirmar; decidir se a taxa cai para famílias recorrentes |
+| Comissão | `COMMISSION_MARKETPLACE_BPS=1500` (15%) e `COMMISSION_TEACHER_LINK_BPS=500` (5%), hipóteses do documento. Na Fase 1, toda família chega pelo link do professor e paga 5%. Desde 17/11, a FAQ dos professores mostra os dois percentuais, lidos destas variáveis | Confirmar; decidir se a taxa cai para famílias recorrentes |
 | Regra de cancelamento | Não há cancelamento nem remarcação pela família (Fase 2). Decidido em 16/11: falta do professor dá reembolso integral automático; falta do aluno paga o professor por inteiro (`STUDENT_NO_SHOW_TEACHER_PCT=100`); aula presencial sem código vai para decisão da equipe | Definir a regra (única ou opções por professor) e o formato da tabela `credits` (§2.2), que ainda não foi criada |
 | Piso de preço | `PRICE_FLOOR_CENTS=0` (sem piso), decidido em 16/11 | Definir o valor |
 | Quem pode dar aula | Sem restrição no código | Só formados e licenciados, ou também universitários? |
@@ -72,7 +72,9 @@ O sistema roda inteiro com adaptadores falsos. Cada adaptador real entra quando 
 - **Asaas, estorno com retenção ativa.** A documentação não descreve; o código chama `refund` e marca a cobrança como devolvida. Teste no ambiente de testes antes de prometer reembolso em um toque (§3.4).
 - **Asaas, devolução parcial com retenção.** Só acontece se `STUDENT_NO_SHOW_TEACHER_PCT` for menor que 100. Confirme como a retenção da subconta se comporta.
 - **Asaas, `daysToExpire` por subconta, mensalidade por subconta e CPF do pagador.** O código manda nome, e-mail e telefone do responsável; se o CPF for obrigatório, é um campo a mais no checkout.
-- **Cartão.** O repasse é pedido 24 horas depois da aula, mas no cartão o valor só fica disponível no prazo de liquidação do provedor (cerca de 32 dias sem antecipação). Decidir quem paga a antecipação, se houver.
+- **Cartão.** O repasse é pedido 24 horas depois da aula, mas no cartão o valor só fica disponível no prazo de liquidação do provedor (cerca de 32 dias sem antecipação). Decidido em 17/11: sem antecipação; a FAQ e a tela de recebimento dizem que, no cartão, o professor recebe em cerca de 30 dias.
+- **Mensalidade da conta de recebimento.** A FAQ não promete “sem mensalidade”: diz que qualquer custo além da comissão é informado antes de o professor aceitar. Decidir depois de confirmar a taxa da Conta Escrow do Asaas e falar com o contador.
+- **Cancelamento e remarcação.** A FAQ não fala do assunto porque o sistema ainda não tem (Fase 2). Definir a regra antes da abertura.
 - **Vídeo.** Entrada restrita por participante, presença por webhook e tempo mínimo de presença para contar a aula como dada (hoje basta entrar). O papel de observador para o responsável existe na interface, mas não aparece nas telas.
 
 ## 5. Jurídico e operação
