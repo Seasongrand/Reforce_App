@@ -14,14 +14,14 @@ const base = {
 };
 
 describe('rotas abertas no modo lista de espera', () => {
-  it.each(['/', '/privacidade', '/api/saude', '/api/lista-de-espera.csv', '/_next/static/chunks/a.js', '/favicon.ico'])(
+  it.each(['/', '/privacidade', '/api/saude', '/api/lista-de-espera.csv', '/_next/static/chunks/a.js', '/favicon.ico', '/opengraph-image', '/opengraph-image-12o0cb', '/icon.svg'])(
     'abre %s',
     (p) => expect(isPathOpenInWaitlistMode(p)).toBe(true),
   );
   it.each([
     '/professor', '/professor/entrar', '/interno', '/interno/entrar', '/p/ana', '/p/ana/reservar', '/pedido/x', '/aula/x',
     '/dev', '/dev/sala/x', '/api/webhooks/pagamento', '/api/dev/pagar', '/api/pedido/x/estado', '/api/interno/arquivos',
-    '/privacidade/../professor',
+    '/privacidade/../professor', '/opengraph-image/x', '/opengraph-image-12o0cb/../professor',
   ])('fecha %s', (p) => expect(isPathOpenInWaitlistMode(p)).toBe(false));
 });
 

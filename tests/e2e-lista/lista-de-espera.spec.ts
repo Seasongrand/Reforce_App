@@ -61,3 +61,17 @@ test('formulário em duas etapas: Enter avança, Voltar mantém, erro do servido
   expect(csv).toContain('bruna.lista@exemplo.com');
   await ctx.close();
 });
+
+test('prévia do link e ícone abrem no modo lista de espera', async ({ page, request }) => {
+  await page.goto('/');
+  const og = await page.locator('meta[property="og:image"]').getAttribute('content');
+  const icon = await page.locator('link[rel="icon"]').first().getAttribute('href');
+  expect(og).toBeTruthy();
+  expect(icon).toBeTruthy();
+  const ogRes = await request.get(new URL(og!).pathname + new URL(og!).search);
+  expect(ogRes.status()).toBe(200);
+  expect(ogRes.headers()['content-type']).toContain('image/png');
+  const iconRes = await request.get(icon!);
+  expect(iconRes.status()).toBe(200);
+  expect(iconRes.headers()['content-type']).toContain('image/svg+xml');
+});

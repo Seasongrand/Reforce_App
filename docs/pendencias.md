@@ -43,7 +43,7 @@ Valores que eu escolhi, sem base no documento, e que você pode querer revisar:
 
 O domínio destrava várias aprovações da semana 0 (§5). Falta:
 
-- **Endereço de produção:** `APP_BASE_URL=https://reforce.app.br`. Os links das mensagens, da página do professor e da sala saem dele.
+- **Endereço de produção:** `APP_BASE_URL=https://reforce.app.br` quando o domínio estiver pronto; até lá, `https://reforce.up.railway.app`. Os links das mensagens, da página do professor, da sala, do convite pelo WhatsApp e da prévia do link saem dele.
 - **E-mail:** verificar o domínio no provedor de e-mail (registros SPF, DKIM e DMARC no DNS) e definir o remetente, por exemplo `SES_FROM=Reforce <naoresponda@reforce.app.br>`.
 - **Google:** a verificação do app pede política de privacidade no mesmo domínio da página inicial e o domínio verificado no Google Search Console (§3.3). As páginas de termos de uso e de política de privacidade ainda não existem no sistema.
 - **Meta (WhatsApp):** a verificação da empresa costuma pedir um site no domínio da empresa.

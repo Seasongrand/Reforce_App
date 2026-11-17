@@ -4,11 +4,17 @@
  * saúde e a exportação protegida. O resto do marketplace fica fechado até os
  * provedores reais (e-mail, pagamento, vídeo) estarem configurados.
  */
-const OPEN = new Set(['/', '/privacidade', '/api/saude', '/api/lista-de-espera.csv', '/favicon.ico', '/robots.txt']);
+const OPEN = new Set([
+  '/', '/privacidade', '/api/saude', '/api/lista-de-espera.csv', '/favicon.ico', '/robots.txt',
+  '/icon.svg', // ícone do site (src/app/icon.svg)
+]);
+
+/** Prévia do link (src/app/(site)/opengraph-image.tsx): dentro de um grupo de rotas, o Next acrescenta um sufixo. */
+const OG_IMAGE = /^\/opengraph-image(-[a-z0-9]+)?$/;
 
 export function isPathOpenInWaitlistMode(pathname: string): boolean {
   if (pathname.includes('..')) return false;
   if (pathname.startsWith('/_next/')) return true;
   const clean = pathname.replace(/\/+$/, '') || '/';
-  return OPEN.has(clean);
+  return OPEN.has(clean) || OG_IMAGE.test(clean);
 }
