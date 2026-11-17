@@ -19,7 +19,7 @@
     "build": "next build",
     "start": "next start",
     "db:seed": "tsx scripts/seed.ts",
-    "test:e2e": "playwright test --trace off"
+    "test:e2e": "playwright test --trace off && playwright test -c playwright.lista.config.ts --trace off"
   },
   "dependencies": {
     "dotenv": "^18.0.10",

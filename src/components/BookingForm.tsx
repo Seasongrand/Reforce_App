@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Temporal } from 'temporal-polyfill';
 import { formatPtBr } from '@/time/zoned';
-import type { BookingState } from '@/app/p/[slug]/reservar/actions';
+import type { BookingState } from '@/app/(marketplace)/p/[slug]/reservar/actions';
 
 type Action = (prev: unknown, f: FormData) => Promise<BookingState>;
 

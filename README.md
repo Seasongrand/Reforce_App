@@ -124,7 +124,7 @@ Configuração inicial, feita uma vez no painel da Railway:
 3. No serviço do site, em **Variables**:
    - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` (referência ao banco criado no passo 2)
    - `SITE_MODE` = `lista_de_espera`
-   - `APP_BASE_URL` = `https://reforce.app.br`
+   - `APP_BASE_URL` = o endereço público do site. Hoje é `https://reforce.up.railway.app`; passa a ser `https://reforce.app.br` quando o domínio estiver pronto. O convite pelo WhatsApp, depois da inscrição, e a prévia do link usam este endereço.
    - `WAITLIST_EXPORT_PASSWORD` = uma senha sua, com 16 caracteres ou mais
    - `CONTACT_EMAIL` = um e-mail que exista, para pedidos sobre dados pessoais
 4. Em **Settings → Deploy**, defina:
