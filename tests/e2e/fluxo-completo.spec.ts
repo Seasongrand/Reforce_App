@@ -92,6 +92,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.fill('#teachingAddress', 'Rua das Flores, 100, Pinheiros');
   await teacher.click('button:has-text("Salvar perfil")');
   await expect(teacher.getByText('Perfil salvo.')).toBeVisible();
+  const photoForm = teacher.getByTestId('foto');
+  await photoForm.locator('input[type=file]').setInputFiles(path.join(FIXTURES, 'foto.jpg'));
+  await photoForm.locator('button:has-text("Enviar foto")').click();
+  await expect(photoForm.getByText('Em análise')).toBeVisible();
 
   await teacher.goto('/professor/verificacao');
   const docs: Array<[string, string[]]> = [
@@ -128,6 +132,16 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
     await doc.locator('button:has-text("Aprovar")').click();
     await expect(doc.getByText('Aprovado')).toBeVisible();
   }
+  // a foto: a equipe compara com o documento; antes da aprovação, a rota pública não a entrega
+  const photoBox = queue.getByTestId('foto');
+  await expect(photoBox.locator('img')).toBeVisible();
+  const photoId = (await q(`SELECT id FROM teacher_photos WHERE status = 'pending'`))[0]!.id as string;
+  expect((await staff.request.get(`/api/fotos/${photoId}`)).status()).toBe(404);
+  await photoBox.locator('button:has-text("Aprovar foto")').click();
+  await expect(photoBox.getByText('Aprovada')).toBeVisible();
+  const publicPhoto = await staff.request.get(`/api/fotos/${photoId}`);
+  expect(publicPhoto.status()).toBe(200);
+  expect(publicPhoto.headers()['content-type']).toBe('image/webp');
   await queue.locator('button:has-text("Aprovar perfil")').click();
   await expect.poll(async () => (await q(`SELECT status FROM teachers WHERE slug = $1`, [SLUG]))[0]!.status).toBe('approved');
   expect(await q(`SELECT count(*)::int AS n FROM teachers_listed`)).toEqual([{ n: 1 }]);
@@ -156,20 +170,30 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // 4. Uma família abre o link, reserva o primeiro horário online e paga por PIX (simulado).
   const fam1 = await (await browser.newContext()).newPage();
   await fam1.goto(`/p/${SLUG}`);
-  await expect(fam1.getByText('Identidade conferida')).toBeVisible();
-  await fam1.getByRole('radio', { name: /Online/ }).click();
-  const slot = fam1.locator('a[data-slot]').first();
-  const slotUrl = new URL((await slot.getAttribute('href'))!, fam1.url()).toString();
-  const slotInstant = (await slot.getAttribute('data-slot'))!;
+  await expect(fam1.getByText('Perfil verificado')).toBeVisible();
+  await expect(fam1.getByRole('img', { name: 'Foto de Ana Souza' })).toBeVisible();
+  await fam1.getByRole('radio', { name: /online/i }).click();
+  const slotButton = fam1.locator('button[data-slot]').first();
+  const slotInstant = (await slotButton.getAttribute('data-slot'))!;
+  await slotButton.click();
+  const reserve = fam1.getByRole('link', { name: 'Reservar' });
+  const slotUrl = new URL((await reserve.getAttribute('href'))!, fam1.url()).toString();
+  expect(slotUrl).toContain(encodeURIComponent(slotInstant));
 
   await identifyAndReserve(fam1, slotUrl, { email: 'maria.e2e@exemplo.com', phone: '(11) 98888-1111' });
   await fam1.waitForURL('**/pedido/**');
-  await expect(fam1.getByTestId('cronometro')).toContainText('reservado');
-  await fam1.click('button:has-text("Pagar com PIX")');
+  await expect(fam1.getByTestId('cronometro')).toContainText('guardado');
+  await fam1.getByRole('button', { name: 'Pagar com PIX' }).click();
   await expect(fam1.getByTestId('pix').locator('img')).toBeVisible();
+  await expect(fam1.getByRole('button', { name: 'Copiar código PIX' })).toBeVisible();
   await fam1.click('button:has-text("Simular pagamento")');
   await fam1.waitForURL('**/confirmado');
-  await expect(fam1.getByTestId('aula-confirmada')).toHaveText('Aula confirmada');
+  await expect(fam1.getByTestId('aula-confirmada')).toHaveText('Aula confirmada!');
+  const icsHref = (await fam1.getByRole('link', { name: 'Adicionar à minha agenda' }).getAttribute('href'))!;
+  const ics = await fam1.request.get(new URL(icsHref, fam1.url()).toString());
+  expect(ics.status()).toBe(200);
+  expect(ics.headers()['content-type']).toContain('text/calendar');
+  expect(await ics.text()).toContain('BEGIN:VCALENDAR');
 
   const [booking] = await q(
     `SELECT b.id, b.starts_at, b.ends_at, b.status FROM bookings b JOIN teachers t ON t.id = b.teacher_id
@@ -194,7 +218,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // 5. Uma segunda família tenta o mesmo horário: recebe "ocupado", nunca um QR.
   const fam2 = await (await browser.newContext()).newPage();
   await identifyAndReserve(fam2, slotUrl, { email: 'outra.e2e@exemplo.com', phone: '(11) 98888-2222' });
-  await expect(fam2.locator('.error')).toContainText('acabou de ser reservado');
+  await expect(fam2.getByTestId('ocupado')).toContainText('acabou de ser reservado');
   await expect(fam2.getByTestId('pix')).toHaveCount(0);
 
   // 6. A aula acontece: professora e aluno entram na sala (falsa) no horário.

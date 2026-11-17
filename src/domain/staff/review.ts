@@ -8,6 +8,7 @@ import { Temporal } from 'temporal-polyfill';
 import { enqueue } from '@/worker/enqueue';
 import type { Deps } from '../deps';
 import { DomainError } from '../errors';
+import { teacherPhotoState } from '../teachers/photo';
 import { KIND_LABEL, listVerifications, type VerificationKind, type VerificationView } from '../teachers/verification';
 
 const today = (now: Temporal.Instant) => now.toZonedDateTimeISO('America/Sao_Paulo').toPlainDate();
@@ -20,6 +21,8 @@ export interface QueueItem {
   status: string;
   verifications: VerificationView[];
   paymentAccount: string | null;
+  /** Foto em análise (prioridade) ou a aprovada, para a equipe comparar com o documento. */
+  photo: { id: string; dataUrl: string; status: 'pending' | 'approved' } | null;
 }
 
 /** Professores em análise e quem tem documento aguardando decisão. */
@@ -30,6 +33,7 @@ export async function reviewQueue(deps: Deps): Promise<QueueItem[]> {
       LEFT JOIN teacher_payment_accounts a ON a.teacher_id = t.id
      WHERE t.status = 'in_review'
         OR EXISTS (SELECT 1 FROM teacher_verifications v WHERE v.teacher_id = t.id AND v.status = 'pending')
+        OR EXISTS (SELECT 1 FROM teacher_photos p WHERE p.teacher_id = t.id AND p.status = 'pending')
      ORDER BY (SELECT min(submitted_at) FROM teacher_verifications v WHERE v.teacher_id = t.id AND v.status = 'pending')
               NULLS LAST, t.created_at`.execute(deps.db);
   return Promise.all(
@@ -38,9 +42,13 @@ export async function reviewQueue(deps: Deps): Promise<QueueItem[]> {
       const latest = (['identity', 'criminal_record', 'education'] as VerificationKind[])
         .map((k) => all.find((v) => v.kind === k))
         .filter((v): v is VerificationView => v !== undefined);
+      const ph = await teacherPhotoState(deps, r.id);
+      const photo = ph.pending
+        ? { id: ph.pending.id, dataUrl: ph.pending.dataUrl, status: 'pending' as const }
+        : ph.approvedId && ph.approvedDataUrl ? { id: ph.approvedId, dataUrl: ph.approvedDataUrl, status: 'approved' as const } : null;
       return {
         teacherId: r.id, name: r.display_name, email: r.email, slug: r.slug, status: r.status,
-        verifications: latest, paymentAccount: r.acc,
+        verifications: latest, paymentAccount: r.acc, photo,
       };
     }),
   );
@@ -96,6 +104,9 @@ export async function approveTeacher(deps: Deps, input: { teacherId: string; sta
      WHERE teacher_id = ${input.teacherId} AND status = 'approved'
        AND (valid_until IS NULL OR valid_until >= ${today(now).toString()}::date)`.execute(deps.db);
   if (ok.rows[0]!.n !== 3) throw new DomainError('conflict', 'aprove antes as três verificações (identidade, antecedentes e formação)');
+  if (!(await teacherPhotoState(deps, input.teacherId)).approvedId) {
+    throw new DomainError('conflict', 'aprove a foto do professor antes do perfil');
+  }
   const acc = await deps.db.selectFrom('teacher_payment_accounts').select('status').where('teacher_id', '=', input.teacherId)
     .where('status', '=', 'active').executeTakeFirst();
   if (!acc) throw new DomainError('conflict', 'a conta de recebimento do professor ainda não está ativa');

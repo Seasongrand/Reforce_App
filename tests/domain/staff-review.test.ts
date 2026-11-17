@@ -34,6 +34,11 @@ async function staff() {
   return (await q(`INSERT INTO staff_users (email, name) VALUES ('ops@exemplo.com', 'Ops') RETURNING id`))[0]!.id as string;
 }
 
+/** Foto aprovada gravada direto no banco (o envio é testado em teacher-photo.test.ts). */
+async function approvedPhoto(teacherId: string) {
+  await q(`INSERT INTO teacher_photos (teacher_id, image, width, height, status) VALUES ($1, '\\x00', 512, 512, 'approved')`, [teacherId]);
+}
+
 /** Professor em análise, com os três documentos enviados e conta aberta. */
 async function teacherInReview() {
   const id = await insertTeacher(testPool());
@@ -95,6 +100,8 @@ describe('fila e decisões', () => {
     await expect(approveTeacher(deps(), { teacherId: t.teacherId, staffId: s }, NOW)).rejects.toThrow(/três verificações/);
     await decideVerification(deps(), { verificationId: t.verifications.criminal_record, staffId: s, decision: 'approved' }, NOW);
     await decideVerification(deps(), { verificationId: t.verifications.education, staffId: s, decision: 'approved' }, NOW);
+    await expect(approveTeacher(deps(), { teacherId: t.teacherId, staffId: s }, NOW)).rejects.toThrow(/foto/);
+    await approvedPhoto(t.teacherId);
     await approveTeacher(deps(), { teacherId: t.teacherId, staffId: s }, NOW);
     expect(await q(`SELECT id FROM teachers_listed`)).toEqual([{ id: t.teacherId }]);
     expect(await reviewQueue(deps())).toEqual([]);
@@ -106,6 +113,7 @@ describe('fila e decisões', () => {
     for (const k of ['identity', 'criminal_record', 'education'] as const) {
       await decideVerification(deps(), { verificationId: t.verifications[k], staffId: s, decision: 'approved' }, NOW);
     }
+    await approvedPhoto(t.teacherId);
     await approveTeacher(deps(), { teacherId: t.teacherId, staffId: s }, NOW);
     await setTeacherStatus(deps(), { teacherId: t.teacherId, staffId: s, status: 'suspended' }, NOW);
     expect(await q(`SELECT id FROM teachers_listed`)).toEqual([]);
@@ -119,6 +127,7 @@ describe('vencimento da certidão', () => {
     for (const k of ['identity', 'criminal_record', 'education'] as const) {
       await decideVerification(deps(), { verificationId: t.verifications[k], staffId: s, decision: 'approved' }, NOW);
     }
+    await approvedPhoto(t.teacherId);
     await approveTeacher(deps(), { teacherId: t.teacherId, staffId: s }, NOW);
     expect(await expireVerifications(deps(), NOW.add({ hours: 24 * 100 }))).toBe(0);
     expect(await expireVerifications(deps(), NOW.add({ hours: 24 * 200 }))).toBe(1);

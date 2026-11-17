@@ -10,12 +10,15 @@ export function ActionForm({
   submitLabel,
   successMessage,
   className,
+  buttonClassName,
 }: {
   action: (prev: unknown, form: FormData) => Promise<ActionState<unknown>>;
   children?: React.ReactNode;
   submitLabel: string;
   successMessage?: string;
   className?: string;
+  /** Classes do botão (padrão: .btn, o visual dos painéis). */
+  buttonClassName?: string;
 }) {
   const [state, run, pending] = useActionState(action, null);
   return (
@@ -23,7 +26,7 @@ export function ActionForm({
       {children}
       {state && !state.ok && <p className="error" role="alert">{state.error}</p>}
       {state?.ok && successMessage && <p className="notice" role="status">{successMessage}</p>}
-      <button className="btn" disabled={pending}>{pending ? 'Salvando…' : submitLabel}</button>
+      <button className={buttonClassName ?? 'btn'} disabled={pending}>{pending ? 'Salvando…' : submitLabel}</button>
     </form>
   );
 }

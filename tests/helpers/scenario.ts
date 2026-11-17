@@ -3,6 +3,7 @@
  * verificações em dia, conta de recebimento ativa), serviço, regra de terça
  * 14h–18h e famílias com aluno.
  */
+import sharp from 'sharp';
 import { Temporal } from 'temporal-polyfill';
 import type { Deps } from '@/domain/deps';
 import { providers } from '@/providers';
@@ -27,6 +28,13 @@ export interface ServiceOpts {
   duration_min?: number;
   buffer_before_min?: number;
   buffer_after_min?: number;
+}
+
+let cachedWebp: Buffer | null = null;
+/** Foto de teste: WEBP 512×512 lilás. */
+async function tinyWebp(): Promise<Buffer> {
+  cachedWebp ??= await sharp({ create: { width: 512, height: 512, channels: 3, background: '#e4e0ff' } }).webp().toBuffer();
+  return cachedWebp;
 }
 
 export async function listedTeacher(
@@ -65,6 +73,10 @@ export async function listedTeacher(
       [teacherId],
     );
   }
+  await db.query(
+    `INSERT INTO teacher_photos (teacher_id, image, width, height, status) VALUES ($1, $2, 512, 512, 'approved')`,
+    [teacherId, await tinyWebp()],
+  );
   const serviceId = await insertService(db, teacherId, o.service ?? {});
   await insertRule(db, teacherId, 2, '14:00', '18:00');
   return { teacherId, serviceId };

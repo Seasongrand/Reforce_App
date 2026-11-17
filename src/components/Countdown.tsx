@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-/** Cronômetro da reserva temporária; ao zerar, recarrega a página. */
+/** Faixa amarela com o tempo em que o horário fica guardado; ao zerar, recarrega a página. */
 export function Countdown({ until }: { until: string }) {
   const router = useRouter();
   const end = new Date(until).getTime();
@@ -20,13 +20,21 @@ export function Countdown({ until }: { until: string }) {
     }, 1000);
     return () => clearInterval(t);
   }, [end, router]);
-  if (left === null) return <p className="notice" data-testid="cronometro">Horário reservado para você.</p>;
-  if (left <= 0) return <p className="error">O tempo para pagar acabou.</p>;
+  const bar = 'sticky top-0 z-10 -mx-5 flex items-center gap-2.5 bg-yellow-400 px-5 py-3 text-[15px] font-semibold text-indigo-950';
+  const icon = (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="13" r="8" />
+      <path d="M12 9v4l2 2" />
+      <path d="M9 2h6" />
+    </svg>
+  );
+  if (left === null) return <p className={bar} data-testid="cronometro">{icon}Horário guardado para você.</p>;
+  if (left <= 0) return <p className={bar} role="alert">{icon}O tempo para pagar acabou.</p>;
   const m = Math.floor(left / 60000);
   const s = Math.floor((left % 60000) / 1000);
   return (
-    <p className="notice" data-testid="cronometro">
-      Horário reservado para você por <strong>{m}:{String(s).padStart(2, '0')}</strong>.
+    <p className={bar} data-testid="cronometro" role="timer">
+      {icon}Horário guardado para você por <span className="font-display text-lg">{m}:{String(s).padStart(2, '0')}</span>
     </p>
   );
 }

@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { ActionForm } from '@/components/ActionForm';
 import { BRAZIL_TIMEZONES } from '@/domain/teachers/profile';
+import { teacherPhotoState } from '@/domain/teachers/photo';
 import { zoneLabel } from '@/time/zoned';
 import { appDeps } from '@/server/app';
 import { requireTeacher } from '@/server/session';
-import { saveProfileAction } from '../actions';
+import { saveProfileAction, uploadPhotoAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,10 +20,43 @@ export default async function TeacherProfilePage() {
       .map((r) => `${r.subject_id}:${r.grade_level_id}`),
   );
   const base = appDeps().config.appBaseUrl;
+  const photo = await teacherPhotoState(appDeps(), teacherId);
   return (
     <div className="space-y-6">
       <Link href="/professor" className="text-sm text-brand">← Painel</Link>
       <h1 className="text-2xl font-semibold">Seu perfil</h1>
+      <section className="card space-y-3" data-testid="foto">
+        <h2 className="text-lg font-medium">Sua foto</h2>
+        <p className="text-sm text-slate-600">
+          Uma foto do rosto, de frente e com boa luz. A equipe confere com o seu documento de identidade antes de ela
+          aparecer na sua página.
+        </p>
+        <div className="flex flex-wrap gap-4">
+          {photo.approvedDataUrl && (
+            <figure className="space-y-1 text-center text-xs text-slate-600">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photo.approvedDataUrl} alt="Sua foto aprovada" width={96} height={96} className="rounded-xl" />
+              <figcaption>Aprovada</figcaption>
+            </figure>
+          )}
+          {photo.pending && (
+            <figure className="space-y-1 text-center text-xs text-slate-600">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photo.pending.dataUrl} alt="Sua foto em análise" width={96} height={96} className="rounded-xl" />
+              <figcaption>Em análise</figcaption>
+            </figure>
+          )}
+        </div>
+        {photo.rejectedNote && <p className="error">Foto recusada: {photo.rejectedNote}. Envie outra.</p>}
+        {!photo.approvedDataUrl && !photo.pending && !photo.rejectedNote && (
+          <p className="text-sm text-slate-600">Nenhuma foto enviada ainda. Sem foto aprovada, o perfil não é aprovado.</p>
+        )}
+        <ActionForm action={uploadPhotoAction} submitLabel="Enviar foto" successMessage="Foto enviada para análise." className="space-y-2">
+          <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required aria-label="Foto"
+            className="block text-sm" />
+          <p className="text-xs text-slate-500">JPG, PNG ou WEBP, até 5 MB.</p>
+        </ActionForm>
+      </section>
       <ActionForm action={saveProfileAction} submitLabel="Salvar perfil" successMessage="Perfil salvo.">
         <div>
           <label className="label" htmlFor="displayName">Nome na página</label>

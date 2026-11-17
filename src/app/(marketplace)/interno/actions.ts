@@ -6,6 +6,7 @@ import { decideOutcome, type Outcome } from '@/domain/lessons/close';
 import { appDeps, now } from '@/server/app';
 import { errorMessage, type ActionState } from '@/server/action-result';
 import { requireStaff } from '@/server/session';
+import { decideTeacherPhoto } from '@/domain/teachers/photo';
 
 const s = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 
@@ -24,6 +25,12 @@ export async function decideVerificationAction(_: unknown, f: FormData): Promise
   return run(async (staffId) => decideVerification(appDeps(), {
     verificationId: s(f, 'verificationId'), staffId, decision: s(f, 'decision') as 'approved' | 'rejected',
     note: s(f, 'note'), validUntil: s(f, 'validUntil') || undefined,
+  }, await now()), '/interno/verificacoes');
+}
+
+export async function decidePhotoAction(_: unknown, f: FormData): Promise<ActionState> {
+  return run(async (staffId) => decideTeacherPhoto(appDeps(), {
+    photoId: s(f, 'photoId'), staffId, approve: s(f, 'decision') === 'approved', note: s(f, 'note'),
   }, await now()), '/interno/verificacoes');
 }
 

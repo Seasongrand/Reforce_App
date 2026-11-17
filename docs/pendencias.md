@@ -62,6 +62,7 @@ O sistema roda inteiro com adaptadores falsos. Cada adaptador real entra quando 
 - **Google Calendar** (`CALENDAR_PROVIDER=google`): projeto no Google Cloud, OAuth (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`), chave para cifrar os tokens (`CALENDAR_TOKEN_ENCRYPTION_KEY`) e pedido de verificação dos escopos `calendar.freebusy` e `calendar.app.created`.
 - **Geocodificação de CEP**: serviço a escolher. Hoje o adaptador falso conhece poucos CEPs; sem coordenada, a verificação do raio do professor é pulada.
 - **Armazenamento de arquivos**: S3 ou equivalente, privado e cifrado. Hoje os documentos ficam cifrados (AES-256-GCM) em disco local, em `FILE_STORAGE_DIR`.
+- **Fotos dos professores**: ficam no PostgreSQL, já reduzidas (512×512, WEBP, cerca de 50 KB, sem metadados), na tabela `teacher_photos`, e saem por `/api/fotos/<id>` com cache longo. Com milhares de professores, vale passar para armazenamento de arquivos com CDN.
 
 ## 4. Pontos a validar com os provedores
 
