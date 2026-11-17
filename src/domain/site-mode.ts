@@ -6,6 +6,7 @@
  */
 const OPEN = new Set([
   '/', '/privacidade', '/api/saude', '/api/lista-de-espera.csv', '/favicon.ico', '/robots.txt',
+  '/professores', // página dos professores (também em "/" neste modo)
   '/icon.svg', // ícone do site (src/app/icon.svg)
 ]);
 

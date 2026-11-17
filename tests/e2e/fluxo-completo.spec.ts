@@ -169,7 +169,25 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
 
   // 4. Uma família abre o link, reserva o primeiro horário online e paga por PIX (simulado).
   const fam1 = await (await browser.newContext()).newPage();
-  await fam1.goto(`/p/${SLUG}`);
+  // a vitrine: sem professor de Química, estado vazio; com Matemática, a professora aparece
+  await fam1.goto('/buscar?disciplina=3&serie=9&modalidade=online');
+  await expect(fam1.getByText('Nenhum professor com horário livre')).toBeVisible();
+  await fam1.goto('/');
+  await fam1.getByLabel('Disciplina').selectOption({ label: 'Matemática' });
+  await fam1.getByLabel('Série').selectOption({ label: '9º ano' });
+  await fam1.getByRole('radio', { name: 'Online' }).check();
+  await fam1.getByRole('button', { name: 'Buscar professores' }).click();
+  await fam1.waitForURL('**/buscar?**');
+  const card = fam1.getByRole('link', { name: /Ana Souza/ });
+  await expect.poll(async () => {
+    if ((await card.count()) > 0) return true;
+    await fam1.reload(); // o retrato da agenda é refeito pelo worker logo depois da configuração
+    return false;
+  }, { timeout: 60_000 }).toBe(true);
+  await expect(card).toContainText('Perfil verificado');
+  await expect(card).toContainText('Novo na Reforce');
+  await card.click();
+  await fam1.waitForURL(`**/p/${SLUG}`);
   await expect(fam1.getByText('Perfil verificado')).toBeVisible();
   await expect(fam1.getByRole('img', { name: 'Foto de Ana Souza' })).toBeVisible();
   await fam1.getByRole('radio', { name: /online/i }).click();
