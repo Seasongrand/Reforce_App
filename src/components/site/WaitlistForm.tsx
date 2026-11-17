@@ -9,13 +9,9 @@ import { startTransition, useActionState, useEffect, useRef, useState } from 're
 import Link from 'next/link';
 import type { ActionState } from '@/server/action-result';
 import { step1Errors, stepOfServerError, type Step1Field } from '@/lib/waitlist-step1';
+import { Chips, FormAlert, Honeypot, INPUT, LABEL, SuccessMark, WhatsAppInvite, type Option } from './form-ui';
 
-type Option = { value: string; label: string };
 type Result = ActionState<{ created: boolean }>;
-
-const INPUT =
-  'block min-h-12 w-full rounded-xl border border-site-field bg-white px-3.5 text-[15px] font-normal text-indigo-950 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/30 aria-[invalid=true]:border-red-600';
-const LABEL = 'flex flex-col gap-1.5 text-sm font-semibold';
 
 const STEP1: { name: Step1Field; label: string; type?: string; autoComplete: string; placeholder?: string; maxLength?: number }[] = [
   { name: 'name', label: 'Nome completo', autoComplete: 'name' },
@@ -82,37 +78,21 @@ export function WaitlistForm({
   }
 
   if (state?.ok) {
-    const invite = `https://wa.me/?text=${encodeURIComponent(INVITE_TEXT + inviteUrl)}`;
     return (
       <div role="status" data-testid="lista-ok" className="flex flex-col items-start gap-3.5">
-        <span className="flex size-14 items-center justify-center rounded-2xl bg-green-100 text-green-800">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
-        </span>
+        <SuccessMark />
         <h3 className="font-display text-3xl font-bold">Inscrição recebida!</h3>
         <p className="leading-relaxed text-site-muted">
           {state.data.created ? 'Vamos entrar em contato' : 'Atualizamos seus dados e vamos entrar em contato'} quando abrirmos a
           seleção de professores na sua região e disciplina.
         </p>
         <p className="mt-2 font-semibold">Conhece outro professor que ia gostar?</p>
-        <a
-          href={invite}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex min-h-13 items-center rounded-2xl bg-green-700 px-5 font-semibold text-white hover:bg-green-800"
-        >
-          Convidar pelo WhatsApp
-        </a>
+        <WhatsAppInvite text={INVITE_TEXT + inviteUrl} label="Convidar pelo WhatsApp" />
       </div>
     );
   }
 
-  const alert = serverError && serverError.step === step && (
-    <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-800">
-      {serverError.message}
-    </p>
-  );
+  const alert = serverError && serverError.step === step && <FormAlert message={serverError.message} />;
 
   const field = ({ name, label, type, autoComplete, placeholder, maxLength }: (typeof STEP1)[number]) => (
     <div key={name}>
@@ -135,22 +115,6 @@ export function WaitlistForm({
         </p>
       )}
     </div>
-  );
-
-  const chips = (name: string, legend: string, options: Option[]) => (
-    <fieldset>
-      <legend className="mb-2 text-sm font-semibold">{legend}</legend>
-      <div className="flex flex-wrap gap-2">
-        {options.map((o) => (
-          <label
-            key={o.value}
-            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-site-field px-4 text-sm has-checked:border-indigo-600 has-checked:bg-indigo-50"
-          >
-            <input type="checkbox" name={name} value={o.value} className="size-4 accent-indigo-600" /> {o.label}
-          </label>
-        ))}
-      </div>
-    </fieldset>
   );
 
   const header = (n: 1 | 2, title: string) => (
@@ -207,9 +171,9 @@ export function WaitlistForm({
       <div hidden={step !== 2} className="flex flex-col gap-5">
         {header(2, 'Suas aulas')}
         {alert}
-        {chips('subject', 'Disciplinas', subjects)}
-        {chips('stage', 'Etapas', stages)}
-        {chips('modality', 'Modalidade', modalities)}
+        <Chips name="subject" legend="Disciplinas" options={subjects} />
+        <Chips name="stage" legend="Etapas" options={stages} />
+        <Chips name="modality" legend="Modalidade" options={modalities} />
         <label className={LABEL}>
           Formação
           <select className={INPUT} name="education" required defaultValue="">
@@ -234,13 +198,7 @@ export function WaitlistForm({
             className="block w-full rounded-xl border border-dashed border-site-field px-3.5 py-3 text-sm font-normal file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-3 file:py-2 file:font-semibold file:text-indigo-950" />
           <span className="text-[13px] font-normal text-site-muted">PDF, DOC, DOCX ou ODT, até 5 MB. Só a equipe da Reforce vê.</span>
         </label>
-        {/* campo-armadilha para robôs: escondido de pessoas e de leitores de tela */}
-        <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
-          <label>
-            Site
-            <input name="website" tabIndex={-1} autoComplete="off" />
-          </label>
-        </div>
+        <Honeypot />
         <label className="flex items-start gap-2.5 text-sm leading-normal text-site-muted">
           <input type="checkbox" name="consent" required className="mt-1 size-4 accent-indigo-600" />
           <span>

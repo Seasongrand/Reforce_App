@@ -153,7 +153,7 @@ export async function joinTeacherWaitlist(
 }
 
 /** Célula de CSV: neutraliza fórmula de planilha e escapa aspas, vírgulas e quebras de linha. */
-function cell(value: string): string {
+export function csvCell(value: string): string {
   let v = value;
   if (/^[=+\-@\t\r]/.test(v) && !/^\+\d{8,15}$/.test(v)) v = `'${v}`;
   return /[",\r\n]/.test(v) ? `"${v.replaceAll('"', '""')}"` : v;
@@ -177,15 +177,18 @@ export async function waitlistCsv(deps: Pick<WaitlistDeps, 'db'> & { config: Pic
       r.modalities.map((m) => MODALITIES[m]).join('; '),
       EDUCATION[r.education], r.notes ?? '', instantFromDb(r.created_at).toString(),
       r.has_cv ? `${deps.config.appBaseUrl}/api/lista-de-espera/curriculo/${r.id}` : '',
-    ].map(cell).join(','),
+    ].map(csvCell).join(','),
   );
   return [header, ...lines].join('\r\n') + '\r\n';
 }
 
 const digest = (s: string) => createHash('sha256').update(s).digest();
 
-/** Senha da equipe (HTTP Basic; o usuário é ignorado). Devolve a resposta de recusa, ou null se a senha confere. */
-function refuse(deps: WaitlistDeps, authorization: string | null): Response | null {
+/**
+ * Senha da equipe para as planilhas e os currículos (HTTP Basic; o usuário é
+ * ignorado). Devolve a resposta de recusa, ou null se a senha confere.
+ */
+export function refuseWithoutPassword(deps: Pick<WaitlistDeps, 'config'>, authorization: string | null): Response | null {
   const password = deps.config.waitlistExportPassword;
   if (!password) return new Response('não encontrado', { status: 404 });
   const given = authorization?.startsWith('Basic ')
@@ -202,7 +205,7 @@ function refuse(deps: WaitlistDeps, authorization: string | null): Response | nu
 
 /** Currículo de uma inscrição, com a mesma senha da planilha. */
 export async function serveWaitlistCv(deps: WaitlistDeps, authorization: string | null, waitlistId: string): Promise<Response> {
-  const refused = refuse(deps, authorization);
+  const refused = refuseWithoutPassword(deps, authorization);
   if (refused) return refused;
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(waitlistId)) {
     return new Response('não encontrado', { status: 404 });
@@ -227,7 +230,7 @@ export async function serveWaitlistCv(deps: WaitlistDeps, authorization: string 
 
 /** Planilha da lista de espera, protegida por senha (HTTP Basic; o usuário é ignorado). */
 export async function serveWaitlistExport(deps: WaitlistDeps, authorization: string | null): Promise<Response> {
-  const refused = refuse(deps, authorization);
+  const refused = refuseWithoutPassword(deps, authorization);
   if (refused) return refused;
   return new Response('﻿' + (await waitlistCsv(deps)), {
     status: 200,

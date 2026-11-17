@@ -14,7 +14,10 @@ export function Hero() {
           <h1 className="font-display text-[clamp(2.5rem,6vw,4.25rem)] font-bold leading-[1.12] tracking-tight">
             <span className="block">{HERO.titleFirst}</span>
             {HERO.titleBefore}
-            <mark className="whitespace-nowrap rounded-lg bg-yellow-400 px-2 text-indigo-950">{HERO.titleMark}</mark>
+            {/* inline-block com altura própria: a faixa amarela não sobe até a perna do "g" da linha de cima */}
+            <mark className="mt-[0.14em] inline-block whitespace-nowrap rounded-lg bg-yellow-400 px-2 py-[0.04em] leading-none text-indigo-950">
+              {HERO.titleMark}
+            </mark>
             {HERO.titleAfter}
           </h1>
           <p className="text-lg leading-relaxed text-site-on-dark">{HERO.lead}</p>
