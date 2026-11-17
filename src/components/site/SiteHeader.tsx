@@ -15,8 +15,9 @@ export function SiteHeader({ cta = true }: { cta?: boolean }) {
           Reforce
         </Link>
         {open ? (
-          <nav aria-label="Principal" className="flex items-center gap-1 text-[15px] font-semibold">
+          <nav aria-label="Principal" className="flex flex-wrap items-center gap-1 text-[15px] font-semibold">
             <Link href="/buscar" className="inline-flex min-h-11 items-center rounded-xl px-3 hover:bg-indigo-900">Buscar professor</Link>
+            <Link href="/conta" className="inline-flex min-h-11 items-center rounded-xl px-3 hover:bg-indigo-900">Minha conta</Link>
             <Link href="/professores" className="inline-flex min-h-11 items-center rounded-xl bg-yellow-400 px-4 text-indigo-950 hover:bg-yellow-300">
               Seja professor
             </Link>
