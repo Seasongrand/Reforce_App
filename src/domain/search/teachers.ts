@@ -61,10 +61,14 @@ export async function searchTeachers(
   }>(CompiledQuery.raw(`${SEARCH_SQL}, ts.teacher_id\n LIMIT ${PAGE_SIZE + 1} OFFSET ${offset}`, params));
   const page = rows.slice(0, PAGE_SIZE);
   if (page.length === 0) return { ok: true, items: [], hasMore: false };
-  const extra = await sql<{ id: string; slug: string; display_name: string; headline: string | null; photo_id: string | null }>`
-    SELECT t.id, t.slug, t.display_name, t.headline,
+  const extra = await sql<{
+    id: string; slug: string; display_name: string; headline: string | null; photo_id: string | null;
+    rating_sum: number; rating_count: number;
+  }>`
+    SELECT t.id, t.slug, t.display_name, t.headline, ts.rating_sum, ts.rating_count,
            (SELECT p.id FROM teacher_photos p WHERE p.teacher_id = t.id AND p.status = 'approved') AS photo_id
-      FROM teachers t WHERE t.id = ANY(${page.map((r) => r.teacher_id)}::uuid[])`.execute(deps.db);
+      FROM teachers t JOIN teacher_search ts ON ts.teacher_id = t.id
+     WHERE t.id = ANY(${page.map((r) => r.teacher_id)}::uuid[])`.execute(deps.db);
   const byId = new Map(extra.rows.map((r) => [r.id, r]));
   return {
     ok: true,
@@ -80,8 +84,9 @@ export async function searchTeachers(
         minPriceCents: r.min_price_cents,
         nextSlot: instantFromDb(r.next_slot_at).toString(),
         slotsWeek: r.slots_7d,
-        rating: r.avaliacoes > 0 ? Number(r.nota) : null,
-        reviews: r.avaliacoes,
+        // a nota da consulta (média bayesiana) só ordena; na tela vai a média real das notas
+        rating: t.rating_count > 0 ? Math.round((t.rating_sum / t.rating_count) * 10) / 10 : null,
+        reviews: t.rating_count,
         km: r.km === null ? null : Number(r.km),
       };
     }),
