@@ -22,7 +22,7 @@ export default function PrivacyPage() {
       <h2 className="pt-2 font-display text-xl font-bold text-indigo-950">Que dados coletamos</h2>
       <p>
         Nome, e-mail, WhatsApp (se você informar), cidade e UF, disciplinas, etapas e modalidades em que dá aula, sua
-        formação e a mensagem opcional que você escrever, além da data da inscrição e da sua autorização de contato.
+        formação, o currículo (se você enviar) e a mensagem opcional que você escrever, além da data da inscrição e da sua autorização de contato.
       </p>
       <h2 className="pt-2 font-display text-xl font-bold text-indigo-950">Para que usamos</h2>
       <p>
