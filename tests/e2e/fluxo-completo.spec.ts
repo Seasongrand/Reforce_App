@@ -182,9 +182,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
 
   await identifyAndReserve(fam1, slotUrl, { email: 'maria.e2e@exemplo.com', phone: '(11) 98888-1111' });
   await fam1.waitForURL('**/pedido/**');
-  await expect(fam1.getByTestId('cronometro')).toContainText('reservado');
-  await fam1.click('button:has-text("Pagar com PIX")');
+  await expect(fam1.getByTestId('cronometro')).toContainText('guardado');
+  await fam1.getByRole('button', { name: 'Pagar com PIX' }).click();
   await expect(fam1.getByTestId('pix').locator('img')).toBeVisible();
+  await expect(fam1.getByRole('button', { name: 'Copiar código PIX' })).toBeVisible();
   await fam1.click('button:has-text("Simular pagamento")');
   await fam1.waitForURL('**/confirmado');
   await expect(fam1.getByTestId('aula-confirmada')).toHaveText('Aula confirmada');

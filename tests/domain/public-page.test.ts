@@ -91,6 +91,9 @@ describe('pedido da família', () => {
       status: 'awaiting_payment', bookingStatus: 'held', totalCents: 12100, teacherName: 'Ana Souza',
       holdExpiresAt: r.holdExpiresAt.toString(), payment: null,
     });
+    const view = await orderView(deps(), r.orderId, f.guardianId, NOW);
+    expect(view!.teacherPhotoUrl).toMatch(/^\/api\/fotos\//);
+    expect(view!.studentFirstName).toBeTruthy();
     await startPayment(deps(), { orderId: r.orderId, guardianId: f.guardianId, method: 'pix' }, NOW);
     const v = await orderView(deps(), r.orderId, f.guardianId, NOW);
     expect(v!.payment).toMatchObject({ method: 'pix', status: 'pending' });
