@@ -24,11 +24,14 @@ export default function Image() {
           gap: 36,
         }}
       >
-        <div style={{ fontSize: 44, fontWeight: 700 }}>Reforce</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 20, fontSize: 30, color: '#DDDBFF' }}>
+          <span style={{ fontSize: 44, fontWeight: 700, color: '#FFFFFF' }}>Reforce</span>
+          <span>Mais tempo para ensinar. Mais confiança para aprender.</span>
+        </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 24, fontSize: 92, fontWeight: 700, lineHeight: 1.05 }}>
-          <span>Ensine.</span>
-          <span style={{ background: '#FACC15', color: '#1E1B4B', padding: '0 16px', borderRadius: 14 }}>A cobrança</span>
-          <span>é com a gente.</span>
+          <span>Você ensina.</span>
+          <span>A gente</span>
+          <span style={{ background: '#FACC15', color: '#1E1B4B', padding: '0 16px', borderRadius: 14 }}>cuida do resto.</span>
         </div>
         <div
           style={{
