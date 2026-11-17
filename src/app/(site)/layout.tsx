@@ -4,7 +4,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 
 const title = 'Reforce · Lista de espera de professores';
 const description =
-  'Ensine. A cobrança é com a gente. Página própria, agenda, cobrança por PIX ou cartão e sala de aula online. Entre na lista de espera dos primeiros professores.';
+  'Você ensina. A gente cuida do resto. Página própria, agenda, pagamento por PIX ou cartão e sala de aula online. Entre na lista de espera dos primeiros professores.';
 
 export const metadata: Metadata = {
   title,

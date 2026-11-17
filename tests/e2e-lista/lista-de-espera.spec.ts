@@ -9,7 +9,8 @@ import { LISTA_BASE, LISTA_PASSWORD } from './env';
 test('página da lista de espera: seções, perguntas e celular', async ({ page, request }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ensine. A cobrança é com a gente.');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Você ensina. A gente cuida do resto.');
+  await expect(page.getByText('Mais tempo para ensinar. Mais confiança para aprender.')).toBeVisible();
   for (const h of [
     'Quatro passos até a primeira aula paga',
     'Você cuida da aula. O resto é automático.',
