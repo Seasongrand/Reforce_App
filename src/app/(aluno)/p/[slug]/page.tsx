@@ -48,6 +48,12 @@ export default async function TeacherPublicPage({ params }: { params: Promise<{ 
                 Perfil verificado
               </span>
             )}
+            {page.rating && (
+              <a href="#avaliacoes" className="text-sm font-semibold text-indigo-950">
+                <span aria-hidden="true" className="text-yellow-500">★</span> {page.rating.average.toFixed(1).replace('.', ',')}
+                <span className="font-normal text-site-muted"> · {page.rating.count} {page.rating.count === 1 ? 'avaliação' : 'avaliações'}</span>
+              </a>
+            )}
           </div>
         </div>
         {page.headline && <p className="text-[17px] font-medium leading-normal">{page.headline}</p>}
@@ -107,6 +113,27 @@ export default async function TeacherPublicPage({ params }: { params: Promise<{ 
         <ProfileBooking slug={page.slug} teacherTz={page.timezone} services={page.services} />
       ) : (
         <p className="notice mt-7">Agenda indisponível no momento.</p>
+      )}
+
+      {page.rating && (
+        <section id="avaliacoes" className="space-y-3 pt-7">
+          <h2 className="font-display text-xl font-bold">
+            Avaliações <span className="text-base font-semibold text-site-muted">
+              <span aria-hidden="true" className="text-yellow-500">★</span> {page.rating.average.toFixed(1).replace('.', ',')} · {page.rating.count}
+            </span>
+          </h2>
+          <ul className="space-y-3">
+            {page.reviews.map((r, i) => (
+              <li key={i} className="space-y-1.5 rounded-2xl border border-site-line p-4">
+                <p className="text-sm">
+                  <span aria-label={`${r.rating} de 5`} className="text-yellow-500">{'★'.repeat(r.rating)}<span className="text-site-line">{'★'.repeat(5 - r.rating)}</span></span>
+                  <span className="text-site-muted"> · {r.author} · {r.date.split('-').reverse().join('/')}</span>
+                </p>
+                {r.comment && <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#3b3870]">{r.comment}</p>}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <section className="pt-7">

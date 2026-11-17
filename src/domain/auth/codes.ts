@@ -12,7 +12,7 @@ import { instantFromDb } from '@/time/zoned';
 import type { Deps } from '../deps';
 import { DomainError } from '../errors';
 
-export type CodePurpose = 'teacher_login' | 'staff_login' | 'guardian_checkout';
+export type CodePurpose = 'teacher_login' | 'staff_login' | 'guardian_checkout' | 'guardian_login';
 export const CODE_TTL_MIN = 10;
 export const CODE_MAX_ATTEMPTS = 5;
 export const CODES_PER_HOUR = 5;

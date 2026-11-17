@@ -93,4 +93,6 @@ test('a página dos professores também fica em /professores; a vitrine está fe
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Você ensina. A gente cuida do resto.');
   expect((await request.get('/buscar')).status()).toBe(404);
   expect((await request.get('/buscar?disciplina=1&serie=9')).status()).toBe(404);
+  expect((await request.get('/conta')).status()).toBe(404);
+  expect((await request.get('/conta/entrar')).status()).toBe(404);
 });

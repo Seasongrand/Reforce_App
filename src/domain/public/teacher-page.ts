@@ -10,6 +10,7 @@ import { availableSlots } from '../availability';
 import { subjectName } from '../catalog';
 import type { Deps } from '../deps';
 import { approvedPhotoId } from '../teachers/photo';
+import { publicReviews, type PublicReviews } from '../reviews';
 
 export interface PublicService {
   id: string;
@@ -40,6 +41,9 @@ export interface PublicTeacherPage {
   modalities: Array<PublicService['modality']>;
   /** O horário livre mais próximo entre todos os serviços (ISO), ou null. */
   nextSlot: string | null;
+  /** Média real e quantidade, só quando há avaliações publicadas. */
+  rating: PublicReviews['rating'];
+  reviews: PublicReviews['reviews'];
 }
 
 export const PUBLIC_DAYS = 14;
@@ -101,5 +105,6 @@ export async function publicTeacherPage(deps: Deps, slug: string, now: Temporal.
     minPriceCents: services.length > 0 ? Math.min(...services.map((s) => s.priceCents)) : null,
     modalities: order.filter((m) => services.some((s) => s.modality === m)),
     nextSlot: allSlots[0] ?? null,
+    ...(await publicReviews(deps, t.id)),
   };
 }
