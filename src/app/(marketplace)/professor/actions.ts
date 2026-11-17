@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { updateTeacherProfile } from '@/domain/teachers/profile';
 import { submitVerificationDocument, type VerificationKind } from '@/domain/teachers/verification';
+import { submitTeacherPhoto } from '@/domain/teachers/photo';
 import { openPaymentAccount } from '@/domain/teachers/payment-account';
 import { submitForReview } from '@/domain/teachers/review';
 import { appDeps, now } from '@/server/app';
@@ -75,5 +76,20 @@ export async function submitForReviewAction(_: unknown, _f: FormData): Promise<A
     return { ok: false, error: errorMessage(err) };
   }
   revalidatePath('/professor');
+  return { ok: true, data: undefined };
+}
+
+export async function uploadPhotoAction(_: unknown, f: FormData): Promise<ActionState> {
+  const teacherId = await requireTeacher();
+  try {
+    const file = f.get('photo');
+    if (!(file instanceof File) || file.size === 0) return { ok: false, error: 'escolha uma foto' };
+    await submitTeacherPhoto(appDeps(), teacherId, {
+      name: file.name, contentType: file.type, bytes: new Uint8Array(await file.arrayBuffer()),
+    }, await now());
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+  revalidatePath('/professor/cadastro');
   return { ok: true, data: undefined };
 }

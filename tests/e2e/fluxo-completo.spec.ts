@@ -92,6 +92,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.fill('#teachingAddress', 'Rua das Flores, 100, Pinheiros');
   await teacher.click('button:has-text("Salvar perfil")');
   await expect(teacher.getByText('Perfil salvo.')).toBeVisible();
+  const photoForm = teacher.getByTestId('foto');
+  await photoForm.locator('input[type=file]').setInputFiles(path.join(FIXTURES, 'foto.jpg'));
+  await photoForm.locator('button:has-text("Enviar foto")').click();
+  await expect(photoForm.getByText('Em análise')).toBeVisible();
 
   await teacher.goto('/professor/verificacao');
   const docs: Array<[string, string[]]> = [
@@ -128,6 +132,16 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
     await doc.locator('button:has-text("Aprovar")').click();
     await expect(doc.getByText('Aprovado')).toBeVisible();
   }
+  // a foto: a equipe compara com o documento; antes da aprovação, a rota pública não a entrega
+  const photoBox = queue.getByTestId('foto');
+  await expect(photoBox.locator('img')).toBeVisible();
+  const photoId = (await q(`SELECT id FROM teacher_photos WHERE status = 'pending'`))[0]!.id as string;
+  expect((await staff.request.get(`/api/fotos/${photoId}`)).status()).toBe(404);
+  await photoBox.locator('button:has-text("Aprovar foto")').click();
+  await expect(photoBox.getByText('Aprovada')).toBeVisible();
+  const publicPhoto = await staff.request.get(`/api/fotos/${photoId}`);
+  expect(publicPhoto.status()).toBe(200);
+  expect(publicPhoto.headers()['content-type']).toBe('image/webp');
   await queue.locator('button:has-text("Aprovar perfil")').click();
   await expect.poll(async () => (await q(`SELECT status FROM teachers WHERE slug = $1`, [SLUG]))[0]!.status).toBe('approved');
   expect(await q(`SELECT count(*)::int AS n FROM teachers_listed`)).toEqual([{ n: 1 }]);
