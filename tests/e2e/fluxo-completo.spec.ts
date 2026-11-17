@@ -188,7 +188,12 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(fam1.getByRole('button', { name: 'Copiar código PIX' })).toBeVisible();
   await fam1.click('button:has-text("Simular pagamento")');
   await fam1.waitForURL('**/confirmado');
-  await expect(fam1.getByTestId('aula-confirmada')).toHaveText('Aula confirmada');
+  await expect(fam1.getByTestId('aula-confirmada')).toHaveText('Aula confirmada!');
+  const icsHref = (await fam1.getByRole('link', { name: 'Adicionar à minha agenda' }).getAttribute('href'))!;
+  const ics = await fam1.request.get(new URL(icsHref, fam1.url()).toString());
+  expect(ics.status()).toBe(200);
+  expect(ics.headers()['content-type']).toContain('text/calendar');
+  expect(await ics.text()).toContain('BEGIN:VCALENDAR');
 
   const [booking] = await q(
     `SELECT b.id, b.starts_at, b.ends_at, b.status FROM bookings b JOIN teachers t ON t.id = b.teacher_id

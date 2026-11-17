@@ -58,8 +58,8 @@ A aplicação fica em http://localhost:3000. O PostgreSQL do Compose escuta na p
 
 Nada sai da máquina: e-mails e mensagens de WhatsApp vão para a caixa de saída em **http://localhost:3000/dev**, onde também ficam o relógio ajustável e o botão que roda o worker na hora.
 
-1. **Professor.** Em `/professor/entrar`, entre com qualquer e-mail; o código chega na caixa de saída do `/dev`. Preencha o perfil, envie os três documentos (qualquer PDF ou imagem), abra a conta de recebimento (o CPF precisa ter dígitos válidos, como `529.982.247-25`) e envie para análise.
-2. **Equipe.** Em `/interno/entrar`, entre com um e-mail de `ADMIN_EMAILS`. Em “Verificações”, abra os documentos, aprove os três e o perfil.
+1. **Professor.** Em `/professor/entrar`, entre com qualquer e-mail; o código chega na caixa de saída do `/dev`. Preencha o perfil, envie a foto (JPG, PNG ou WEBP, em “Seu perfil”) e os três documentos (qualquer PDF ou imagem), abra a conta de recebimento (o CPF precisa ter dígitos válidos, como `529.982.247-25`) e envie para análise.
+2. **Equipe.** Em `/interno/entrar`, entre com um e-mail de `ADMIN_EMAILS`. Em “Verificações”, compare a foto com o documento de identidade e aprove a foto, os três documentos e o perfil.
 3. **Agenda.** De volta ao professor, crie um serviço em “Serviços” e horários em “Agenda”.
 4. **Família.** Abra `/p/<endereço-da-página>`, escolha um horário, identifique-se (código no `/dev`), pague por PIX e use “Simular pagamento”.
 5. **Aula.** No `/dev`, avance o relógio até perto da aula. O professor entra pela lista de “Aulas”; a família, pelo link do e-mail de confirmação. Os dois clicam “Entrar” na sala simulada.
