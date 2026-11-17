@@ -170,11 +170,15 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // 4. Uma família abre o link, reserva o primeiro horário online e paga por PIX (simulado).
   const fam1 = await (await browser.newContext()).newPage();
   await fam1.goto(`/p/${SLUG}`);
-  await expect(fam1.getByText('Identidade conferida')).toBeVisible();
-  await fam1.getByRole('radio', { name: /Online/ }).click();
-  const slot = fam1.locator('a[data-slot]').first();
-  const slotUrl = new URL((await slot.getAttribute('href'))!, fam1.url()).toString();
-  const slotInstant = (await slot.getAttribute('data-slot'))!;
+  await expect(fam1.getByText('Perfil verificado')).toBeVisible();
+  await expect(fam1.getByRole('img', { name: 'Foto de Ana Souza' })).toBeVisible();
+  await fam1.getByRole('radio', { name: /online/i }).click();
+  const slotButton = fam1.locator('button[data-slot]').first();
+  const slotInstant = (await slotButton.getAttribute('data-slot'))!;
+  await slotButton.click();
+  const reserve = fam1.getByRole('link', { name: 'Reservar' });
+  const slotUrl = new URL((await reserve.getAttribute('href'))!, fam1.url()).toString();
+  expect(slotUrl).toContain(encodeURIComponent(slotInstant));
 
   await identifyAndReserve(fam1, slotUrl, { email: 'maria.e2e@exemplo.com', phone: '(11) 98888-1111' });
   await fam1.waitForURL('**/pedido/**');

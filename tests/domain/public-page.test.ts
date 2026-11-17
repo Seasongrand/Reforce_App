@@ -47,8 +47,17 @@ describe('página pública do professor', () => {
     expect(page!.badges.find((b) => b.kind === 'criminal_record')!.validUntil).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(page!.services).toHaveLength(1);
     expect(page!.services[0]!.slots[0]).toBe(TUE_14.toString());
+    expect(page!.photoUrl).toMatch(/^\/api\/fotos\/[0-9a-f-]{36}$/);
+    expect(page).toMatchObject({ verified: true, minPriceCents: 12100, nextSlot: TUE_14.toString(), modalities: ['online'] });
     const json = JSON.stringify(page);
     for (const secret of ['+5511977776666', 'Rua Secreta', '@exemplo.com', 'wal_', 'acc_']) expect(json).not.toContain(secret);
+  });
+
+  it('sem foto aprovada (só em análise), o perfil mostra as iniciais', async () => {
+    const t = await listedTeacher();
+    const slug = await slugOf(t.teacherId);
+    await testPool().query(`UPDATE teacher_photos SET status = 'pending' WHERE teacher_id = $1`, [t.teacherId]);
+    expect((await publicTeacherPage(deps(), slug, NOW))!.photoUrl).toBeNull();
   });
 
   it('perfil não aprovado não existe para o público', async () => {
@@ -63,7 +72,7 @@ describe('página pública do professor', () => {
     const t = await listedTeacher({ criminalRecordExpired: true });
     const slug = await slugOf(t.teacherId);
     const page = await publicTeacherPage(deps(), slug, NOW);
-    expect(page).toMatchObject({ sellable: false });
+    expect(page).toMatchObject({ sellable: false, verified: false, nextSlot: null });
     expect(page!.services.every((s) => s.slots.length === 0)).toBe(true);
   });
 });

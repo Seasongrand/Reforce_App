@@ -9,6 +9,7 @@ import type { Temporal } from 'temporal-polyfill';
 import { availableSlots } from '../availability';
 import { subjectName } from '../catalog';
 import type { Deps } from '../deps';
+import { approvedPhotoId } from '../teachers/photo';
 
 export interface PublicService {
   id: string;
@@ -31,6 +32,14 @@ export interface PublicTeacherPage {
   subjects: Array<{ subject: string; grades: string[] }>;
   badges: Array<{ kind: 'identity' | 'criminal_record' | 'education'; validUntil: string | null }>;
   services: PublicService[];
+  /** Endereço da foto aprovada (/api/fotos/<id>), ou null: o perfil mostra as iniciais. */
+  photoUrl: string | null;
+  /** Selo "Perfil verificado": vendendo e com as três verificações em dia. */
+  verified: boolean;
+  minPriceCents: number | null;
+  modalities: Array<PublicService['modality']>;
+  /** O horário livre mais próximo entre todos os serviços (ISO), ou null. */
+  nextSlot: string | null;
 }
 
 export const PUBLIC_DAYS = 14;
@@ -79,8 +88,18 @@ export async function publicTeacherPage(deps: Deps, slug: string, now: Temporal.
       slots: slots.map((x) => x.toString()),
     });
   }
+  const photoId = await approvedPhotoId(deps, t.id);
+  const allSlots = services.flatMap((s) => s.slots).sort();
+  const order: Array<PublicService['modality']> = ['online', 'at_student', 'at_teacher'];
+  // online primeiro, depois na casa do aluno e no endereço do professor; dentro de cada um, a mais curta
+  services.sort((a, b) => order.indexOf(a.modality) - order.indexOf(b.modality) || a.durationMin - b.durationMin);
   return {
     teacherId: t.id, slug: t.slug, name: t.display_name, headline: t.headline, bio: t.bio, timezone: t.timezone,
     sellable, subjects, badges, services,
+    photoUrl: photoId ? `/api/fotos/${photoId}` : null,
+    verified: sellable && badges.length === 3,
+    minPriceCents: services.length > 0 ? Math.min(...services.map((s) => s.priceCents)) : null,
+    modalities: order.filter((m) => services.some((s) => s.modality === m)),
+    nextSlot: allSlots[0] ?? null,
   };
 }
