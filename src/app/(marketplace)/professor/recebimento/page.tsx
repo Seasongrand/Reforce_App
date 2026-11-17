@@ -23,7 +23,8 @@ export default async function PayoutAccountPage() {
       <h1 className="text-2xl font-semibold">Conta de recebimento</h1>
       <p className="text-sm text-slate-700">
         O aluno paga na plataforma. Sua parte fica retida no provedor de pagamento e é liberada na sua conta
-        24 horas depois da aula, se ninguém contestar. Seus dados vão direto ao provedor; a plataforma não guarda seu CPF.
+        24 horas depois da aula, se ninguém contestar; no cartão, quando a operadora repassa o valor, em cerca de 30 dias.
+        Seus dados vão direto ao provedor; a plataforma não guarda seu CPF.
       </p>
       {acc && acc.status !== 'rejected' ? (
         <p className="notice" data-testid="conta-status">

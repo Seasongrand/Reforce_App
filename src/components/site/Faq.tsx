@@ -1,4 +1,5 @@
-import { FAQ, FAQ_TITLE } from './content';
+import { config } from '@/config';
+import { FAQ_TITLE, faqWithCommission } from './content';
 
 export function Faq() {
   return (
@@ -6,7 +7,7 @@ export function Faq() {
       <div className="mx-auto flex max-w-[54rem] flex-col gap-6">
         <h2 className="font-display text-[clamp(1.875rem,4vw,2.75rem)] font-bold tracking-tight">{FAQ_TITLE}</h2>
         <div className="border-t border-site-line">
-          {FAQ.map(({ q, a }) => (
+          {faqWithCommission(config().commissionBps).map(({ q, a }) => (
             <details key={q} className="group border-b border-site-line">
               <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-3 text-lg font-semibold [&::-webkit-details-marker]:hidden">
                 {q}
