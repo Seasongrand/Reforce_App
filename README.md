@@ -116,7 +116,7 @@ O site roda na Railway, no projeto `bountiful-growth`: um serviço `Reforce_App`
 
 A configuração do deploy fica no próprio serviço, na Railway, e não no repositório. O arquivo `railway.json` (Config as Code) foi descontinuado pela Railway: serviços novos não o leem, e os antigos deixam de ler em 01/12/2026. O substituto (Infrastructure as Code, `.railway/railway.ts`) é aplicado pela linha de comando da Railway e não foi adotado.
 
-**Enquanto não há provedores reais**, o site roda em `SITE_MODE=lista_de_espera`: a página inicial mostra a lista de espera de professores, o botão "Entrar" leva a `/entrar` (o aluno pede aviso da abertura) e as rotas do marketplace respondem 404. As planilhas ficam em `/api/lista-de-espera.csv` (professores; hoje, https://reforce.up.railway.app/api/lista-de-espera.csv) e `/api/lista-de-espera/alunos.csv` (alunos que pediram aviso); o navegador pede a senha (`WAITLIST_EXPORT_PASSWORD`; o usuário pode ser qualquer um).
+**Enquanto não há provedores reais**, o site roda em `SITE_MODE=lista_de_espera`: a página inicial mostra a lista de espera de professores, o botão "Entrar" leva a `/entrar` (o aluno pede aviso da abertura) e as rotas do marketplace respondem 404. A equipe acompanha as inscrições em `/equipe` (hoje, https://reforce.up.railway.app/equipe): totais, resumo por cidade e disciplina, listas com filtros, WhatsApp, e-mail e currículo de cada professor. As planilhas ficam em `/api/lista-de-espera.csv` (professores) e `/api/lista-de-espera/alunos.csv` (alunos que pediram aviso). Tudo isso pede a mesma senha (`WAITLIST_EXPORT_PASSWORD`; o usuário pode ser qualquer um); sem a variável, essas rotas não existem.
 
 Configuração inicial, feita uma vez no painel da Railway:
 

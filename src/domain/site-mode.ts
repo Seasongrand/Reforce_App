@@ -11,6 +11,7 @@ const OPEN = new Set([
   '/icon.svg', // ícone do site (src/app/icon.svg)
   '/entrar', // botão "Entrar": aluno pede aviso da abertura
   '/api/lista-de-espera/alunos.csv', // planilha dos alunos que pediram aviso (com senha)
+  '/equipe', // página da equipe com as inscrições (com senha; ver proxy.ts)
 ]);
 
 /** Currículo de uma inscrição (com a senha da planilha). */

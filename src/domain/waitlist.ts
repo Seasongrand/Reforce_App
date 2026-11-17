@@ -3,7 +3,6 @@
  * 30 a 50 professores verificados). Inscrição pública, uma por e-mail, e
  * exportação em planilha protegida por senha.
  */
-import { createHash, timingSafeEqual } from 'node:crypto';
 import { sql } from 'kysely';
 import type { Temporal } from 'temporal-polyfill';
 import type { AppConfig } from '@/config';
@@ -12,6 +11,7 @@ import { instantFromDb } from '@/time/zoned';
 import { normalizeEmail } from './auth/codes';
 import { DomainError } from './errors';
 import { normalizePhoneBR } from './guardians/identify';
+import { teamPasswordChallenge, teamPasswordMatches } from './team-auth';
 
 export const STAGES = { fund2: 'Fundamental 2 (6º ao 9º ano)', medio: 'Ensino médio', pre_vestibular: 'Pré-vestibular' } as const;
 export const MODALITIES = { online: 'Online', presencial: 'Presencial' } as const;
@@ -182,8 +182,6 @@ export async function waitlistCsv(deps: Pick<WaitlistDeps, 'db'> & { config: Pic
   return [header, ...lines].join('\r\n') + '\r\n';
 }
 
-const digest = (s: string) => createHash('sha256').update(s).digest();
-
 /**
  * Senha da equipe para as planilhas e os currículos (HTTP Basic; o usuário é
  * ignorado). Devolve a resposta de recusa, ou null se a senha confere.
@@ -191,16 +189,7 @@ const digest = (s: string) => createHash('sha256').update(s).digest();
 export function refuseWithoutPassword(deps: Pick<WaitlistDeps, 'config'>, authorization: string | null): Response | null {
   const password = deps.config.waitlistExportPassword;
   if (!password) return new Response('não encontrado', { status: 404 });
-  const given = authorization?.startsWith('Basic ')
-    ? Buffer.from(authorization.slice(6), 'base64').toString('utf8').split(':').slice(1).join(':')
-    : null;
-  if (given === null || !timingSafeEqual(digest(given), digest(password))) {
-    return new Response('senha necessária', {
-      status: 401,
-      headers: { 'www-authenticate': 'Basic realm="Lista de espera", charset="UTF-8"', 'cache-control': 'no-store' },
-    });
-  }
-  return null;
+  return teamPasswordMatches(password, authorization) ? null : teamPasswordChallenge();
 }
 
 /** Currículo de uma inscrição, com a mesma senha da planilha. */

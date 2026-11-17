@@ -5,7 +5,8 @@
  */
 import { expect, test } from '@playwright/test';
 import path from 'node:path';
-import { LISTA_BASE, LISTA_PASSWORD } from './env';
+import pg from 'pg';
+import { LISTA_BASE, LISTA_DATABASE_URL, LISTA_PASSWORD } from './env';
 
 test('página da lista de espera: seções, perguntas e celular', async ({ page, request }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -99,6 +100,44 @@ test('botão Entrar: o aluno pede aviso da abertura; planilha dos alunos com sen
   const csv = await (await ctx.request.get(`${LISTA_BASE}/api/lista-de-espera/alunos.csv`)).text();
   expect(csv).toContain('paula.aviso@exemplo.com,Niterói,RJ,Inglês,Ensino médio,');
   expect((await page.request.get('/api/lista-de-espera/alunos.csv')).status()).toBe(401);
+  await ctx.close();
+});
+
+test('página da equipe: pede a senha, mostra o resumo, filtra e abre o currículo', async ({ page, browser }) => {
+  expect((await page.request.get('/equipe')).status()).toBe(401);
+  const db = new pg.Client({ connectionString: LISTA_DATABASE_URL });
+  await db.connect();
+  await db.query(`INSERT INTO teacher_waitlist (name, email, phone_e164, city, state, subject_ids, stages, modalities, education, consent_at)
+                  VALUES ('Carla Equipe', 'carla.equipe@exemplo.com', '+5521966665555', 'Petrópolis', 'RJ', '{9}', '{medio}', '{online}',
+                          'doutorado', now()) ON CONFLICT (email) DO NOTHING`);
+  await db.query(`INSERT INTO teacher_waitlist_cvs (waitlist_id, file_name, content_type, bytes, uploaded_at)
+                  SELECT id, 'cv.pdf', 'application/pdf', '\\x255044462d312e37'::bytea, now() FROM teacher_waitlist
+                   WHERE email = 'carla.equipe@exemplo.com' ON CONFLICT (waitlist_id) DO NOTHING`);
+  await db.query(`INSERT INTO student_waitlist (email, city, state, subject_ids, stages, consent_at)
+                  VALUES ('responsavel.equipe@exemplo.com', 'Petropolis', 'RJ', '{9}', '{fund2}', now()) ON CONFLICT (email) DO NOTHING`);
+  await db.end();
+
+  const ctx = await browser.newContext({ httpCredentials: { username: 'equipe', password: LISTA_PASSWORD } });
+  const team = await ctx.newPage();
+  await team.setViewportSize({ width: 390, height: 844 });
+  await team.goto('/equipe');
+  await expect(team.getByRole('heading', { level: 1 })).toHaveText('Listas de espera');
+  expect(await team.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  // "Petrópolis" e "Petropolis" contam como a mesma cidade: 1 professor e 1 aluno
+  await expect(team.getByRole('row', { name: /Petrópolis\/RJ/ })).toHaveText(/Petrópolis\/RJ\s*1\s*1/);
+  await team.getByLabel('Disciplina').selectOption({ label: 'História' });
+  await team.getByRole('button', { name: 'Filtrar' }).click();
+  await expect(team).toHaveURL(/disciplina=9/);
+  const card = team.getByTestId('professor');
+  await expect(card).toHaveCount(1);
+  await expect(card).toContainText('Carla Equipe');
+  await expect(card).toContainText('Doutorado');
+  await expect(card.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('href', 'https://wa.me/5521966665555');
+  const cv = await ctx.request.get((await card.getByRole('link', { name: 'Currículo' }).getAttribute('href'))!);
+  expect(cv.status()).toBe(200);
+  expect(cv.headers()['content-type']).toBe('application/pdf');
+  await team.getByRole('link', { name: 'Alunos (1)' }).click();
+  await expect(team.getByTestId('aluno')).toContainText('responsavel.equipe@exemplo.com');
   await ctx.close();
 });
 
