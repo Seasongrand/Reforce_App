@@ -140,7 +140,7 @@ Configuração inicial, feita uma vez no painel da Railway:
    - uma **Redirect Rule** do modelo “Redirect from WWW to root”;
    - no Registro.br, os servidores DNS trocados pelos dois que o Cloudflare indicar.
 
-**Quando o marketplace abrir:** troque `SITE_MODE` para `completo`, defina `SESSION_SECRET`, `FILE_ENCRYPTION_KEY` e as credenciais dos provedores reais, e crie um segundo serviço a partir do mesmo repositório para o worker, com o comando `npm run worker` e as mesmas variáveis.
+**Quando o marketplace abrir:** a página inicial vira a vitrine de busca para o aluno (resultados em `/buscar`), e a página dos professores, que também fica em `/professores` desde já, sai da página inicial. Troque `SITE_MODE` para `completo`, defina `SESSION_SECRET`, `FILE_ENCRYPTION_KEY` e as credenciais dos provedores reais, e crie um segundo serviço a partir do mesmo repositório para o worker, com o comando `npm run worker` e as mesmas variáveis.
 
 ## Produção (outras hospedagens)
 
