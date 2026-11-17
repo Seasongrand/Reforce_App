@@ -4,6 +4,7 @@
  * ou fechado neste modo.
  */
 import { expect, test } from '@playwright/test';
+import path from 'node:path';
 import { LISTA_BASE, LISTA_PASSWORD } from './env';
 
 test('página da lista de espera: seções, perguntas e celular', async ({ page, request }) => {
@@ -46,7 +47,10 @@ test('formulário em duas etapas: Enter avança, Voltar mantém, erro do servido
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByLabel('Ensino médio').check();
   await page.getByLabel('Online').check();
-  await page.getByLabel('Formação').selectOption('licenciatura');
+  await expect(page.getByLabel('Inglês')).toBeVisible();
+  await expect(page.getByLabel('Educação Física')).toBeVisible();
+  await page.getByLabel('Formação').selectOption('doutorado');
+  await page.getByLabel(/Currículo/).setInputFiles(path.resolve('tests/e2e/fixtures/documento.pdf'));
   await page.getByLabel(/Autorizo o contato/).check();
   await page.getByRole('button', { name: 'Entrar na lista de espera' }).click();
   await expect(page.locator('form').getByRole('alert')).toHaveText('escolha ao menos uma disciplina da lista');
@@ -60,6 +64,13 @@ test('formulário em duas etapas: Enter avança, Voltar mantém, erro do servido
   const ctx = await browser.newContext({ httpCredentials: { username: 'equipe', password: LISTA_PASSWORD } });
   const csv = await (await ctx.request.get(`${LISTA_BASE}/api/lista-de-espera.csv`)).text();
   expect(csv).toContain('bruna.lista@exemplo.com');
+  expect(csv).toContain('Doutorado');
+  const cvUrl = /(http\S+\/api\/lista-de-espera\/curriculo\/[0-9a-f-]{36})/.exec(csv)?.[1];
+  expect(cvUrl).toBeTruthy();
+  const cv = await ctx.request.get(cvUrl!);
+  expect(cv.status()).toBe(200);
+  expect(cv.headers()['content-type']).toBe('application/pdf');
+  expect((await page.request.get(cvUrl!)).status()).toBe(401);
   await ctx.close();
 });
 

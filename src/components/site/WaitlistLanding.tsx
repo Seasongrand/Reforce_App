@@ -4,8 +4,7 @@
  */
 import { joinWaitlistAction } from '@/app/(site)/actions';
 import { config } from '@/config';
-import { SUBJECTS } from '@/domain/catalog';
-import { EDUCATION, MODALITIES, STAGES } from '@/domain/waitlist';
+import { EDUCATION, MODALITIES, STAGES, WAITLIST_SUBJECTS } from '@/domain/waitlist';
 import { Benefits } from './Benefits';
 import { FORM_LEAD, FORM_TITLE } from './content';
 import { Faq } from './Faq';
@@ -31,7 +30,7 @@ export function WaitlistLanding() {
           <div className="min-w-0 flex-[1_1_28rem] rounded-[22px] bg-white p-5 text-indigo-950 sm:p-9">
             <WaitlistForm
               action={joinWaitlistAction}
-              subjects={SUBJECTS.map((s) => ({ value: String(s.id), label: s.name }))}
+              subjects={WAITLIST_SUBJECTS.map((s) => ({ value: String(s.id), label: s.name }))}
               stages={options(STAGES)}
               modalities={options(MODALITIES)}
               education={options(EDUCATION)}

@@ -435,6 +435,14 @@ export interface TeacherWaitlist {
   updated_at: Generated<string>;
 }
 
+export interface TeacherWaitlistCvs {
+  bytes: Buffer;
+  content_type: string;
+  file_name: string;
+  uploaded_at: string;
+  waitlist_id: string;
+}
+
 export interface WebhookEvents {
   id: Generated<Int8>;
   payload: Json;
@@ -482,6 +490,7 @@ export interface DB {
   teacher_subjects: TeacherSubjects;
   teacher_verifications: TeacherVerifications;
   teacher_waitlist: TeacherWaitlist;
+  teacher_waitlist_cvs: TeacherWaitlistCvs;
   teachers: Teachers;
   teachers_listed: TeachersListed;
   webhook_events: WebhookEvents;

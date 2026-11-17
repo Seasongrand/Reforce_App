@@ -10,6 +10,9 @@ const OPEN = new Set([
   '/icon.svg', // ícone do site (src/app/icon.svg)
 ]);
 
+/** Currículo de uma inscrição (com a senha da planilha). */
+const WAITLIST_CV = /^\/api\/lista-de-espera\/curriculo\/[0-9a-f-]{36}$/i;
+
 /** Prévia do link (src/app/(site)/opengraph-image.tsx): dentro de um grupo de rotas, o Next acrescenta um sufixo. */
 const OG_IMAGE = /^\/opengraph-image(-[a-z0-9]+)?$/;
 
@@ -17,5 +20,5 @@ export function isPathOpenInWaitlistMode(pathname: string): boolean {
   if (pathname.includes('..')) return false;
   if (pathname.startsWith('/_next/')) return true;
   const clean = pathname.replace(/\/+$/, '') || '/';
-  return OPEN.has(clean) || OG_IMAGE.test(clean);
+  return OPEN.has(clean) || OG_IMAGE.test(clean) || WAITLIST_CV.test(clean);
 }

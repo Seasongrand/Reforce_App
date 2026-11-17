@@ -4,6 +4,11 @@ import { joinTeacherWaitlist, type Education, type Stage, type WaitlistModality 
 import { now, siteDeps } from '@/server/app';
 import { errorMessage, type ActionState } from '@/server/action-result';
 
+async function fileOf(v: FormDataEntryValue | null) {
+  if (!(v instanceof File) || v.size === 0) return null;
+  return { name: v.name, contentType: v.type, bytes: new Uint8Array(await v.arrayBuffer()) };
+}
+
 export async function joinWaitlistAction(_: unknown, f: FormData): Promise<ActionState<{ created: boolean }>> {
   const s = (k: string) => String(f.get(k) ?? '');
   try {
@@ -12,6 +17,7 @@ export async function joinWaitlistAction(_: unknown, f: FormData): Promise<Actio
       subjectIds: f.getAll('subject').map(Number), stages: f.getAll('stage').map(String) as Stage[],
       modalities: f.getAll('modality').map(String) as WaitlistModality[], education: s('education') as Education,
       notes: s('notes'), consent: f.get('consent') === 'on', website: s('website'),
+      cv: await fileOf(f.get('cv')),
     }, await now());
     return { ok: true, data: r };
   } catch (err) {

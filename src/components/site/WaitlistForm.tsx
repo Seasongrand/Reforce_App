@@ -227,6 +227,13 @@ export function WaitlistForm({
           Conte um pouco da sua experiência (opcional)
           <textarea className={`${INPUT} py-3`} name="notes" rows={3} maxLength={1000} />
         </label>
+        <label className={LABEL}>
+          Currículo (opcional)
+          <input type="file" name="cv"
+            accept=".pdf,.doc,.docx,.odt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text"
+            className="block w-full rounded-xl border border-dashed border-site-field px-3.5 py-3 text-sm font-normal file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-3 file:py-2 file:font-semibold file:text-indigo-950" />
+          <span className="text-[13px] font-normal text-site-muted">PDF, DOC, DOCX ou ODT, até 5 MB. Só a equipe da Reforce vê.</span>
+        </label>
         {/* campo-armadilha para robôs: escondido de pessoas e de leitores de tela */}
         <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
           <label>
