@@ -346,6 +346,19 @@ export interface TeacherPaymentAccounts {
   wallet_id: string;
 }
 
+export interface TeacherPhotos {
+  created_at: Generated<string>;
+  decided_at: string | null;
+  decided_by: string | null;
+  decision_note: string | null;
+  height: number;
+  id: Generated<string>;
+  image: Buffer;
+  status: Generated<string>;
+  teacher_id: string;
+  width: number;
+}
+
 export interface Teachers {
   base_cep: string | null;
   base_lat: number | null;
@@ -464,6 +477,7 @@ export interface DB {
   teacher_guardian_links: TeacherGuardianLinks;
   teacher_next_slot: TeacherNextSlot;
   teacher_payment_accounts: TeacherPaymentAccounts;
+  teacher_photos: TeacherPhotos;
   teacher_search: TeacherSearch;
   teacher_subjects: TeacherSubjects;
   teacher_verifications: TeacherVerifications;
