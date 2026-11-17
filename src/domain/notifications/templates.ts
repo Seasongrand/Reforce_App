@@ -111,7 +111,7 @@ function teacherModalityBlock(c: MessageContext): string {
     case 'online':
       return 'A aula é online, na sala da plataforma. O link está no seu painel.';
     case 'at_teacher':
-      return 'A aula é no seu endereço. Na chegada, a família vai informar o código da aula: digite-o no painel.';
+      return 'A aula é no seu endereço. Na chegada, o aluno vai informar o código da aula: digite-o no painel.';
     case 'at_student':
       return `A aula é na casa do aluno: ${c.familyAddress}.\nNa chegada, peça o código da aula e digite-o no painel.`;
   }

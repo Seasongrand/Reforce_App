@@ -22,7 +22,7 @@ export default async function PayoutAccountPage() {
       <Link href="/professor" className="text-sm text-brand">← Painel</Link>
       <h1 className="text-2xl font-semibold">Conta de recebimento</h1>
       <p className="text-sm text-slate-700">
-        A família paga na plataforma. Sua parte fica retida no provedor de pagamento e é liberada na sua conta
+        O aluno paga na plataforma. Sua parte fica retida no provedor de pagamento e é liberada na sua conta
         24 horas depois da aula, se ninguém contestar. Seus dados vão direto ao provedor; a plataforma não guarda seu CPF.
       </p>
       {acc && acc.status !== 'rejected' ? (

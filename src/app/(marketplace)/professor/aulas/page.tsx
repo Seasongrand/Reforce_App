@@ -41,7 +41,7 @@ export default async function TeacherLessonsPage() {
               <ActionForm action={checkinAction} submitLabel="Registrar chegada" successMessage="Presença registrada." className="flex flex-wrap items-center gap-2">
                 <input type="hidden" name="bookingId" value={l.bookingId} />
                 <input name="code" className="input w-40 tracking-widest" inputMode="numeric" maxLength={6}
-                  placeholder="Código da aula" aria-label="Código da aula informado pela família" />
+                  placeholder="Código da aula" aria-label="Código da aula informado pelo aluno" />
               </ActionForm>
             )}
           </li>

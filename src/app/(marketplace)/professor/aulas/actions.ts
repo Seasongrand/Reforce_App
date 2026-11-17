@@ -9,7 +9,7 @@ import { errorMessage, type ActionState } from '@/server/action-result';
 import { requireTeacher } from '@/server/session';
 
 const CHECKIN: Record<string, string> = {
-  codigo_errado: 'Código incorreto. Confira com a família.',
+  codigo_errado: 'Código incorreto. Confira com o aluno.',
   bloqueado: 'Tentativas demais. A equipe vai conferir a aula.',
   fora_do_horario: 'O código só pode ser digitado perto do horário da aula.',
   nao_presencial: 'Esta aula não é presencial.',

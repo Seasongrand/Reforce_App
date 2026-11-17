@@ -98,7 +98,7 @@ export default async function TeacherProfilePage() {
             </div>
           </div>
           <div>
-            <label className="label" htmlFor="teachingAddress">Endereço onde você dá aula (só a família com aula paga vê)</label>
+            <label className="label" htmlFor="teachingAddress">Endereço onde você dá aula (só o aluno com aula paga vê)</label>
             <input className="input" id="teachingAddress" name="teachingAddress" defaultValue={t.teaching_address ?? ''} />
           </div>
         </fieldset>
