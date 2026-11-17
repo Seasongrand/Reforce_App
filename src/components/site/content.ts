@@ -5,9 +5,10 @@
  */
 export const HERO = {
   badge: 'Lista de espera aberta para os primeiros professores',
-  titleBefore: 'Ensine. ',
-  titleMark: 'A cobrança',
-  titleAfter: ' é com a gente.',
+  titleFirst: 'Você ensina.',
+  titleBefore: ' A gente ',
+  titleMark: 'cuida do resto.',
+  titleAfter: '',
   lead: 'Monte sua agenda, divulgue sua página e receba depois de cada aula. Matemática, Física, Química e Redação, do 6º ano ao ensino médio.',
   primary: 'Entrar na lista de espera',
   secondary: 'Como funciona',

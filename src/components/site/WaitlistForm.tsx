@@ -25,7 +25,7 @@ const STEP1: { name: Step1Field; label: string; type?: string; autoComplete: str
   { name: 'state', label: 'UF', autoComplete: 'address-level1', maxLength: 2 },
 ];
 
-const INVITE_TEXT = 'Estou na lista de espera da Reforce, plataforma de aulas particulares que cuida da agenda e da cobrança. Entra também: ';
+const INVITE_TEXT = 'Estou na lista de espera da Reforce, plataforma de aulas particulares que cuida da agenda e do pagamento. Entra também: ';
 
 export function WaitlistForm({
   action, subjects, stages, modalities, education, inviteUrl,

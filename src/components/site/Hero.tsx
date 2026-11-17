@@ -11,7 +11,8 @@ export function Hero() {
           <span className="self-start rounded-lg border border-indigo-700 px-3.5 py-2 text-sm font-medium text-site-on-dark">
             {HERO.badge}
           </span>
-          <h1 className="font-display text-[clamp(2.5rem,6vw,4.25rem)] font-bold leading-[1.02] tracking-tight">
+          <h1 className="font-display text-[clamp(2.5rem,6vw,4.25rem)] font-bold leading-[1.12] tracking-tight">
+            <span className="block">{HERO.titleFirst}</span>
             {HERO.titleBefore}
             <mark className="whitespace-nowrap rounded-lg bg-yellow-400 px-2 text-indigo-950">{HERO.titleMark}</mark>
             {HERO.titleAfter}
