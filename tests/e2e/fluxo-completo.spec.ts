@@ -270,6 +270,31 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.goto('/professor/aulas');
   await expect(teacher.getByTestId(`aula-${booking!.id}`).getByTestId('situacao')).toHaveText('Concluída');
 
+  // 7b. Em "Minha conta" (entrada por código, sem senha), a responsável avalia a aula concluída;
+  // a avaliação aparece no perfil com o autor abreviado, o telefone oculto e sem o nome da aluna.
+  const acct = await (await browser.newContext()).newPage();
+  await acct.goto('/conta');
+  await acct.waitForURL('**/conta/entrar');
+  await acct.fill('#email', 'maria.e2e@exemplo.com');
+  await acct.click('button:has-text("Receber código por e-mail")');
+  await acct.waitForSelector('#code');
+  await acct.fill('#code', await lastCode('maria.e2e@exemplo.com'));
+  await acct.click('button:has-text("Entrar")');
+  await acct.waitForURL(/\/conta$/);
+  const past = acct.getByTestId(`aula-${booking!.id}`);
+  await past.getByRole('link', { name: 'Avaliar a aula' }).click();
+  await acct.getByRole('radio', { name: /^5 —/ }).check({ force: true });
+  await acct.fill('textarea[name=comment]', 'Explica com calma. Meu WhatsApp é 11 98888-1111');
+  await acct.click('button:has-text("Enviar avaliação")');
+  await acct.waitForURL('**/conta?avaliada=1');
+  await expect(acct.getByText('Obrigado pela avaliação!')).toBeVisible();
+  await expect(acct.getByTestId(`aula-${booking!.id}`)).toContainText('Sua avaliação');
+  await acct.goto(`/p/${SLUG}`);
+  const reviews = acct.locator('#avaliacoes');
+  await expect(reviews).toContainText('Maria L.');
+  await expect(reviews).toContainText('[contato removido]');
+  await expect(reviews).not.toContainText('Joana');
+
   // 8. Fechada a janela de contestação (24 h), o repasse é liberado uma vez.
   await setClock(new Date(endsAt.getTime() + 24 * 60 * 60_000 + 60_000));
   await runSweeps(browser);

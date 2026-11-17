@@ -63,7 +63,8 @@ Nada sai da máquina: e-mails e mensagens de WhatsApp vão para a caixa de saíd
 3. **Agenda.** De volta ao professor, crie um serviço em “Serviços” e horários em “Agenda”.
 4. **Família.** Abra `/p/<endereço-da-página>`, escolha um horário, identifique-se (código no `/dev`), pague por PIX e use “Simular pagamento”.
 5. **Aula.** No `/dev`, avance o relógio até perto da aula. O professor entra pela lista de “Aulas”; a família, pelo link do e-mail de confirmação. Os dois clicam “Entrar” na sala simulada.
-6. **Repasse.** Avance o relógio para depois do fim da aula e clique “Rodar varreduras agora”: a aula é concluída e o repasse fica retido. Avance mais 24 horas e rode de novo: o repasse é liberado.
+6. **Minha conta.** Com a aula concluída, em `/conta` (entrada com o código do e-mail, sem senha), avalie a aula; a avaliação aparece no perfil e acende as estrelas na vitrine.
+7. **Repasse.** Avance o relógio para depois do fim da aula e clique “Rodar varreduras agora”: a aula é concluída e o repasse fica retido. Avance mais 24 horas e rode de novo: o repasse é liberado.
 
 ## Testes
 
