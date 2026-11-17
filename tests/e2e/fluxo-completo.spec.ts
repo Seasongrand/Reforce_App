@@ -272,8 +272,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
 
   // 7b. Em "Minha conta" (entrada por código, sem senha), a responsável avalia a aula concluída;
   // a avaliação aparece no perfil com o autor abreviado, o telefone oculto e sem o nome da aluna.
+  // O botão "Entrar" do topo leva ao login; já conectada, o topo mostra "Minha conta".
   const acct = await (await browser.newContext()).newPage();
-  await acct.goto('/conta');
+  await acct.goto('/');
+  await acct.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Entrar' }).click();
   await acct.waitForURL('**/conta/entrar');
   await acct.fill('#email', 'maria.e2e@exemplo.com');
   await acct.click('button:has-text("Receber código por e-mail")');
@@ -281,6 +283,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await acct.fill('#code', await lastCode('maria.e2e@exemplo.com'));
   await acct.click('button:has-text("Entrar")');
   await acct.waitForURL(/\/conta$/);
+  await expect(acct.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Minha conta' })).toHaveAttribute('href', '/conta');
   const past = acct.getByTestId(`aula-${booking!.id}`);
   await past.getByRole('link', { name: 'Avaliar a aula' }).click();
   await acct.getByRole('radio', { name: /^5 —/ }).check({ force: true });

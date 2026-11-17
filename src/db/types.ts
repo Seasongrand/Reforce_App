@@ -315,6 +315,18 @@ export interface Students {
   id: Generated<string>;
 }
 
+export interface StudentWaitlist {
+  city: string;
+  consent_at: string;
+  created_at: Generated<string>;
+  email: string;
+  id: Generated<string>;
+  stages: string[];
+  state: string;
+  subject_ids: number[];
+  updated_at: Generated<string>;
+}
+
 export interface Subjects {
   id: number;
   name: string;
@@ -480,6 +492,7 @@ export interface DB {
   services: Services;
   sessions: Sessions;
   staff_users: StaffUsers;
+  student_waitlist: StudentWaitlist;
   students: Students;
   subjects: Subjects;
   teacher_guardian_links: TeacherGuardianLinks;

@@ -26,7 +26,7 @@ test('página da lista de espera: seções, perguntas e celular', async ({ page,
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 
   await page.goto('/privacidade');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Política de privacidade da lista de espera');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Política de privacidade das listas de espera');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   expect((await request.get('/professor/entrar')).status()).toBe(404);
 });
@@ -71,6 +71,34 @@ test('formulário em duas etapas: Enter avança, Voltar mantém, erro do servido
   expect(cv.status()).toBe(200);
   expect(cv.headers()['content-type']).toBe('application/pdf');
   expect((await page.request.get(cvUrl!)).status()).toBe(401);
+  await ctx.close();
+});
+
+test('botão Entrar: o aluno pede aviso da abertura; planilha dos alunos com senha', async ({ page, browser }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Entrar' }).click();
+  await expect(page).toHaveURL(/\/entrar$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('A Reforce abre em breve para alunos');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.getByLabel('E-mail', { exact: true }).fill('paula.aviso@exemplo.com');
+  await page.getByLabel('Cidade', { exact: true }).fill('Niterói');
+  await page.getByLabel('UF').fill('rj');
+  await page.getByLabel('Ensino médio').check();
+  await page.getByLabel(/Tenho 18 anos/).check();
+  await page.getByRole('button', { name: 'Quero ser avisado' }).click();
+  await expect(page.locator('form').getByRole('alert')).toHaveText('escolha ao menos uma disciplina da lista');
+  await expect(page.getByLabel('Cidade', { exact: true })).toHaveValue('Niterói'); // o erro não apaga o que foi preenchido
+  await page.getByLabel('Inglês').check();
+  await page.getByRole('button', { name: 'Quero ser avisado' }).click();
+  const ok = page.getByTestId('aviso-ok');
+  await expect(ok).toContainText('Pronto!');
+  const invite = ok.getByRole('link', { name: 'Indicar a Reforce pelo WhatsApp' });
+  expect(decodeURIComponent((await invite.getAttribute('href'))!)).toContain('http://localhost:3201/professores');
+  const ctx = await browser.newContext({ httpCredentials: { username: 'equipe', password: LISTA_PASSWORD } });
+  const csv = await (await ctx.request.get(`${LISTA_BASE}/api/lista-de-espera/alunos.csv`)).text();
+  expect(csv).toContain('paula.aviso@exemplo.com,Niterói,RJ,Inglês,Ensino médio,');
+  expect((await page.request.get('/api/lista-de-espera/alunos.csv')).status()).toBe(401);
   await ctx.close();
 });
 
