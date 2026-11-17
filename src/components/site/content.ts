@@ -54,7 +54,10 @@ export const FAQ = [
     a: 'Sim. Mande o link da sua página para eles: a reserva, o pagamento e os lembretes passam a ser feitos pela plataforma.',
   },
   { q: 'Como é a aula online?', a: 'Na sala da própria Reforce, direto no navegador do computador ou do celular. Não precisa de Zoom, de Meet nem de instalar nada.' },
-  { q: 'E se o aluno faltar?', a: 'Você recebe a aula inteira. Se quem faltar for você, o aluno recebe o dinheiro de volta.' },
+  {
+    q: 'E se o aluno faltar?',
+    a: 'Você recebe a aula inteira. Se o aluno justificar a falta, você pode devolver o valor a ele pelo seu painel, em até 24 horas depois da aula. Se quem faltar for você, o aluno recebe o dinheiro de volta.',
+  },
   {
     q: 'Quem pode participar?',
     a: 'Professores de qualquer disciplina, do 6º ano ao pré-vestibular, que passem pela verificação de identidade, antecedentes criminais e formação. A plataforma abre aos poucos, por cidade e disciplina; quem está na lista é avisado primeiro.',

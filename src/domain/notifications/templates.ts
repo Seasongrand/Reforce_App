@@ -152,6 +152,11 @@ export function render(template: Template, c: MessageContext): RenderedMessage {
       text = `Olá, ${c.guardian.name}.\n\n${c.teacher.name} não entrou na aula de ${c.subject} de ${when}. ` +
         `Devolvemos o valor integral de ${formatBRL(c.totalCents)} pelo mesmo meio de pagamento. Pedimos desculpas.`;
       break;
+    case 'falta_aluno_devolvida':
+      subject = 'Falta justificada: valor da aula devolvido';
+      text = `Olá, ${c.guardian.name}.\n\n${c.teacher.name} devolveu o valor da aula de ${c.subject} de ${when}, ` +
+        `em que ${c.student.firstName} não pôde participar. A devolução é feita pelo mesmo meio de pagamento.`;
+      break;
     case 'confirmacao_professor': {
       const at = formatPtBr(c.startsAt, c.teacher.timezone);
       subject = `Nova aula paga: ${c.student.firstName}, ${at}`;

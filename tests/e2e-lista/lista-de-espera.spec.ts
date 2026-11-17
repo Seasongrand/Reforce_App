@@ -24,6 +24,8 @@ test('página da lista de espera: seções, perguntas e celular', async ({ page,
   await expect(page.locator('details')).toHaveCount(8);
   await page.getByText('Preciso ter CNPJ?').click();
   await expect(page.getByText('Dá para receber como pessoa física')).toBeVisible();
+  await page.getByText('E se o aluno faltar?').click();
+  await expect(page.getByText('Se o aluno justificar a falta, você pode devolver o valor a ele pelo seu painel')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 
   await page.goto('/privacidade');
