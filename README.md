@@ -58,9 +58,9 @@ A aplicação fica em http://localhost:3000. O PostgreSQL do Compose escuta na p
 
 Nada sai da máquina: e-mails e mensagens de WhatsApp vão para a caixa de saída em **http://localhost:3000/dev**, onde também ficam o relógio ajustável e o botão que roda o worker na hora.
 
-1. **Professor.** Em `/professor/entrar`, entre com qualquer e-mail; o código chega na caixa de saída do `/dev`. Preencha o perfil, envie a foto (JPG, PNG ou WEBP, em “Seu perfil”) e os três documentos (qualquer PDF ou imagem), abra a conta de recebimento (o CPF precisa ter dígitos válidos, como `529.982.247-25`) e envie para análise.
+1. **Professor.** Em `/professor/entrar`, entre com qualquer e-mail; o código chega na caixa de saída do `/dev`. O painel “Início” mostra os sete passos até a primeira aula. Em “Meu perfil”, preencha o perfil (com especialidades e o ano em que começou a dar aula; a prévia ao lado mostra a página como o aluno vê) e envie a foto (JPG, PNG ou WEBP). Em “Documentos”, envie os três documentos (qualquer PDF ou imagem); em “Recebimento”, abra a conta de recebimento (o CPF precisa ter dígitos válidos, como `529.982.247-25`) e envie para análise.
 2. **Equipe.** Em `/interno/entrar`, entre com um e-mail de `ADMIN_EMAILS`. Em “Verificações”, compare a foto com o documento de identidade e aprove a foto, os três documentos e o perfil.
-3. **Agenda.** De volta ao professor, crie um serviço em “Serviços” e horários em “Agenda”.
+3. **Agenda.** De volta ao professor, crie um serviço em “Serviços e preços” e horários em “Agenda”.
 4. **Família.** Abra `/p/<endereço-da-página>`, escolha um horário, identifique-se (código no `/dev`), pague por PIX e use “Simular pagamento”.
 5. **Aula.** No `/dev`, avance o relógio até perto da aula. O professor entra pela lista de “Aulas”; a família, pelo link do e-mail de confirmação. Os dois clicam “Entrar” na sala simulada.
 6. **Repasse.** Avance o relógio para depois do fim da aula e clique “Rodar varreduras agora”: a aula é concluída e o repasse fica retido. Avance mais 24 horas e rode de novo: o repasse é liberado.

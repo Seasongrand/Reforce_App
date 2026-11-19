@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { ActionForm } from '@/components/ActionForm';
 import { appDeps } from '@/server/app';
 import { requireTeacher } from '@/server/session';
@@ -19,7 +18,6 @@ export default async function PayoutAccountPage() {
     .where('teacher_id', '=', teacherId).executeTakeFirst();
   return (
     <div className="space-y-6">
-      <Link href="/professor" className="text-sm text-brand">← Painel</Link>
       <h1 className="text-2xl font-semibold">Conta de recebimento</h1>
       <p className="text-sm text-slate-700">
         O aluno paga na plataforma. Sua parte fica retida no provedor de pagamento e é liberada na sua conta

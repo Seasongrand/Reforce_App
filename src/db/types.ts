@@ -387,8 +387,10 @@ export interface Teachers {
   phone_e164: string | null;
   slot_step_min: Generated<number>;
   slug: string;
+  specialties: Generated<string[]>;
   status: Generated<string>;
   teaching_address: string | null;
+  teaching_since: number | null;
   timezone: Generated<string>;
   travel_radius_km: Numeric | null;
   whatsapp_opt_in_at: string | null;
