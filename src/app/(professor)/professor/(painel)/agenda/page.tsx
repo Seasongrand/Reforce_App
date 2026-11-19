@@ -35,7 +35,6 @@ export default async function AgendaPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/professor" className="text-sm text-brand">← Painel</Link>
       <h1 className="text-2xl font-semibold">Agenda</h1>
       <p className="text-sm text-slate-600">Horários no fuso do seu perfil ({t.timezone}).</p>
 

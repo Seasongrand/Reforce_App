@@ -21,7 +21,6 @@ export default async function ServicesPage() {
   const floor = appDeps().config.priceFloorCents;
   return (
     <div className="space-y-6">
-      <Link href="/professor" className="text-sm text-brand">← Painel</Link>
       <h1 className="text-2xl font-semibold">Serviços</h1>
       <p className="text-sm text-slate-600">
         Você define o preço{floor > 0 ? ` (mínimo da plataforma: ${formatBRL(floor)})` : ''}. Mudanças valem para as próximas

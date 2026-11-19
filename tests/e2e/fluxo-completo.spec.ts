@@ -81,6 +81,12 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   const teacher = await (await browser.newContext()).newPage();
   await codeLogin(teacher, '/professor/entrar', TEACHER_EMAIL);
   await teacher.waitForURL('**/professor/cadastro');
+  // a área do professor tem o menu do painel, com a página atual marcada
+  const nav = teacher.getByRole('navigation', { name: 'Área do professor' });
+  for (const label of ['Início', 'Meu perfil', 'Serviços e preços', 'Agenda', 'Aulas', 'Documentos', 'Recebimento']) {
+    await expect(nav.getByRole('link', { name: label })).toBeVisible();
+  }
+  await expect(nav.getByRole('link', { name: 'Meu perfil' })).toHaveAttribute('aria-current', 'page');
   await teacher.fill('#displayName', 'Ana Souza');
   await teacher.fill('#slug', SLUG);
   await teacher.fill('#headline', 'Matemática para o 9º ano');
@@ -118,6 +124,9 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(teacher.getByTestId('conta-status')).toContainText('ativa');
 
   await teacher.goto('/professor');
+  await teacher.setViewportSize({ width: 390, height: 844 }); // no celular, o menu não cria rolagem lateral
+  expect(await teacher.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await teacher.setViewportSize({ width: 1280, height: 720 });
   await teacher.click('button:has-text("Enviar para análise")');
   await expect(teacher.getByTestId('teacher-status')).toHaveText('Em análise pela equipe');
 

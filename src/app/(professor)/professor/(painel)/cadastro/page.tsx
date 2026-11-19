@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { ActionForm } from '@/components/ActionForm';
 import { BRAZIL_TIMEZONES } from '@/domain/teachers/profile';
 import { teacherPhotoState } from '@/domain/teachers/photo';
@@ -23,7 +22,6 @@ export default async function TeacherProfilePage() {
   const photo = await teacherPhotoState(appDeps(), teacherId);
   return (
     <div className="space-y-6">
-      <Link href="/professor" className="text-sm text-brand">← Painel</Link>
       <h1 className="text-2xl font-semibold">Seu perfil</h1>
       <section className="card space-y-3" data-testid="foto">
         <h2 className="text-lg font-medium">Sua foto</h2>

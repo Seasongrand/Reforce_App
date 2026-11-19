@@ -4,7 +4,7 @@ import { missingForReview } from '@/domain/teachers/review';
 import { appDeps, now } from '@/server/app';
 import { requireTeacher } from '@/server/session';
 import { submitForReviewAction } from './actions';
-import { logoutAction } from './entrar/actions';
+import { logoutAction } from '../entrar/actions';
 
 export const dynamic = 'force-dynamic';
 
