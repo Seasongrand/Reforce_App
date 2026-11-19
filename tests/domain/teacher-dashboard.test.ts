@@ -5,13 +5,14 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { teacherDashboard } from '@/domain/teachers/dashboard';
+import { teacherServiceSummary } from '@/domain/teachers/service-summary';
 import { updateTeacherProfile, type ProfileInput } from '@/domain/teachers/profile';
 import { submitVerificationDocument } from '@/domain/teachers/verification';
 import { openPaymentAccount } from '@/domain/teachers/payment-account';
 import { submitForReview } from '@/domain/teachers/review';
-import { closeAppDb } from '../helpers/app';
+import { appDb, closeAppDb } from '../helpers/app';
 import { closeTestPool, testPool, truncateAll } from '../helpers/db';
-import { insertTeacher, seedTestCatalog } from '../helpers/fixtures';
+import { insertService, insertTeacher, seedTestCatalog } from '../helpers/fixtures';
 import { family, listedTeacher, NOW, testDeps, TUE_14 } from '../helpers/scenario';
 
 beforeEach(async () => {
@@ -102,5 +103,23 @@ describe('painel Início do professor', () => {
     expect(d.upcoming.map((l) => l.bookingId)).toEqual(ids.slice(0, 3));
     expect(d.upcoming.map((l) => l.startsAt.toString())).toEqual([0, 1, 2].map((h) => TUE_14.add({ hours: h }).toString()));
     expect((await teacherDashboard(deps(), t.teacherId, TUE_14.add({ hours: 5 }))).upcoming).toEqual([]);
+  });
+});
+
+describe('resumo dos serviços para o perfil', () => {
+  it('sem serviço: sem preço, duração nem modalidade', async () => {
+    const id = await insertTeacher(testPool());
+    expect(await teacherServiceSummary(appDb(), id)).toEqual({ minPriceCents: null, durations: [], modalities: [] });
+  });
+
+  it('menor preço, durações e modalidades dos serviços ativos, na ordem da página', async () => {
+    const id = await insertTeacher(testPool());
+    await insertService(testPool(), id, { duration_min: 90, price_cents: 15000, modality: 'at_student' });
+    await insertService(testPool(), id, { duration_min: 60, price_cents: 12100, modality: 'online' });
+    const off = await insertService(testPool(), id, { duration_min: 30, price_cents: 5000, modality: 'at_teacher' });
+    await testPool().query(`UPDATE services SET active = false WHERE id = $1`, [off]);
+    expect(await teacherServiceSummary(appDb(), id)).toEqual({
+      minPriceCents: 12100, durations: [60, 90], modalities: ['online', 'at_student'],
+    });
   });
 });

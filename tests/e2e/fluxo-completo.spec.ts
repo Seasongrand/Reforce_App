@@ -49,6 +49,9 @@ async function codeLogin(page: Page, path: string, email: string) {
 }
 
 /** Ajusta o relógio de desenvolvimento (compartilhado por web e worker) para o instante dado. */
+/** O professor começou a dar aula em 2013; a página mostra os anos até hoje. */
+const EXPERIENCE = `${new Date().getFullYear() - 2013} anos de experiência`;
+
 async function setClock(target: Date) {
   const offset = target.getTime() - Date.now();
   await q(`INSERT INTO dev_clock (id, offset_ms) VALUES (true, $1)
@@ -87,9 +90,17 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
     await expect(nav.getByRole('link', { name: label })).toBeVisible();
   }
   await expect(nav.getByRole('link', { name: 'Meu perfil' })).toHaveAttribute('aria-current', 'page');
+  // a prévia mostra, ao vivo, como os alunos vão ver a página
+  const preview = teacher.getByTestId('previa');
+  await expect(preview).toContainText('Defina o preço em Serviços e preços');
   await teacher.fill('#displayName', 'Ana Souza');
   await teacher.fill('#slug', SLUG);
   await teacher.fill('#headline', 'Matemática para o 9º ano');
+  await expect(preview).toContainText('Matemática para o 9º ano');
+  await teacher.getByRole('checkbox', { name: 'ENEM' }).check();
+  await teacher.fill('#teachingSince', '2013');
+  await expect(preview).toContainText('ENEM');
+  await expect(preview).toContainText(EXPERIENCE);
   await teacher.check('input[aria-label="Matemática, 9º ano"]');
   await teacher.fill('#phone', '(11) 97777-6666');
   await teacher.check('input[name=whatsappOptIn]');
@@ -207,6 +218,8 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await card.click();
   await fam1.waitForURL(`**/p/${SLUG}`);
   await expect(fam1.getByText('Perfil verificado')).toBeVisible();
+  await expect(fam1.getByText('ENEM', { exact: true })).toBeVisible();
+  await expect(fam1.getByText(EXPERIENCE)).toBeVisible();
   await expect(fam1.getByRole('img', { name: 'Foto de Ana Souza' })).toBeVisible();
   await fam1.getByRole('radio', { name: /online/i }).click();
   const slotButton = fam1.locator('button[data-slot]').first();

@@ -11,6 +11,7 @@ import { onlyDigits } from '@/providers/geocoding/fake';
 import { enqueue } from '@/worker/enqueue';
 import type { Deps } from '../deps';
 import { DomainError } from '../errors';
+import { experienceText } from '@/lib/teacher-experience';
 import { normalizePhoneBR } from '../guardians/identify';
 
 export const BRAZIL_TIMEZONES = [
@@ -38,12 +39,12 @@ const SPECIALTY_KEYS = Object.keys(TEACHER_SPECIALTIES) as Specialty[];
 
 const yearInSaoPaulo = (now: Temporal.Instant) => now.toZonedDateTimeISO('America/Sao_Paulo').year;
 
+/** Ano corrente em São Paulo (a prévia do perfil recebe este valor do servidor). */
+export const currentYearSaoPaulo = yearInSaoPaulo;
+
 /** "13 anos de experiência" a partir do ano em que começou a dar aula; null quando não informado. */
 export function experienceLabel(teachingSince: number | null, now: Temporal.Instant): string | null {
-  if (teachingSince === null) return null;
-  const years = yearInSaoPaulo(now) - teachingSince;
-  if (years <= 0) return 'Começou a dar aula este ano';
-  return years === 1 ? '1 ano de experiência' : `${years} anos de experiência`;
+  return experienceText(teachingSince, yearInSaoPaulo(now));
 }
 
 export interface ProfileInput {
