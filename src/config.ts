@@ -54,7 +54,7 @@ const schema = z
     FAKE_FAIL: z.string().default(''),
     // Exportação da lista de espera (CSV), protegida por senha; sem senha, a exportação não existe
     WAITLIST_EXPORT_PASSWORD: z.string().min(16, 'deve ter pelo menos 16 caracteres').optional(),
-    CONTACT_EMAIL: z.string().regex(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, 'e-mail inválido').default('contato@reforce.app.br'),
+    CONTACT_EMAIL: z.string().regex(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, 'e-mail inválido').default('ola.reforce@gmail.com'),
   })
   .superRefine((e, ctx) => {
     if (e.PIX_EXPIRY_LEAD_MINUTES >= e.HOLD_MINUTES) {
