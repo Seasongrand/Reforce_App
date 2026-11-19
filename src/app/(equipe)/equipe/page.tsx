@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { config } from '@/config';
+import { config, marketplaceReady } from '@/config';
 import { teamPasswordMatches } from '@/domain/team-auth';
 import { teamOverview, type TeamOverview } from '@/domain/team-view';
 import { WAITLIST_SUBJECTS } from '@/domain/waitlist';
 import { siteDeps } from '@/server/app';
+import { enterAsGuardianAction, enterAsStaffAction, enterAsTeacherAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +68,49 @@ function Chips({ items }: { items: string[] }) {
         <li key={s} className="rounded-lg bg-violet-50 px-2 py-1 text-[13px] font-medium">{s}</li>
       ))}
     </ul>
+  );
+}
+
+const SHORTCUTS = [
+  { action: enterAsStaffAction, label: 'Painel interno', text: 'Aprovar professores e acompanhar aulas e repasses.' },
+  { action: enterAsTeacherAction, label: 'Ver como professor', text: 'O painel de um professor de teste, em rascunho.' },
+  { action: enterAsGuardianAction, label: 'Ver como aluno', text: 'A conta de um responsável de teste, com um aluno.' },
+];
+
+/** Atalhos para as áreas fechadas ao público (só no modo lista de espera). */
+function TeamAccess() {
+  return (
+    <section aria-labelledby="acessos" className={CARD}>
+      <h2 id="acessos" className="font-display text-lg font-bold">Acessos da equipe</h2>
+      {marketplaceReady(config()) ? (
+        <>
+          <p className="mt-1 text-sm text-site-muted">
+            Entre nas áreas que o público ainda não vê, com contas de teste. Pagamentos e mensagens são simulados: nada é
+            cobrado nem enviado.
+          </p>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-3">
+            {SHORTCUTS.map((s) => (
+              <li key={s.label} className="rounded-xl border border-site-line p-3">
+                <form action={s.action}>
+                  <button type="submit" className="min-h-11 w-full rounded-xl bg-indigo-600 px-4 font-semibold text-white hover:bg-indigo-700">
+                    {s.label}
+                  </button>
+                </form>
+                <p className="mt-2 text-[13px] text-site-muted">{s.text}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-sm text-site-muted">
+            A busca e as páginas dos professores também abrem para você:{' '}
+            <a className="font-semibold text-indigo-600 underline" href="/buscar">busca de professores</a>.
+          </p>
+        </>
+      ) : (
+        <p className="mt-1 text-sm text-site-muted">
+          Para entrar nas áreas fechadas ao público, o servidor precisa de duas chaves: SESSION_SECRET e FILE_ENCRYPTION_KEY.
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -147,6 +191,8 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
           <a className={ACTION} href="/api/lista-de-espera/alunos.csv">Planilha dos alunos</a>
         </div>
       </div>
+
+      {config().siteMode === 'lista_de_espera' && <TeamAccess />}
 
       <div className="grid grid-cols-3 gap-3">
         <Count label="Professores" n={v.totals.teachers} />

@@ -14,5 +14,9 @@ export const LISTA_ENV: Record<string, string> = {
   APP_BASE_URL: LISTA_BASE,
   SITE_MODE: 'lista_de_espera',
   WAITLIST_EXPORT_PASSWORD: LISTA_PASSWORD,
+  // com as duas chaves, a equipe (com a senha) usa as áreas fechadas ao público
+  SESSION_SECRET: 'segredo-do-teste-da-lista-de-espera-com-mais-de-32',
+  FILE_ENCRYPTION_KEY: 'c'.repeat(64),
+  FILE_STORAGE_DIR: 'var/e2e-lista-private',
   NEXT_TELEMETRY_DISABLED: '1',
 };
