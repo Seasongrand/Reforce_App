@@ -156,6 +156,15 @@ export function loadConfig(env: Env): AppConfig {
   };
 }
 
+/**
+ * O marketplace (sessões e documentos) pode rodar? No site completo, sempre
+ * (a validação exige as duas chaves). Na lista de espera, só quando as duas
+ * foram definidas: aí a equipe, com a senha, usa as áreas fechadas ao público.
+ */
+export function marketplaceReady(cfg: AppConfig): boolean {
+  return Boolean(cfg.sessionSecret && cfg.fileEncryptionKeyHex);
+}
+
 let cached: AppConfig | undefined;
 
 /** Configuração do processo, lida uma vez de process.env. */
