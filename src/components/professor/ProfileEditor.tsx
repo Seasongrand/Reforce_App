@@ -59,9 +59,10 @@ export function ProfileEditor(p: ProfileEditorProps) {
   const full = specialties.size >= p.maxSpecialties;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,23rem)]">
+    // minmax(0, 1fr): a tabela de disciplinas rola dentro do cartão em vez de alargar a página no celular
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,23rem)]">
       <form
-        className="card space-y-5"
+        className="card min-w-0 space-y-5"
         onSubmit={(e) => {
           e.preventDefault();
           const data = new FormData(e.currentTarget);
@@ -94,7 +95,7 @@ export function ProfileEditor(p: ProfileEditorProps) {
             value={since} onChange={(e) => setSince(e.target.value.replace(/\D/g, ''))} placeholder="2015" />
           <p className="mt-1 text-[13px] text-site-muted">Aparece como “anos de experiência” na sua página.</p>
         </div>
-        <fieldset>
+        <fieldset className="min-w-0">
           <legend className="label">Especialidades <span className="font-normal text-site-muted">({specialties.size} de {p.maxSpecialties})</span></legend>
           <div className="flex flex-wrap gap-2">
             {p.specialties.map((o) => {
@@ -110,7 +111,8 @@ export function ProfileEditor(p: ProfileEditorProps) {
             })}
           </div>
         </fieldset>
-        <fieldset>
+        {/* min-w-0: por padrão, fieldset cresce até caber a tabela e anula a rolagem dela */}
+        <fieldset className="min-w-0">
           <legend className="label">Disciplinas e séries</legend>
           <div className="overflow-x-auto">
             <table className="text-sm">

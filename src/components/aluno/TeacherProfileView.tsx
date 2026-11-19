@@ -53,7 +53,8 @@ export function TeacherProfileView(p: TeacherProfileViewProps) {
   const durations = p.durations.length === 0 ? null
     : p.durations.length === 1 ? `${p.durations[0]} min` : `${p.durations[0]} a ${p.durations.at(-1)} min`;
   return (
-    <div>
+    // @container: os quadros seguem a largura da caixa (página inteira ou a prévia estreita), não a da tela
+    <div className="@container">
       <section className="space-y-4">
         <div className="flex items-center gap-4">
           <TeacherPhoto photoUrl={p.photoUrl} name={p.name || 'Professor'} size={96} />
@@ -79,7 +80,7 @@ export function TeacherProfileView(p: TeacherProfileViewProps) {
               Defina o preço em Serviços e preços
             </p>
           ) : (
-            <div className={`grid grid-cols-2 gap-2 ${p.statExtra ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
+            <div className={`grid grid-cols-2 gap-2 ${p.statExtra ? '@lg:grid-cols-4' : '@md:grid-cols-3'}`}>
               <Stat label="A partir de"><span className="text-[17px] font-bold">{formatBRL(p.minPriceCents)}</span></Stat>
               <Stat label="Duração">{durations ?? '—'}</Stat>
               <Stat label="Aulas">{modalities || '—'}</Stat>

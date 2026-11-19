@@ -109,6 +109,9 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.fill('#teachingAddress', 'Rua das Flores, 100, Pinheiros');
   await teacher.click('button:has-text("Salvar perfil")');
   await expect(teacher.getByText('Perfil salvo.')).toBeVisible();
+  await teacher.setViewportSize({ width: 390, height: 844 }); // no celular, o editor e a prévia cabem sem rolagem lateral
+  expect(await teacher.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await teacher.setViewportSize({ width: 1280, height: 720 });
   const photoForm = teacher.getByTestId('foto');
   await photoForm.locator('input[type=file]').setInputFiles(path.join(FIXTURES, 'foto.jpg'));
   await photoForm.locator('button:has-text("Enviar foto")').click();

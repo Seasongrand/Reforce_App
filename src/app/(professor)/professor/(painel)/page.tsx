@@ -57,7 +57,7 @@ export default async function TeacherHome() {
           <div className="space-y-2">
             <div className="flex items-baseline justify-between gap-3">
               <h2 id="passos" className="font-display text-xl font-bold">Seus passos até a primeira aula</h2>
-              <span className="text-sm font-semibold text-site-muted" data-testid="progresso">{d.done} de {d.total}</span>
+              <span className="flex-none whitespace-nowrap text-sm font-semibold text-site-muted" data-testid="progresso">{d.done} de {d.total}</span>
             </div>
             <div className="h-2 rounded-full bg-site-line" aria-hidden="true">
               <div className="h-2 rounded-full bg-indigo-600" style={{ width: `${pct}%` }} />
