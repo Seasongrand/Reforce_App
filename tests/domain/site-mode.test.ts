@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { isPathOpenInWaitlistMode } from '@/domain/site-mode';
-import { loadConfig } from '@/config';
+import { loadConfig, marketplaceReady } from '@/config';
 
 const base = {
   DATABASE_URL: 'postgres://u:p@localhost:5433/aulas',
@@ -49,5 +49,14 @@ describe('configuração do modo do site', () => {
     expect(loadConfig({ ...base, WAITLIST_EXPORT_PASSWORD: 'uma-senha-longa-o-bastante' }).waitlistExportPassword)
       .toBe('uma-senha-longa-o-bastante');
     expect(loadConfig(base).waitlistExportPassword).toBeNull();
+  });
+
+  it('o marketplace roda no site completo e, na lista de espera, só para a equipe com as duas chaves', () => {
+    const { SESSION_SECRET, FILE_ENCRYPTION_KEY, ...noKeys } = base;
+    expect(marketplaceReady(loadConfig(base))).toBe(true);
+    expect(marketplaceReady(loadConfig({ ...base, SITE_MODE: 'lista_de_espera' }))).toBe(true);
+    expect(marketplaceReady(loadConfig({ ...noKeys, SITE_MODE: 'lista_de_espera' }))).toBe(false);
+    expect(marketplaceReady(loadConfig({ ...noKeys, SESSION_SECRET, SITE_MODE: 'lista_de_espera' }))).toBe(false);
+    expect(marketplaceReady(loadConfig({ ...noKeys, FILE_ENCRYPTION_KEY, SITE_MODE: 'lista_de_espera' }))).toBe(false);
   });
 });

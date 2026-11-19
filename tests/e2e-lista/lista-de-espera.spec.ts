@@ -167,3 +167,42 @@ test('a página dos professores também fica em /professores; a vitrine está fe
   expect((await request.get('/conta')).status()).toBe(404);
   expect((await request.get('/conta/entrar')).status()).toBe(404);
 });
+
+test('acesso da equipe: com a senha, entra no painel interno e como professor e aluno de teste', async ({ page, browser }) => {
+  const header = (password: string) => ({ authorization: `Basic ${Buffer.from(`equipe:${password}`).toString('base64')}` });
+  for (const p of ['/professor', '/interno', '/conta']) {
+    expect((await page.request.get(p)).status()).toBe(404);
+    expect((await page.request.get(p, { headers: header('senha-errada-bem-longa') })).status()).toBe(404);
+  }
+  expect((await page.request.get('/professor/entrar', { headers: header(LISTA_PASSWORD) })).status()).toBe(200);
+
+  const ctx = await browser.newContext({ httpCredentials: { username: 'equipe', password: LISTA_PASSWORD } });
+  const team = await ctx.newPage();
+  await team.setViewportSize({ width: 390, height: 844 });
+  await team.goto('/equipe');
+  const access = team.getByRole('region', { name: 'Acessos da equipe' });
+  await expect(access).toContainText('contas de teste');
+  expect(await team.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+
+  await access.getByRole('button', { name: 'Ver como professor' }).click();
+  await expect(team).toHaveURL(/\/professor$/);
+  await expect(team.getByRole('heading', { level: 1 })).toContainText('Olá, Professor');
+
+  await team.goto('/equipe');
+  await access.getByRole('button', { name: 'Ver como aluno' }).click();
+  await expect(team).toHaveURL(/\/conta$/);
+  await expect(team.getByRole('heading', { level: 1 })).toHaveText('Olá, Responsável');
+
+  await team.goto('/equipe');
+  await access.getByRole('button', { name: 'Painel interno' }).click();
+  await expect(team).toHaveURL(/\/interno$/);
+  await expect(team.getByRole('heading', { level: 1 })).toHaveText('Painel interno');
+
+  // a sessão sozinha não abre nada: sem a senha, as áreas continuam fechadas
+  const anon = await browser.newContext();
+  await anon.addCookies(await ctx.cookies());
+  expect((await anon.request.get('/professor')).status()).toBe(404);
+  expect((await anon.request.get('/interno')).status()).toBe(404);
+  await anon.close();
+  await ctx.close();
+});

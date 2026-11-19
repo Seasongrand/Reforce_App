@@ -3,7 +3,7 @@
  * tela e de rota pega daqui o que precisa; a lógica fica em src/domain.
  */
 import 'server-only';
-import { config } from '@/config';
+import { config, marketplaceReady } from '@/config';
 import { getDb } from '@/db/client';
 import type { Deps } from '@/domain/deps';
 import type { WaitlistDeps } from '@/domain/waitlist';
@@ -13,11 +13,16 @@ import type { Temporal } from 'temporal-polyfill';
 
 let deps: Deps | undefined;
 
-/** Dependências do marketplace. No modo lista de espera, o marketplace está desligado. */
+/**
+ * Dependências do marketplace. No modo lista de espera, só a equipe chega às
+ * áreas fechadas (o proxy confere a senha), e só se as duas chaves existirem.
+ */
 export function appDeps(): Deps {
   if (!deps) {
     const cfg = config();
-    if (cfg.siteMode !== 'completo') throw new Error('marketplace desligado: SITE_MODE=lista_de_espera');
+    if (!marketplaceReady(cfg)) {
+      throw new Error('marketplace desligado: na lista de espera, faltam SESSION_SECRET e FILE_ENCRYPTION_KEY');
+    }
     const db = getDb();
     deps = { db, config: cfg, providers: providers(db, cfg) };
   }

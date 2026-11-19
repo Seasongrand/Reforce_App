@@ -118,6 +118,8 @@ A configuração do deploy fica no próprio serviço, na Railway, e não no repo
 
 **Enquanto não há provedores reais**, o site roda em `SITE_MODE=lista_de_espera`: a página inicial mostra a lista de espera de professores, o botão "Entrar" leva a `/entrar` (o aluno pede aviso da abertura) e as rotas do marketplace respondem 404. A equipe acompanha as inscrições em `/equipe` (hoje, https://reforce.up.railway.app/equipe): totais, resumo por cidade e disciplina, listas com filtros, WhatsApp, e-mail e currículo de cada professor. As planilhas ficam em `/api/lista-de-espera.csv` (professores) e `/api/lista-de-espera/alunos.csv` (alunos que pediram aviso). Tudo isso pede a mesma senha (`WAITLIST_EXPORT_PASSWORD`; o usuário pode ser qualquer um); sem a variável, essas rotas não existem.
 
+Na mesma página, a seção **Acessos da equipe** leva o dono, com a senha, ao painel interno (`/interno`), à área do professor (`/professor`) e à conta da família (`/conta`), com contas de teste e sem código por e-mail: um professor em rascunho (`professor.teste@reforce.invalid`) e um responsável com um aluno (telefone fictício `+5500000000000`). Pagamentos e mensagens continuam simulados. Com a senha, as outras rotas do marketplace (busca, página do professor) também abrem; sem ela, continuam respondendo 404, e o cookie de sessão sozinho não abre nada. Os atalhos precisam de `SESSION_SECRET` e `FILE_ENCRYPTION_KEY`; sem elas, a seção só explica o que falta. No site completo, a seção some e a equipe entra pelo código no e-mail.
+
 Configuração inicial, feita uma vez no painel da Railway:
 
 1. **New Project → Deploy from GitHub repo** e escolha `Seasongrand/Reforce_App` (autorize o app da Railway no GitHub).
@@ -128,6 +130,7 @@ Configuração inicial, feita uma vez no painel da Railway:
    - `APP_BASE_URL` = o endereço público do site. Hoje é `https://reforce.up.railway.app`; passa a ser `https://reforce.app.br` quando o domínio estiver pronto. O convite pelo WhatsApp, depois da inscrição, e a prévia do link usam este endereço.
    - `WAITLIST_EXPORT_PASSWORD` = uma senha sua, com 16 caracteres ou mais
    - `CONTACT_EMAIL` = um e-mail que exista, para pedidos sobre dados pessoais
+   - `SESSION_SECRET` e `FILE_ENCRYPTION_KEY` = as chaves dos acessos da equipe, geradas com o comando do `.env.example` (cada uma com o seu valor)
 4. Em **Settings → Deploy**, defina:
    - **Pre-deploy Command:** `npm run db:migrate && npm run db:seed`
    - **Custom Start Command:** `npm run start`
@@ -141,7 +144,7 @@ Configuração inicial, feita uma vez no painel da Railway:
    - uma **Redirect Rule** do modelo “Redirect from WWW to root”;
    - no Registro.br, os servidores DNS trocados pelos dois que o Cloudflare indicar.
 
-**Quando o marketplace abrir:** a página inicial vira a vitrine de busca para o aluno (resultados em `/buscar`), e a página dos professores, que também fica em `/professores` desde já, sai da página inicial. Troque `SITE_MODE` para `completo`, defina `SESSION_SECRET`, `FILE_ENCRYPTION_KEY` e as credenciais dos provedores reais, e crie um segundo serviço a partir do mesmo repositório para o worker, com o comando `npm run worker` e as mesmas variáveis.
+**Quando o marketplace abrir:** a página inicial vira a vitrine de busca para o aluno (resultados em `/buscar`), e a página dos professores, que também fica em `/professores` desde já, sai da página inicial. Troque `SITE_MODE` para `completo`, confira `SESSION_SECRET` e `FILE_ENCRYPTION_KEY` (já definidas para os acessos da equipe), defina as credenciais dos provedores reais, apague as contas de teste (veja `docs/pendencias.md`) e crie um segundo serviço a partir do mesmo repositório para o worker, com o comando `npm run worker` e as mesmas variáveis.
 
 ## Produção (outras hospedagens)
 
