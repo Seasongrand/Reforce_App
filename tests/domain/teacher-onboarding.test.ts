@@ -5,7 +5,7 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
-import { updateTeacherProfile, type ProfileInput } from '@/domain/teachers/profile';
+import { experienceLabel, updateTeacherProfile, type ProfileInput } from '@/domain/teachers/profile';
 import { listVerifications, submitVerificationDocument } from '@/domain/teachers/verification';
 import { openPaymentAccount, isValidCpfCnpj } from '@/domain/teachers/payment-account';
 import { submitForReview } from '@/domain/teachers/review';
@@ -74,6 +74,51 @@ describe('perfil', () => {
     const id = await insertTeacher(testPool());
     await expect(updateTeacherProfile(deps(), id, profile({ subjects: [] }), NOW)).rejects.toThrow(/disciplina/);
     await expect(updateTeacherProfile(deps(), id, profile({ subjects: [[99, 9]] }), NOW)).rejects.toThrow(/disciplina/);
+  });
+});
+
+describe('especialidades e experiência', () => {
+  it('grava as especialidades na ordem do catálogo e o ano em que começou a dar aula', async () => {
+    const id = await insertTeacher(testPool());
+    await updateTeacherProfile(deps(), id, profile({ specialties: ['enem', 'reforco'], teachingSince: 2013 }), NOW);
+    expect(await q(`SELECT specialties, teaching_since FROM teachers WHERE id = $1`, [id])).toEqual([
+      { specialties: ['reforco', 'enem'], teaching_since: 2013 },
+    ]);
+  });
+
+  it('salvar sem os campos novos não apaga o que já estava gravado; null apaga o ano', async () => {
+    const id = await insertTeacher(testPool());
+    await updateTeacherProfile(deps(), id, profile({ specialties: ['enem'], teachingSince: 2013 }), NOW);
+    await updateTeacherProfile(deps(), id, profile(), NOW);
+    expect(await q(`SELECT specialties, teaching_since FROM teachers WHERE id = $1`, [id])).toEqual([
+      { specialties: ['enem'], teaching_since: 2013 },
+    ]);
+    await updateTeacherProfile(deps(), id, profile({ specialties: [], teachingSince: null }), NOW);
+    expect(await q(`SELECT specialties, teaching_since FROM teachers WHERE id = $1`, [id])).toEqual([
+      { specialties: [], teaching_since: null },
+    ]);
+  });
+
+  it('recusa especialidade fora da lista, mais de 6 e ano fora do intervalo, sem gravar nada', async () => {
+    const id = await insertTeacher(testPool());
+    const before = await q(`SELECT slug, specialties, teaching_since FROM teachers WHERE id = $1`, [id]);
+    await expect(updateTeacherProfile(deps(), id, profile({ specialties: ['inventada' as never] }), NOW))
+      .rejects.toThrow(/especialidade fora da lista/);
+    await expect(updateTeacherProfile(deps(), id, profile({
+      specialties: ['reforco', 'tarefas', 'provas', 'recuperacao', 'base', 'dificuldades', 'enem'],
+    }), NOW)).rejects.toThrow(/até 6 especialidades/);
+    await expect(updateTeacherProfile(deps(), id, profile({ teachingSince: 2027 }), NOW)).rejects.toThrow(/ano em que começou/);
+    await expect(updateTeacherProfile(deps(), id, profile({ teachingSince: 1949 }), NOW)).rejects.toThrow(/ano em que começou/);
+    await expect(updateTeacherProfile(deps(), id, profile({ teachingSince: 2013.5 }), NOW)).rejects.toThrow(/ano em que começou/);
+    expect(await q(`SELECT slug, specialties, teaching_since FROM teachers WHERE id = $1`, [id])).toEqual(before);
+    expect(before).toEqual([{ slug: expect.any(String), specialties: [], teaching_since: null }]);
+  });
+
+  it('mostra a experiência em anos, a partir do ano em São Paulo', () => {
+    expect(experienceLabel(2013, NOW)).toBe('13 anos de experiência');
+    expect(experienceLabel(2025, NOW)).toBe('1 ano de experiência');
+    expect(experienceLabel(2026, NOW)).toBe('Começou a dar aula este ano');
+    expect(experienceLabel(null, NOW)).toBeNull();
   });
 });
 
