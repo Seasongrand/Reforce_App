@@ -127,6 +127,11 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.setViewportSize({ width: 390, height: 844 }); // no celular, o menu não cria rolagem lateral
   expect(await teacher.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await teacher.setViewportSize({ width: 1280, height: 720 });
+  // o painel Início mostra os passos feitos (foto em análise, perfil, documentos e conta) e que a página ainda não está no ar
+  await expect(teacher.getByRole('heading', { level: 1 })).toHaveText('Olá, Ana');
+  await expect(teacher.getByTestId('progresso')).toHaveText('4 de 7');
+  await expect(teacher.getByTestId('passo-foto')).toContainText('Em análise');
+  await expect(teacher.getByTestId('pagina-aviso')).toBeVisible();
   await teacher.click('button:has-text("Enviar para análise")');
   await expect(teacher.getByTestId('teacher-status')).toHaveText('Em análise pela equipe');
 
@@ -175,6 +180,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
     await ruleForm.locator('button:has-text("Adicionar horário")').click();
     await expect(teacher.getByTestId('regras').locator('li')).toHaveCount(day);
   }
+  // aprovada, com serviço e agenda: os sete passos feitos e o link da página para divulgar
+  await teacher.goto('/professor');
+  await expect(teacher.getByTestId('progresso')).toHaveText('7 de 7');
+  await expect(teacher.getByTestId('pagina-link')).toHaveAttribute('href', new RegExp(`/p/${SLUG}$`));
 
   // 4. Uma família abre o link, reserva o primeiro horário online e paga por PIX (simulado).
   const fam1 = await (await browser.newContext()).newPage();
