@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { ActionForm } from '@/components/ActionForm';
 import { KIND_LABEL, listVerifications, VERIFICATION_KINDS } from '@/domain/teachers/verification';
 import { appDeps } from '@/server/app';
@@ -21,7 +20,6 @@ export default async function VerificationPage() {
   const all = await listVerifications(appDeps(), teacherId);
   return (
     <div className="space-y-6">
-      <Link href="/professor" className="text-sm text-brand">← Painel</Link>
       <h1 className="text-2xl font-semibold">Documentos de verificação</h1>
       <p className="text-sm text-slate-700">
         Os arquivos ficam guardados cifrados e só a equipe de análise os abre, por link temporário.

@@ -10,6 +10,7 @@ import { availableSlots } from '../availability';
 import { subjectName } from '../catalog';
 import type { Deps } from '../deps';
 import { approvedPhotoId } from '../teachers/photo';
+import { experienceLabel, TEACHER_SPECIALTIES, type Specialty } from '../teachers/profile';
 import { publicReviews, type PublicReviews } from '../reviews';
 
 export interface PublicService {
@@ -41,6 +42,10 @@ export interface PublicTeacherPage {
   modalities: Array<PublicService['modality']>;
   /** O horário livre mais próximo entre todos os serviços (ISO), ou null. */
   nextSlot: string | null;
+  /** Especialidades declaradas pelo professor (rótulos, na ordem da lista). */
+  specialties: string[];
+  /** "13 anos de experiência", ou null quando o professor não informou. */
+  experience: string | null;
   /** Média real e quantidade, só quando há avaliações publicadas. */
   rating: PublicReviews['rating'];
   reviews: PublicReviews['reviews'];
@@ -50,7 +55,7 @@ export const PUBLIC_DAYS = 14;
 
 export async function publicTeacherPage(deps: Deps, slug: string, now: Temporal.Instant): Promise<PublicTeacherPage | null> {
   const t = await deps.db.selectFrom('teachers')
-    .select(['id', 'slug', 'display_name', 'headline', 'bio', 'timezone', 'horizon_days'])
+    .select(['id', 'slug', 'display_name', 'headline', 'bio', 'timezone', 'horizon_days', 'specialties', 'teaching_since'])
     .where('slug', '=', slug).where('status', '=', 'approved').executeTakeFirst();
   if (!t) return null;
 
@@ -105,6 +110,8 @@ export async function publicTeacherPage(deps: Deps, slug: string, now: Temporal.
     minPriceCents: services.length > 0 ? Math.min(...services.map((s) => s.priceCents)) : null,
     modalities: order.filter((m) => services.some((s) => s.modality === m)),
     nextSlot: allSlots[0] ?? null,
+    specialties: (t.specialties as Specialty[]).map((s) => TEACHER_SPECIALTIES[s] ?? s),
+    experience: experienceLabel(t.teaching_since, now),
     ...(await publicReviews(deps, t.id)),
   };
 }

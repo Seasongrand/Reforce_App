@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { ActionForm } from '@/components/ActionForm';
 import { teacherLessons } from '@/domain/teachers/lessons';
 import { formatBRL } from '@/lib/money';
@@ -22,7 +21,6 @@ export default async function TeacherLessonsPage() {
   const lessons = await teacherLessons(deps.db, teacherId, at);
   return (
     <div className="space-y-6">
-      <Link href="/professor" className="text-sm text-brand">← Painel</Link>
       <h1 className="text-2xl font-semibold">Aulas</h1>
       {lessons.length === 0 && <p className="text-slate-600">Nenhuma aula paga ainda.</p>}
       <ul className="space-y-3">

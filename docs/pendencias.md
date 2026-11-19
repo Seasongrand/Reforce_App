@@ -12,6 +12,7 @@ O que o código trata como configuração provisória, ou que depende de uma dec
 | Comissão | `COMMISSION_MARKETPLACE_BPS=1500` (15%) e `COMMISSION_TEACHER_LINK_BPS=500` (5%), hipóteses do documento. Na Fase 1, toda família chega pelo link do professor e paga 5%. Desde 17/11, a FAQ dos professores mostra os dois percentuais, lidos destas variáveis | Confirmar; decidir se a taxa cai para famílias recorrentes |
 | Regra de cancelamento | Não há cancelamento nem remarcação pela família (Fase 2). Decidido em 16/11: falta do professor dá reembolso integral automático; falta do aluno paga o professor por inteiro (`STUDENT_NO_SHOW_TEACHER_PCT=100`); aula presencial sem código vai para decisão da equipe | Definir a regra (única ou opções por professor) e o formato da tabela `credits` (§2.2), que ainda não foi criada |
 | Piso de preço | `PRICE_FLOOR_CENTS=0` (sem piso), decidido em 16/11 | Definir o valor |
+| Especialidades e experiência | Desde 19/11, o professor escolhe até 6 especialidades de uma lista fechada e informa o ano em que começou a dar aula (“N anos de experiência”). Os dois são declarados por ele, sem verificação da equipe (`TEACHER_SPECIALTIES` em `src/domain/teachers/profile.ts`) | Revisar a lista; decidir se a equipe confere a experiência |
 | Quem pode dar aula | Sem restrição no código | Só formados e licenciados, ou também universitários? |
 | Venda com certidão vencida | Decidido em 16/11: a página do professor deixa de vender até a nova certidão ser aprovada | Nada, salvo se mudar de ideia |
 

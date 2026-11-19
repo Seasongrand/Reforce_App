@@ -53,6 +53,16 @@ describe('página pública do professor', () => {
     for (const secret of ['+5511977776666', 'Rua Secreta', '@exemplo.com', 'wal_', 'acc_']) expect(json).not.toContain(secret);
   });
 
+  it('mostra as especialidades (rótulos, na ordem do catálogo) e a experiência; sem elas, vazio', async () => {
+    const t = await listedTeacher();
+    const slug = await slugOf(t.teacherId);
+    expect(await publicTeacherPage(deps(), slug, NOW)).toMatchObject({ specialties: [], experience: null });
+    await testPool().query(`UPDATE teachers SET specialties = '{reforco,enem}', teaching_since = 2013 WHERE id = $1`, [t.teacherId]);
+    expect(await publicTeacherPage(deps(), slug, NOW)).toMatchObject({
+      specialties: ['Reforço escolar', 'ENEM'], experience: '13 anos de experiência',
+    });
+  });
+
   it('sem foto aprovada (só em análise), o perfil mostra as iniciais', async () => {
     const t = await listedTeacher();
     const slug = await slugOf(t.teacherId);

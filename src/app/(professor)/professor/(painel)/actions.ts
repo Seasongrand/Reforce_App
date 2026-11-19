@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { updateTeacherProfile } from '@/domain/teachers/profile';
+import { updateTeacherProfile, type Specialty } from '@/domain/teachers/profile';
 import { submitVerificationDocument, type VerificationKind } from '@/domain/teachers/verification';
 import { submitTeacherPhoto } from '@/domain/teachers/photo';
 import { openPaymentAccount } from '@/domain/teachers/payment-account';
@@ -28,6 +28,8 @@ export async function saveProfileAction(_: unknown, f: FormData): Promise<Action
       travelRadiusKm: radius ? Number(radius.replace(',', '.')) : null,
       teachingAddress: s(f, 'teachingAddress'),
       subjects: f.getAll('subj').map((v) => String(v).split(':').map(Number) as [number, number]),
+      specialties: f.getAll('specialty').map(String) as Specialty[],
+      teachingSince: s(f, 'teachingSince') ? Number(s(f, 'teachingSince')) : null,
     }, await now());
   } catch (err) {
     return { ok: false, error: errorMessage(err) };
