@@ -87,7 +87,16 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // 1. A professora se cadastra, envia documentos, abre a conta de recebimento e pede análise.
   const teacher = await (await browser.newContext()).newPage();
   await codeLogin(teacher, '/professor/entrar', TEACHER_EMAIL);
-  await teacher.waitForURL('**/professor/cadastro');
+  // primeiro acesso: só o nome, depois o Início com os passos
+  await teacher.waitForURL('**/professor/boas-vindas');
+  await expect(teacher.getByRole('heading', { level: 1 })).toHaveText('Como você quer ser chamado?');
+  await teacher.fill('#nome', 'Ana Souza');
+  await teacher.getByRole('button', { name: 'Continuar' }).click();
+  await teacher.waitForURL(/\/professor$/);
+  await expect(teacher.getByRole('heading', { level: 1 })).toHaveText('Olá, Ana');
+  // cada passo é clicável na linha inteira
+  await expect(teacher.getByTestId('passo-perfil').getByRole('link')).toHaveAttribute('href', '/professor/cadastro');
+  await teacher.goto('/professor/cadastro');
   // a área do professor tem o menu do painel, com a página atual marcada
   const nav = teacher.getByRole('navigation', { name: 'Área do professor' });
   for (const label of ['Início', 'Meu perfil', 'Serviços e preços', 'Agenda', 'Aulas', 'Documentos', 'Recebimento']) {
@@ -163,6 +172,13 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.goto('/professor');
   await teacher.setViewportSize({ width: 390, height: 844 }); // no celular, o menu não cria rolagem lateral
   expect(await teacher.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  // no celular, a barra de baixo tem Início, Aulas, Agenda e "Mais" com o resto
+  const tabs = teacher.getByRole('navigation', { name: 'Área do professor' });
+  for (const l of ['Início', 'Aulas', 'Agenda']) await expect(tabs.getByRole('link', { name: l })).toBeVisible();
+  await expect(tabs.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page');
+  await tabs.getByRole('button', { name: 'Mais' }).click();
+  for (const l of ['Meu perfil', 'Serviços e preços', 'Documentos', 'Recebimento']) await expect(tabs.getByRole('link', { name: l })).toBeVisible();
+  await tabs.getByRole('button', { name: 'Mais' }).click();
   await teacher.setViewportSize({ width: 1280, height: 720 });
   // o painel Início mostra os passos feitos (foto em análise, perfil, documentos e conta) e que a página ainda não está no ar
   await expect(teacher.getByRole('heading', { level: 1 })).toHaveText('Olá, Ana');
@@ -254,6 +270,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // aprovada, com serviço e agenda: os sete passos feitos e o link da página para divulgar
   await teacher.goto('/professor');
   await expect(teacher.getByTestId('progresso')).toHaveText('7 de 7');
+  // com tudo pronto, o Início fica enxuto: "Tudo pronto" e as próximas aulas antes dos passos
+  await expect(teacher.getByText('Tudo pronto: sua página está no ar.')).toBeVisible();
+  const top = async (l: Locator) => (await l.boundingBox())!.y;
+  expect(await top(teacher.getByRole('heading', { name: 'Próximas aulas' }))).toBeLessThan(await top(teacher.getByText('Ver os passos')));
   await expect(teacher.getByTestId('pagina-link')).toHaveAttribute('href', new RegExp(`/p/${SLUG}$`));
 
   // 4. Uma família abre o link, reserva o primeiro horário online e paga por PIX (simulado).
@@ -305,7 +325,6 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(fam1.getByTestId('pix').locator('img')).toBeVisible();
   await expect(fam1.getByRole('button', { name: 'Copiar código PIX' })).toBeVisible();
   // no computador o QR vem primeiro; no celular, quem paga no mesmo aparelho usa o "copia e cola", que vem antes
-  const top = async (l: Locator) => (await l.boundingBox())!.y;
   const qrImg = fam1.getByTestId('pix').locator('img');
   const copyPix = fam1.getByRole('button', { name: 'Copiar código PIX' });
   expect(await top(qrImg)).toBeLessThan(await top(copyPix));
@@ -466,7 +485,7 @@ test('código por e-mail: reenviar depois de 60 s e usar outro e-mail', async ({
   await expect(resend).toBeDisabled(); // a contagem recomeça
   await page.fill('#code', await lastCode(email));
   await page.click('button:has-text("Entrar")');
-  await page.waitForURL('**/professor/cadastro');
+  await page.waitForURL('**/professor/boas-vindas');
 });
 
 test('topo do site no celular: uma linha, com menu; "Para professores" no rodapé', async ({ page }) => {

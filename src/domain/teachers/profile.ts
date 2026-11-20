@@ -131,3 +131,12 @@ export async function updateTeacherProfile(deps: Deps, teacherId: string, input:
     throw err;
   }
 }
+
+/** Primeiro acesso: só o nome, antes do perfil completo (mesma regra do "Nome na página", até 80 letras). */
+export async function setDisplayName(deps: Deps, teacherId: string, name: string): Promise<void> {
+  const displayName = name.trim();
+  if (displayName.length < 3 || displayName.length > 80) {
+    throw new DomainError('invalid', 'informe seu nome como deve aparecer na página');
+  }
+  await sql`UPDATE teachers SET display_name = ${displayName} WHERE id = ${teacherId}`.execute(deps.db);
+}

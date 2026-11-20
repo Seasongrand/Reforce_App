@@ -1,9 +1,11 @@
 'use client';
 
 /**
- * Menu da área do professor: lateral no computador, faixa rolável no celular.
+ * Menu da área do professor: lateral no computador; no celular, barra fixa embaixo
+ * com Início, Aulas, Agenda e "Mais" (o resto).
  * O item da página atual fica marcado (aria-current) e destacado.
  */
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -58,33 +60,100 @@ function isCurrent(pathname: string, href: string, rootHref: string): boolean {
   return href === rootHref ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** Destinos que ficam na barra de baixo do celular; o resto vai para "Mais". */
+const PRIMARY = ['/professor', '/professor/aulas', '/professor/agenda'];
+
+function Icon({ name }: { name: PanelIcon }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-none">
+      {PATHS[name]}
+    </svg>
+  );
+}
+
 export function PanelNav({ items, label }: { items: PanelNavItem[]; label: string }) {
   const pathname = usePathname();
   const root = items[0]!.href;
+  const [more, setMore] = useState(false);
+  const sheet = useRef<HTMLDivElement>(null);
+  useEffect(() => setMore(false), [pathname]);
+  useEffect(() => {
+    if (!more) return;
+    const close = (e: MouseEvent) => { if (!sheet.current?.contains(e.target as Node)) setMore(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [more]);
+  const primary = PRIMARY.map((h) => items.find((i) => i.href === h)).filter((i): i is PanelNavItem => Boolean(i));
+  const rest = items.filter((i) => !PRIMARY.includes(i.href));
+  const inRest = rest.some((i) => isCurrent(pathname, i.href, root));
+  const tab = 'flex min-h-14 w-full flex-col items-center justify-center gap-0.5 text-xs font-semibold';
   return (
-    <nav aria-label={label} className="min-w-0">
-      <ul className="-mx-5 flex gap-1 overflow-x-auto px-5 pb-1 md:mx-0 md:flex-col md:overflow-visible md:px-0 md:pb-0">
-        {items.map((item) => {
-          const current = isCurrent(pathname, item.href, root);
-          return (
-            <li key={item.href} className="flex-none">
-              <Link
-                href={item.href}
-                aria-current={current ? 'page' : undefined}
-                className={`flex min-h-11 items-center gap-3 whitespace-nowrap rounded-xl px-3 text-[15px] font-semibold ${
-                  current ? 'bg-indigo-100 text-indigo-950' : 'text-indigo-700 hover:bg-white'
-                }`}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
-                  strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-none">
-                  {PATHS[item.icon]}
+    <>
+      {/* computador: menu lateral */}
+      <nav aria-label={label} className="hidden min-w-0 md:block">
+        <ul className="flex flex-col gap-1">
+          {items.map((item) => {
+            const current = isCurrent(pathname, item.href, root);
+            return (
+              <li key={item.href}>
+                <Link href={item.href} aria-current={current ? 'page' : undefined}
+                  className={`flex min-h-11 items-center gap-3 whitespace-nowrap rounded-xl px-3 text-[15px] font-semibold ${
+                    current ? 'bg-indigo-100 text-indigo-950' : 'text-indigo-700 hover:bg-white'}`}>
+                  <Icon name={item.icon} />
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {/* celular: barra fixa embaixo, com "Mais" para o resto */}
+      <nav aria-label={label} ref={sheet}
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-site-line bg-white pb-[env(safe-area-inset-bottom,0px)] md:hidden">
+        {more && (
+          <ul className="absolute inset-x-3 bottom-[calc(100%+8px)] space-y-1 rounded-2xl border border-site-line bg-white p-2 shadow-xl">
+            {rest.map((item) => {
+              const current = isCurrent(pathname, item.href, root);
+              return (
+                <li key={item.href}>
+                  <Link href={item.href} aria-current={current ? 'page' : undefined}
+                    className={`flex min-h-12 items-center gap-3 rounded-xl px-3 text-[15px] font-semibold ${current ? 'bg-indigo-100 text-indigo-950' : 'text-indigo-700'}`}>
+                    <Icon name={item.icon} />
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <ul className="grid grid-cols-4">
+          {primary.map((item) => {
+            const current = isCurrent(pathname, item.href, root);
+            return (
+              <li key={item.href}>
+                <Link href={item.href} aria-current={current ? 'page' : undefined}
+                  className={`${tab} ${current ? 'text-indigo-950' : 'text-site-muted'}`}>
+                  <span className={`flex h-7 w-12 items-center justify-center rounded-full ${current ? 'bg-indigo-100' : ''}`}><Icon name={item.icon} /></span>
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+          <li>
+            <button type="button" aria-expanded={more} onClick={() => setMore((m) => !m)}
+              className={`${tab} ${more || inRest ? 'text-indigo-950' : 'text-site-muted'}`}>
+              <span className={`flex h-7 w-12 items-center justify-center rounded-full ${more || inRest ? 'bg-indigo-100' : ''}`}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden="true">
+                  <path d="M4 7h16M4 12h16M4 17h16" />
                 </svg>
-                {item.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+              </span>
+              Mais
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </>
   );
 }

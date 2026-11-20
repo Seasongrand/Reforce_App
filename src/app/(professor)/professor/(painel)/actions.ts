@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { updateTeacherProfile, type Specialty } from '@/domain/teachers/profile';
+import { redirect } from 'next/navigation';
+import { setDisplayName, updateTeacherProfile, type Specialty } from '@/domain/teachers/profile';
 import { submitVerificationDocument, type VerificationKind } from '@/domain/teachers/verification';
 import { submitTeacherPhoto } from '@/domain/teachers/photo';
 import { openPaymentAccount } from '@/domain/teachers/payment-account';
@@ -94,4 +95,16 @@ export async function uploadPhotoAction(_: unknown, f: FormData): Promise<Action
   }
   revalidatePath('/professor/cadastro');
   return { ok: true, data: undefined };
+}
+
+/** Boas-vindas (primeiro acesso): grava o nome e leva ao Início com os passos. */
+export async function saveNameAction(_: unknown, f: FormData): Promise<ActionState> {
+  const teacherId = await requireTeacher();
+  try {
+    await setDisplayName(appDeps(), teacherId, s(f, 'nome'));
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+  revalidatePath('/professor', 'layout');
+  redirect('/professor');
 }
