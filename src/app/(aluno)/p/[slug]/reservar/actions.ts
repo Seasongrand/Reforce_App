@@ -2,7 +2,9 @@
 
 import { redirect } from 'next/navigation';
 import { Temporal } from 'temporal-polyfill';
+import { cookies } from 'next/headers';
 import { holdSlots, type HoldReason } from '@/domain/booking/hold';
+import { acquisitionFor, originCookieName } from '@/domain/family-origin';
 import { confirmGuardian, ensureStudent, identifyGuardian, saveAddress } from '@/domain/guardians/identify';
 import { DomainError } from '@/domain/errors';
 import { appDeps, now } from '@/server/app';
@@ -39,7 +41,8 @@ export async function identifyAction(_: unknown, f: FormData): Promise<BookingSt
 
 async function hold(guardianId: string, studentId: string, f: FormData): Promise<BookingState | string> {
   const deps = appDeps();
-  const svc = await deps.db.selectFrom('services').select(['modality', 'teacher_id']).where('id', '=', s(f, 'serviceId'))
+  const svc = await deps.db.selectFrom('services').innerJoin('teachers', 'teachers.id', 'services.teacher_id')
+    .select(['services.modality', 'services.teacher_id', 'teachers.slug']).where('services.id', '=', s(f, 'serviceId'))
     .executeTakeFirst();
   if (!svc) throw new DomainError('not_found', 'serviço não encontrado');
   let addressId: string | null = null;
@@ -58,6 +61,7 @@ async function hold(guardianId: string, studentId: string, f: FormData): Promise
   const r = await holdSlots(deps, {
     teacherId: svc.teacher_id, serviceId: s(f, 'serviceId'), guardianId, studentId, addressId,
     startsAt: [startsAt], idempotencyKey: s(f, 'idempotencyKey'),
+    acquisition: acquisitionFor((await cookies()).get(originCookieName(svc.slug))?.value),
   }, await now());
   if (r.ok) return `/pedido/${r.orderId}`;
   return { ok: false, error: REASONS[r.reason], alternatives: r.alternatives.map((a) => a.toString()) };

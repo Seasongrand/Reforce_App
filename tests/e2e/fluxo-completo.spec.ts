@@ -318,7 +318,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(card).toContainText('Perfil verificado');
   await expect(card).toContainText('Novo na Reforce');
   await card.click();
-  await fam1.waitForURL(`**/p/${SLUG}?serie=9ano`); // o perfil guarda a série buscada
+  await fam1.waitForURL(`**/p/${SLUG}?serie=9ano&origem=busca`); // o perfil guarda a série buscada e a origem
   await expect(fam1.getByText('Perfil verificado')).toBeVisible();
   // rótulos do resumo do perfil legíveis (antes, 12 px)
   expect(await fam1.getByText('A partir de', { exact: true }).first().evaluate((e) => parseFloat(getComputedStyle(e).fontSize)))
@@ -448,7 +448,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   expect(await q(`SELECT status FROM bookings WHERE id = $1`, [booking!.id])).toEqual([{ status: 'completed' }]);
   expect(await q(
     `SELECT gross_cents, commission_bps, platform_cents, teacher_cents, status FROM payouts WHERE booking_id = $1`, [booking!.id],
-  )).toEqual([{ gross_cents: 12100, commission_bps: 500, platform_cents: 605, teacher_cents: 11495, status: 'held' }]);
+  )).toEqual([{ gross_cents: 12100, commission_bps: 1500, platform_cents: 1815, teacher_cents: 10285, status: 'held' }]); // veio da busca: 15%
   // concluída, a aula sai de "Próximas" e vai para "Anteriores"
   await teacher.goto('/professor/aulas');
   await expect(teacher.getByTestId(`aula-${booking!.id}`)).toHaveCount(0);
@@ -458,7 +458,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(teacher.getByTestId(`aula-${booking!.id}`).getByTestId('situacao')).toHaveText('Concluída');
   // "Meus ganhos": a parte da professora fica a receber até a liberação
   await teacher.goto('/professor/recebimento');
-  await expect(teacher.getByTestId('ganho-a-receber')).toContainText('R$ 114,95');
+  await expect(teacher.getByTestId('ganho-a-receber')).toContainText('R$ 102,85');
   await expect(teacher.getByTestId(`repasse-${booking!.id}`)).toContainText('A receber');
 
   // 7b. Em "Minha conta" (entrada por código, sem senha), a responsável avalia a aula concluída;
@@ -596,7 +596,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // em "Meus ganhos", o valor passa de "a receber" para "liberado"
   await teacher.goto('/professor/recebimento');
   await expect(teacher.getByTestId('ganho-a-receber')).toContainText('R$ 0,00');
-  await expect(teacher.getByTestId('ganho-total')).toContainText('R$ 114,95');
+  await expect(teacher.getByTestId('ganho-total')).toContainText('R$ 102,85');
   await expect(teacher.getByTestId(`repasse-${booking!.id}`)).toContainText('Liberado');
   // o painel interno mostra a situação em português
   await staff.goto('/interno/aulas');
@@ -632,6 +632,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   expect(await q(
     `SELECT s.first_name FROM students s JOIN guardians g ON g.id = s.guardian_id WHERE g.email = 'carla.e2e@exemplo.com'`,
   )).toEqual([{ first_name: 'Lucas' }]);
+  // ela abriu o perfil direto (o link do professor), sem passar pela busca: 5%
+  expect(await q(
+    `SELECT o.commission_bps FROM orders o JOIN guardians g ON g.id = o.guardian_id WHERE g.email = 'carla.e2e@exemplo.com'`,
+  )).toEqual([{ commission_bps: 500 }]);
 
   // 9. Nenhum par de aulas ativas do mesmo professor se sobrepõe.
   expect(await q(

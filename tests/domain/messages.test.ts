@@ -73,6 +73,14 @@ describe('enviar', () => {
     expect(m).toEqual({ sender: 'guardian', body: 'Oi! Meu zap é [contato oculto]', masked: true, created_at: new Date(NOW.epochMilliseconds) });
   });
 
+  it('a primeira mensagem registra a origem da família; depois ela não muda', async () => {
+    const t = await teacher('Ana Souza');
+    const g = await guardian('Maria Lima', 'maria@exemplo.com');
+    await sendMessage(testDeps(), { teacherId: t, guardianId: g, from: 'guardian', body: 'Oi', acquisition: 'marketplace' }, NOW);
+    await sendMessage(testDeps(), { teacherId: t, guardianId: g, from: 'guardian', body: 'De novo', acquisition: 'teacher_link' }, NOW);
+    expect(await q(`SELECT acquisition FROM teacher_guardian_links`)).toEqual([{ acquisition: 'marketplace' }]);
+  });
+
   it('o professor não começa conversa; professor não aprovado não recebe; vazia e longa demais são recusadas', async () => {
     const t = await teacher('Ana Souza');
     const draft = await teacher('Bruno Lima', 'draft');
