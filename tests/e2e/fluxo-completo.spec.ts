@@ -5,7 +5,7 @@
  * família não consegue o mesmo horário; a aula acontece na sala falsa, é
  * concluída e o repasse é liberado 24 h depois. Nenhuma reserva duplicada.
  */
-import { expect, test, type Browser, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
 import path from 'node:path';
 import pg from 'pg';
 import { E2E_DATABASE_URL, STAFF_EMAIL } from './env';
@@ -243,6 +243,22 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await fam1.getByRole('button', { name: 'Pagar com PIX' }).click();
   await expect(fam1.getByTestId('pix').locator('img')).toBeVisible();
   await expect(fam1.getByRole('button', { name: 'Copiar código PIX' })).toBeVisible();
+  // no computador o QR vem primeiro; no celular, quem paga no mesmo aparelho usa o "copia e cola", que vem antes
+  const top = async (l: Locator) => (await l.boundingBox())!.y;
+  const qrImg = fam1.getByTestId('pix').locator('img');
+  const copyPix = fam1.getByRole('button', { name: 'Copiar código PIX' });
+  expect(await top(qrImg)).toBeLessThan(await top(copyPix));
+  await fam1.setViewportSize({ width: 390, height: 844 });
+  expect(await top(copyPix)).toBeLessThan(await top(qrImg));
+  await fam1.setViewportSize({ width: 1280, height: 720 });
+  // com o relógio do aparelho 2 h atrasado, o cronômetro ainda mostra no máximo os 10 minutos da reserva
+  const skewed = await browser.newContext();
+  await skewed.addCookies(await fam1.context().cookies());
+  const skewedPage = await skewed.newPage();
+  await skewedPage.clock.install({ time: new Date(Date.now() - 2 * 60 * 60_000) });
+  await skewedPage.goto(fam1.url());
+  await expect(skewedPage.getByTestId('cronometro')).toHaveText(/por (10:00|[0-9]:[0-5][0-9])$/);
+  await skewed.close();
   await fam1.click('button:has-text("Simular pagamento")');
   await fam1.waitForURL('**/confirmado');
   await expect(fam1.getByTestId('aula-confirmada')).toHaveText('Aula confirmada!');
