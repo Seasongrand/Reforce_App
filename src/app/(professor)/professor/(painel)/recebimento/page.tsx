@@ -40,9 +40,9 @@ function payoutState(i: EarningItem, tz: string, at: Temporal.Instant): { label:
   }
 }
 
-function Total({ label, cents, note, testId }: { label: string; cents: number; note?: string; testId: string }) {
+function Total({ label, cents, note, testId, className = '' }: { label: string; cents: number; note?: string; testId: string; className?: string }) {
   return (
-    <div className={CARD} data-testid={testId}>
+    <div className={`rounded-3xl border border-site-line bg-white p-4 sm:p-5 ${className}`} data-testid={testId}>
       <p className="text-sm font-semibold text-site-muted">{label}</p>
       <p className="mt-1 font-display text-2xl font-bold">{formatBRL(cents)}</p>
       {note && <p className="mt-1 text-sm text-site-muted">{note}</p>}
@@ -75,8 +75,8 @@ export default async function PayoutAccountPage() {
       {showEarnings && (
         <section className="space-y-4" aria-labelledby="meus-ganhos">
           <h2 id="meus-ganhos" className="font-display text-xl font-bold">Meus ganhos</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Total label="A receber" cents={e.pendingCents} testId="ganho-a-receber"
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <Total label="A receber" cents={e.pendingCents} testId="ganho-a-receber" className="col-span-2 sm:col-span-1"
               note={e.pendingCount === 0 ? 'Nada aguardando liberação.' : `${e.pendingCount} ${e.pendingCount === 1 ? 'aula aguardando' : 'aulas aguardando'} liberação.`} />
             <Total label="Liberado este mês" cents={e.releasedMonthCents} testId="ganho-mes" />
             <Total label="Liberado no total" cents={e.releasedTotalCents} testId="ganho-total" />
@@ -96,7 +96,7 @@ export default async function PayoutAccountPage() {
                         <p className="font-semibold">{day(i.startsAt, tz)}, {formatTime(i.startsAt, tz)} · {i.subject} · {i.studentFirstName}</p>
                         <p className="text-sm text-site-muted">
                           Aula {formatBRL(i.grossCents)} · Reforce {pct(i.commissionBps)} · você recebe{' '}
-                          <strong className={i.status === 'refunded' ? 'line-through' : 'text-slate-900'}>{formatBRL(i.teacherCents)}</strong>
+                          <strong className={`whitespace-nowrap ${i.status === 'refunded' ? 'line-through' : 'text-slate-900'}`}>{formatBRL(i.teacherCents)}</strong>
                         </p>
                       </div>
                       <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${state.tone}`}>{state.label}</span>
