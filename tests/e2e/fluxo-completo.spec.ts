@@ -192,6 +192,17 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   const staff = await (await browser.newContext()).newPage();
   await codeLogin(staff, '/interno/entrar', STAFF_EMAIL);
   await staff.waitForURL('**/interno');
+  // o painel da equipe tem o molde da área do professor: topo com "Sair", menu lateral e, no celular, barra embaixo
+  const staffNav = staff.getByRole('navigation', { name: 'Painel da equipe' });
+  for (const label of ['Início', 'Verificações', 'Aulas', 'Professores', 'Reembolsos']) {
+    await expect(staffNav.getByRole('link', { name: label })).toBeVisible();
+  }
+  await expect(staffNav.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page');
+  await expect(staff.getByRole('button', { name: 'Sair' })).toBeVisible();
+  await staff.setViewportSize({ width: 390, height: 844 });
+  expect(await staff.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(staffNav.getByRole('link', { name: 'Verificações' })).toBeVisible(); // na barra de baixo
+  await staff.setViewportSize({ width: 1280, height: 720 });
   await staff.goto('/interno/verificacoes');
   const queue = staff.getByTestId(`fila-${SLUG}`);
   for (const kind of ['identity', 'criminal_record', 'education']) {
@@ -212,6 +223,17 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await queue.locator('button:has-text("Aprovar perfil")').click();
   await expect.poll(async () => (await q(`SELECT status FROM teachers WHERE slug = $1`, [SLUG]))[0]!.status).toBe('approved');
   expect(await q(`SELECT count(*)::int AS n FROM teachers_listed`)).toEqual([{ n: 1 }]);
+  // Professores: a professora aparece em "Aprovado"; a aba "Em análise" fica vazia
+  await staff.getByRole('navigation', { name: 'Painel da equipe' }).getByRole('link', { name: 'Professores' }).click();
+  await staff.waitForURL('**/interno/professores');
+  await expect(staff.getByTestId(`professor-${SLUG}`)).toContainText('Aprovado');
+  await staff.getByRole('navigation', { name: 'Situação' }).getByRole('link', { name: /Em análise/ }).click();
+  await staff.waitForURL('**/interno/professores?situacao=in_review');
+  await expect(staff.getByTestId(`professor-${SLUG}`)).toHaveCount(0);
+  await expect(staff.getByText('Nenhum professor nesta situação.')).toBeVisible();
+  // Reembolsos: nenhum pedido devolvido ainda
+  await staff.goto('/interno/reembolsos');
+  await expect(staff.getByText('Nenhum reembolso ainda.')).toBeVisible();
 
   // 3. A professora configura serviços e agenda.
   await teacher.goto('/professor/servicos');
@@ -317,6 +339,23 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   const slotUrl = new URL((await reserve.getAttribute('href'))!, fam1.url()).toString();
   expect(slotUrl).toContain(encodeURIComponent(slotInstant));
   expect(slotUrl).toContain('serie=9ano'); // a série buscada segue até a reserva
+  // no computador, duas colunas: o cartão com a aula, os horários e "Reservar" fica fixo à direita do perfil
+  const about = fam1.getByRole('heading', { name: 'Dá aula de', exact: true });
+  const bookingCard = fam1.getByTestId('cartao-reserva');
+  const bookingBar = fam1.getByTestId('barra-reservar');
+  const box = async (l: typeof about) => (await l.boundingBox())!;
+  expect((await box(bookingCard)).x).toBeGreaterThan((await box(about)).x + (await box(about)).width);
+  expect(await bookingCard.evaluate((e) => getComputedStyle(e).position)).toBe('sticky');
+  expect(await bookingBar.evaluate((e) => getComputedStyle(e).position)).not.toBe('fixed');
+  // mesmo com muitos horários no dia, "Reservar" fica dentro da tela (o cartão rola por dentro)
+  const reserveBox = await box(fam1.getByRole('link', { name: 'Reservar' }));
+  expect(reserveBox.y + reserveBox.height).toBeLessThanOrEqual(720);
+  // no celular, uma coluna: a reserva vem depois do perfil e a barra fica fixa embaixo
+  await fam1.setViewportSize({ width: 390, height: 844 });
+  expect((await box(bookingCard)).y).toBeGreaterThan((await box(about)).y);
+  expect(await bookingBar.evaluate((e) => getComputedStyle(e).position)).toBe('fixed');
+  expect(await fam1.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await fam1.setViewportSize({ width: 1280, height: 720 });
 
   await identifyAndReserve(fam1, slotUrl, { email: 'maria.e2e@exemplo.com', phone: '(11) 98888-1111' });
   await fam1.waitForURL('**/pedido/**');
@@ -378,6 +417,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   const startsAt = booking!.starts_at as Date;
   const endsAt = booking!.ends_at as Date;
   await setClock(new Date(startsAt.getTime() - 5 * 60_000));
+  // no dia da aula, a equipe a vê em "Aulas de hoje"
+  await staff.goto('/interno/aulas');
+  await expect(staff.getByTestId(`hoje-${booking!.id}`)).toContainText('Ana Souza');
+  await expect(staff.getByTestId(`hoje-${booking!.id}`)).toContainText('Confirmada');
 
   // a aula marcada fica em "Próximas" (aba aberta por padrão), com a contagem na aba
   await teacher.goto('/professor/aulas');

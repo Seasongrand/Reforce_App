@@ -3,7 +3,8 @@
 /**
  * Escolha da aula e do horário no perfil do professor (tela 1): cartões de
  * serviço, calendário do mês com os horários no fuso de quem vê, e a barra
- * fixa com o horário escolhido e o botão "Reservar".
+ * com o horário escolhido e o botão "Reservar" (fixa embaixo no celular; no
+ * computador, no fim do cartão).
  */
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -47,10 +48,10 @@ export function ProfileBooking({ slug, teacherTz, services, gradeSlug }: {
     setSlot(null);
   };
 
-  if (services.length === 0) return <p className="text-site-muted">Nenhuma aula disponível no momento.</p>;
+  if (services.length === 0) return <p className="text-site-muted lg:pb-6">Nenhuma aula disponível no momento.</p>;
   return (
     <>
-      <section className="space-y-3 pt-7">
+      <section className="space-y-3 pt-7 lg:pt-0">
         <h2 className="font-display text-xl font-bold">Escolha a aula</h2>
         <div role="radiogroup" aria-label="Aula" className="space-y-2.5">
           {services.map((s) => {
@@ -72,7 +73,7 @@ export function ProfileBooking({ slug, teacherTz, services, gradeSlug }: {
         </div>
       </section>
 
-      <section className="space-y-3 pt-7">
+      <section className="space-y-3 pt-7 lg:pt-6">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="font-display text-xl font-bold">Horários livres</h2>
           <span className="text-[13px] text-site-muted">
@@ -83,8 +84,9 @@ export function ProfileBooking({ slug, teacherTz, services, gradeSlug }: {
       </section>
 
       {service && (
-        <div className="fixed inset-x-0 bottom-0 z-10 border-t border-site-line bg-white">
-          <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 pb-5 pt-3">
+        // no celular, presa embaixo da tela; no computador, presa no fim do cartão de reserva (que rola por dentro)
+        <div data-testid="barra-reservar" className="fixed inset-x-0 bottom-0 z-10 border-t border-site-line bg-white lg:sticky lg:-mx-6 lg:mt-6 lg:px-6 lg:pb-6 lg:pt-4">
+          <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 pb-5 pt-3 lg:max-w-none lg:p-0">
             <div className="min-w-0 flex-1">
               <p className="text-[13px] text-site-muted">{slot ? shortWhen(slot, viewerTz) : 'Escolha um horário'}</p>
               <p className="text-[17px] font-bold">{formatBRL(service.priceCents)} · {service.durationMin} min</p>
