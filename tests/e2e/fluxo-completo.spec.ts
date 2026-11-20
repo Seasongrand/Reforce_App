@@ -508,6 +508,34 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await staff.goto('/interno');
   await expect(staff.getByText(/avisos de pagamento não processados/)).toBeVisible();
 
+  // 8b. Uma família nova cria a conta sem comprar (sem aluno ainda) e depois reserva informando só o aluno
+  const novaFam = await (await browser.newContext()).newPage();
+  await novaFam.goto('/conta/entrar');
+  await novaFam.getByRole('link', { name: 'Criar conta' }).click();
+  await novaFam.waitForURL('**/conta/criar');
+  await novaFam.getByLabel('Seu nome').fill('Carla Dias');
+  await novaFam.getByLabel('E-mail').fill('carla.e2e@exemplo.com');
+  await novaFam.getByLabel('WhatsApp', { exact: true }).fill('(11) 97777-2222');
+  await novaFam.click('button:has-text("Criar conta")');
+  await novaFam.waitForSelector('#code');
+  await novaFam.fill('#code', await lastCode('carla.e2e@exemplo.com'));
+  await novaFam.click('button:has-text("Confirmar e entrar")');
+  await novaFam.waitForURL(/\/conta$/);
+  await expect(novaFam.getByRole('heading', { level: 1 })).toHaveText('Olá, Carla');
+  await novaFam.goto(`/p/${SLUG}`);
+  await novaFam.locator('button[data-slot]').first().click();
+  await novaFam.getByRole('link', { name: 'Reservar' }).click();
+  await novaFam.waitForURL('**/reservar?**');
+  await expect(novaFam.getByRole('heading', { name: 'Para quem é a aula?' })).toBeVisible();
+  await expect(novaFam.getByRole('radio', { name: 'Novo aluno' })).toBeChecked();
+  await novaFam.getByLabel('Primeiro nome do aluno').fill('Lucas');
+  await novaFam.getByLabel('Série').selectOption({ label: '9º ano' });
+  await novaFam.click('button:has-text("Reservar e ir para o pagamento")');
+  await novaFam.waitForURL('**/pedido/**');
+  expect(await q(
+    `SELECT s.first_name FROM students s JOIN guardians g ON g.id = s.guardian_id WHERE g.email = 'carla.e2e@exemplo.com'`,
+  )).toEqual([{ first_name: 'Lucas' }]);
+
   // 9. Nenhum par de aulas ativas do mesmo professor se sobrepõe.
   expect(await q(
     `SELECT count(*)::int AS n FROM bookings a JOIN bookings b

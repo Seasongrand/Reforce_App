@@ -121,7 +121,8 @@ export function BookingForm(p: Props) {
             </label>
           ))}
           <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-site-field px-4 has-checked:border-indigo-600 has-checked:bg-indigo-50">
-            <input type="radio" name="studentId" value="" className="size-4 accent-indigo-600" /> Outro aluno
+            <input type="radio" name="studentId" value="" defaultChecked={p.students.length === 0} className="size-4 accent-indigo-600" />
+            {p.students.length === 0 ? 'Novo aluno' : 'Outro aluno'}
           </label>
           <div className="grid grid-cols-2 gap-2.5">
             <input className={INPUT} name="studentFirstName" placeholder="Primeiro nome" aria-label="Primeiro nome do aluno" />
