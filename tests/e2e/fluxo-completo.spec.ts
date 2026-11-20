@@ -430,6 +430,10 @@ test('topo do site no celular: uma linha, com menu; "Para professores" no rodap√
   await expect(nav.getByRole('link', { name: 'Seja professor' })).toBeVisible();
   await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Para professores' })).toHaveAttribute('href', '/professores');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  // ao escolher um link, o menu fecha na p√°gina seguinte
+  await nav.getByRole('link', { name: 'Seja professor' }).click();
+  await page.waitForURL('**/professores');
+  await expect(nav.getByRole('link', { name: 'Seja professor' })).toBeHidden();
   await page.setViewportSize({ width: 1280, height: 800 });
   for (const name of ['Buscar professor', 'Entrar', 'Seja professor']) await expect(nav.getByRole('link', { name })).toBeVisible();
 });
