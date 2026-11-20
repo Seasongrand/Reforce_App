@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import { config } from '@/config';
 import { currentSubject } from '@/server/session';
+import { MobileMenu } from './MobileMenu';
 
-const LINK = 'inline-flex min-h-11 items-center rounded-xl px-3 hover:bg-indigo-900';
 const ENTER = 'inline-flex min-h-11 items-center rounded-xl border border-indigo-400 px-4 text-white hover:bg-indigo-900';
 const CTA = 'inline-flex min-h-11 items-center rounded-xl bg-yellow-400 px-4 text-indigo-950 hover:bg-yellow-300';
+// no celular, "Buscar professor" e "Seja professor" vão para o menu: o topo cabe em uma linha
+const WIDE_LINK = 'hidden min-h-11 items-center rounded-xl px-3 hover:bg-indigo-900 sm:inline-flex';
+const WIDE_CTA = 'hidden min-h-11 items-center rounded-xl bg-yellow-400 px-4 text-indigo-950 hover:bg-yellow-300 sm:inline-flex';
 
 /**
  * Topo do site, sempre com o botão "Entrar" do aluno. No modo lista de espera,
@@ -18,16 +21,17 @@ export async function SiteHeader({ cta = true }: { cta?: boolean }) {
   const signedIn = open && (await currentSubject('guardian')) !== null;
   return (
     <header className="bg-indigo-950 text-white">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-4">
         <Link href="/" className="font-display text-2xl font-bold text-white">
           Reforce
         </Link>
         <nav aria-label="Principal" className="flex flex-wrap items-center gap-2 text-[15px] font-semibold">
           {open ? (
             <>
-              <Link href="/buscar" className={LINK}>Buscar professor</Link>
+              <Link href="/buscar" className={WIDE_LINK}>Buscar professor</Link>
               <Link href={signedIn ? '/conta' : '/conta/entrar'} className={ENTER}>{signedIn ? 'Minha conta' : 'Entrar'}</Link>
-              <Link href="/professores" className={CTA}>Seja professor</Link>
+              <Link href="/professores" className={WIDE_CTA}>Seja professor</Link>
+              <MobileMenu />
             </>
           ) : (
             <>

@@ -73,8 +73,8 @@ export function StudentWaitlistForm({
       <Chips name="stage" legend="Etapa" options={stages} />
       <Honeypot />
       <div className="space-y-1.5">
-        <label className="flex items-start gap-2.5 text-sm leading-normal text-site-muted">
-          <input type="checkbox" name="adult" required className="mt-1 size-4 accent-indigo-600" />
+        <label className="flex items-start gap-3 rounded-2xl border border-site-field p-3.5 text-sm leading-normal text-site-muted has-checked:border-indigo-600 has-checked:bg-indigo-50">
+          <input type="checkbox" name="adult" required className="mt-0.5 size-5 flex-none accent-indigo-600" />
           <span>
             Tenho 18 anos ou mais e autorizo o aviso por e-mail sobre a abertura da Reforce, conforme a{' '}
             <Link className="text-indigo-600 underline" href="/privacidade">

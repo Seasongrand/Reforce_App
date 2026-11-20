@@ -16,8 +16,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: page ? `${page.name}: aulas particulares · Reforce` : 'Professor não encontrado' };
 }
 
-export default async function TeacherPublicPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function TeacherPublicPage({
+  params, searchParams,
+}: { params: Promise<{ slug: string }>; searchParams: Promise<{ serie?: string }> }) {
   const { slug } = await params;
+  const { serie } = await searchParams;
   const deps = appDeps();
   const page = await publicTeacherPage(deps, slug, await now());
   if (!page) notFound();
@@ -55,7 +58,7 @@ export default async function TeacherPublicPage({ params }: { params: Promise<{ 
       )}
     >
       {page.sellable ? (
-        <ProfileBooking slug={page.slug} teacherTz={page.timezone} services={page.services} />
+        <ProfileBooking slug={page.slug} teacherTz={page.timezone} services={page.services} gradeSlug={serie} />
       ) : (
         <p className="notice mt-7">Agenda indisponível no momento.</p>
       )}

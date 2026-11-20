@@ -35,8 +35,9 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     devChargeId = (await deps.db.selectFrom('payments').select('provider_charge_id').where('order_id', '=', id)
       .where('status', '=', 'pending').executeTakeFirst())?.provider_charge_id ?? null;
   }
-  const holding = v.status === 'awaiting_payment' && v.bookingStatus === 'held' && v.holdExpiresAt
-    && Temporal.Instant.compare(Temporal.Instant.from(v.holdExpiresAt), await now()) > 0;
+  const at = await now();
+  const secondsLeft = v.holdExpiresAt ? Math.floor(Temporal.Instant.from(v.holdExpiresAt).since(at).total('seconds')) : 0;
+  const holding = v.status === 'awaiting_payment' && v.bookingStatus === 'held' && secondsLeft > 0;
   const summary = (
     <LessonSummary photoUrl={v.teacherPhotoUrl} teacherName={v.teacherName} subject={v.subject} priceCents={v.totalCents}
       when={<><LocalWhen iso={v.startsAt} teacherTz={v.guardianTimezone} /> · para {v.studentFirstName}</>} />
@@ -47,7 +48,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       <OrderPoller orderId={id} status={v.status} />
       {holding ? (
         <>
-          <Countdown until={v.holdExpiresAt!} />
+          <Countdown secondsLeft={secondsLeft} />
           <Stepper current={3} />
           {summary}
           {!pending && (
@@ -59,21 +60,30 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           {pending?.method === 'pix' && qr && (
             <>
               <h1 className={TITLE}>Pague com PIX</h1>
-              <section className="flex flex-col items-center gap-3.5 rounded-2xl border border-site-line p-5" data-testid="pix">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={qr} alt="QR do PIX" width={220} height={220} className="rounded-xl" />
-                <p className="text-center text-sm text-site-muted">
-                  Abra o app do seu banco, escolha pagar com PIX e aponte a câmera, ou copie o código.
-                </p>
-                <CopyButton text={pending.pixPayload!} label="Copiar código PIX" targetId="pix-codigo" />
-                <code id="pix-codigo" className="block w-full break-all rounded-xl bg-violet-50 p-3 text-xs text-site-muted">
-                  {pending.pixPayload}
-                </code>
-                {pending.expiresAt && (
-                  <p className="text-[13px] text-site-muted">
-                    O código vale até {formatTime(Temporal.Instant.from(pending.expiresAt), v.guardianTimezone)}.
+              {/* no celular, quem paga no mesmo aparelho usa o "copia e cola": ele vem antes do QR */}
+              <section className="flex flex-col items-center gap-5 rounded-2xl border border-site-line p-5" data-testid="pix">
+                <div className="order-2 flex flex-col items-center gap-2.5 sm:order-1">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={qr} alt="QR do PIX" width={220} height={220} className="rounded-xl" />
+                  <p className="text-center text-sm text-site-muted">
+                    <span className="sm:hidden">Pagando de outro aparelho? Aponte a câmera para o QR.</span>
+                    <span className="hidden sm:inline">Abra o app do seu banco, escolha pagar com PIX e aponte a câmera, ou copie o código.</span>
                   </p>
-                )}
+                </div>
+                <div className="order-1 flex w-full flex-col items-center gap-2.5 sm:order-2">
+                  <p className="text-center text-[15px] text-indigo-950 sm:hidden">
+                    Copie o código e cole no app do seu banco, em <strong>PIX copia e cola</strong>.
+                  </p>
+                  <CopyButton text={pending.pixPayload!} label="Copiar código PIX" targetId="pix-codigo" />
+                  <code id="pix-codigo" className="block w-full break-all rounded-xl bg-violet-50 p-3 text-xs text-site-muted">
+                    {pending.pixPayload}
+                  </code>
+                  {pending.expiresAt && (
+                    <p className="text-sm text-site-muted">
+                      O código vale até {formatTime(Temporal.Instant.from(pending.expiresAt), v.guardianTimezone)}.
+                    </p>
+                  )}
+                </div>
               </section>
             </>
           )}

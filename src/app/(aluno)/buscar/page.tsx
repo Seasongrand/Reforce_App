@@ -48,6 +48,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   const subject = subjects.find((s) => s.id === values.subjectId)!.name;
   const grade = grades.find((g) => g.id === values.gradeId)!.name;
+  const gradeSlug = GRADE_LEVELS.find((g) => g.id === values.gradeId)?.slug;
   const deps = appDeps();
   const result = await searchTeachers(deps, { ...values, subjectId: values.subjectId, gradeId: values.gradeId }, await now());
 
@@ -89,7 +90,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           </p>
           <ul className="space-y-3">
             {result.items.map((item) => (
-              <li key={item.teacherId}><TeacherCard item={item} viewerTzFallback="America/Sao_Paulo" /></li>
+              <li key={item.teacherId}><TeacherCard item={item} viewerTzFallback="America/Sao_Paulo" gradeSlug={gradeSlug} /></li>
             ))}
           </ul>
           <div className="flex flex-wrap gap-3">

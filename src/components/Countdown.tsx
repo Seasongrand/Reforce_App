@@ -3,23 +3,28 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-/** Faixa amarela com o tempo em que o horário fica guardado; ao zerar, recarrega a página. */
-export function Countdown({ until }: { until: string }) {
+/**
+ * Faixa amarela com o tempo em que o horário fica guardado; ao zerar, recarrega
+ * a página. Conta a partir dos segundos restantes calculados no servidor, e não
+ * do horário final: um celular com o relógio errado mostra o tempo certo.
+ */
+export function Countdown({ secondsLeft }: { secondsLeft: number }) {
   const router = useRouter();
-  const end = new Date(until).getTime();
   const [left, setLeft] = useState<number | null>(null); // calculado só no navegador
   useEffect(() => {
-    setLeft(end - Date.now());
-    const t = setInterval(() => {
+    const end = Date.now() + secondsLeft * 1000;
+    const tick = () => {
       const l = end - Date.now();
       setLeft(l);
       if (l <= 0) {
         clearInterval(t);
         router.refresh();
       }
-    }, 1000);
+    };
+    const t = setInterval(tick, 1000);
+    tick();
     return () => clearInterval(t);
-  }, [end, router]);
+  }, [secondsLeft, router]);
   const bar = 'sticky top-0 z-10 -mx-5 flex items-center gap-2.5 bg-yellow-400 px-5 py-3 text-[15px] font-semibold text-indigo-950';
   const icon = (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

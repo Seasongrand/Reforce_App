@@ -5,7 +5,7 @@
  * família não consegue o mesmo horário; a aula acontece na sala falsa, é
  * concluída e o repasse é liberado 24 h depois. Nenhuma reserva duplicada.
  */
-import { expect, test, type Browser, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
 import path from 'node:path';
 import pg from 'pg';
 import { E2E_DATABASE_URL, STAFF_EMAIL } from './env';
@@ -68,6 +68,10 @@ async function runSweeps(browser: Browser) {
 
 async function identifyAndReserve(page: Page, slotUrl: string, who: { email: string; phone: string }) {
   await page.goto(slotUrl);
+  // a série vem da busca (ou a única do professor) e o aceite do WhatsApp começa desmarcado
+  await expect(page.locator('select[name=studentGrade]')).toHaveValue('9ano');
+  await expect(page.locator('input[name=whatsappOptIn]')).not.toBeChecked();
+  await page.check('input[name=whatsappOptIn]');
   await page.fill('input[name=name]', 'Maria Lima');
   await page.fill('input[name=phone]', who.phone);
   await page.fill('input[name=email]', who.email);
@@ -109,6 +113,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.fill('#teachingAddress', 'Rua das Flores, 100, Pinheiros');
   await teacher.click('button:has-text("Salvar perfil")');
   await expect(teacher.getByText('Perfil salvo.')).toBeVisible();
+  // telefone e raio voltam no formato brasileiro
+  await teacher.reload();
+  await expect(teacher.locator('#phone')).toHaveValue('(11) 97777-6666');
+  await expect(teacher.locator('#travelRadiusKm')).toHaveValue('5');
   await teacher.setViewportSize({ width: 390, height: 844 }); // no celular, o editor e a prévia cabem sem rolagem lateral
   expect(await teacher.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await teacher.setViewportSize({ width: 1280, height: 720 });
@@ -118,6 +126,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(photoForm.getByText('Em análise')).toBeVisible();
 
   await teacher.goto('/professor/verificacao');
+  expect(await teacher.getByTestId('verificacao-criminal_record').locator('h2').innerText()).toBe('Antecedentes criminais');
   const docs: Array<[string, string[]]> = [
     ['identity', ['documento.pdf', 'selfie.pdf']], ['criminal_record', ['documento.pdf']], ['education', ['documento.pdf']],
   ];
@@ -176,6 +185,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
 
   // 3. A professora configura serviços e agenda.
   await teacher.goto('/professor/servicos');
+  await expect(teacher.getByRole('heading', { level: 1 })).toHaveText('Serviços e preços');
   await teacher.fill('input[name=price]', '121,00');
   await teacher.click('button:has-text("Criar serviço")');
   await expect(teacher.getByText('Serviço criado.')).toBeVisible();
@@ -186,6 +196,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(teacher.getByTestId('servicos')).toContainText('intervalo 30/30 min');
 
   await teacher.goto('/professor/agenda');
+  await expect(teacher.getByText('horário de São Paulo')).toBeVisible();
   const ruleForm = teacher.locator('form:has(button:has-text("Adicionar horário"))');
   for (let day = 1; day <= 7; day++) {
     await ruleForm.locator('select[name=weekday]').selectOption(String(day));
@@ -219,8 +230,11 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(card).toContainText('Perfil verificado');
   await expect(card).toContainText('Novo na Reforce');
   await card.click();
-  await fam1.waitForURL(`**/p/${SLUG}`);
+  await fam1.waitForURL(`**/p/${SLUG}?serie=9ano`); // o perfil guarda a série buscada
   await expect(fam1.getByText('Perfil verificado')).toBeVisible();
+  // rótulos do resumo do perfil legíveis (antes, 12 px)
+  expect(await fam1.getByText('A partir de', { exact: true }).first().evaluate((e) => parseFloat(getComputedStyle(e).fontSize)))
+    .toBeGreaterThanOrEqual(13);
   await expect(fam1.getByText('ENEM', { exact: true })).toBeVisible();
   await expect(fam1.getByText(EXPERIENCE)).toBeVisible();
   await expect(fam1.getByRole('img', { name: 'Foto de Ana Souza' })).toBeVisible();
@@ -231,6 +245,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   const reserve = fam1.getByRole('link', { name: 'Reservar' });
   const slotUrl = new URL((await reserve.getAttribute('href'))!, fam1.url()).toString();
   expect(slotUrl).toContain(encodeURIComponent(slotInstant));
+  expect(slotUrl).toContain('serie=9ano'); // a série buscada segue até a reserva
 
   await identifyAndReserve(fam1, slotUrl, { email: 'maria.e2e@exemplo.com', phone: '(11) 98888-1111' });
   await fam1.waitForURL('**/pedido/**');
@@ -238,6 +253,22 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await fam1.getByRole('button', { name: 'Pagar com PIX' }).click();
   await expect(fam1.getByTestId('pix').locator('img')).toBeVisible();
   await expect(fam1.getByRole('button', { name: 'Copiar código PIX' })).toBeVisible();
+  // no computador o QR vem primeiro; no celular, quem paga no mesmo aparelho usa o "copia e cola", que vem antes
+  const top = async (l: Locator) => (await l.boundingBox())!.y;
+  const qrImg = fam1.getByTestId('pix').locator('img');
+  const copyPix = fam1.getByRole('button', { name: 'Copiar código PIX' });
+  expect(await top(qrImg)).toBeLessThan(await top(copyPix));
+  await fam1.setViewportSize({ width: 390, height: 844 });
+  expect(await top(copyPix)).toBeLessThan(await top(qrImg));
+  await fam1.setViewportSize({ width: 1280, height: 720 });
+  // com o relógio do aparelho 2 h atrasado, o cronômetro ainda mostra no máximo os 10 minutos da reserva
+  const skewed = await browser.newContext();
+  await skewed.addCookies(await fam1.context().cookies());
+  const skewedPage = await skewed.newPage();
+  await skewedPage.clock.install({ time: new Date(Date.now() - 2 * 60 * 60_000) });
+  await skewedPage.goto(fam1.url());
+  await expect(skewedPage.getByTestId('cronometro')).toHaveText(/por (10:00|[0-9]:[0-5][0-9])$/);
+  await skewed.close();
   await fam1.click('button:has-text("Simular pagamento")');
   await fam1.waitForURL('**/confirmado');
   await expect(fam1.getByTestId('aula-confirmada')).toHaveText('Aula confirmada!');
@@ -317,6 +348,8 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await acct.fill('#code', await lastCode('maria.e2e@exemplo.com'));
   await acct.click('button:has-text("Entrar")');
   await acct.waitForURL(/\/conta$/);
+  // "Sair da conta" fica no fim da página, depois dos alunos
+  expect(await top(acct.getByRole('button', { name: 'Sair da conta' }))).toBeGreaterThan(await top(acct.getByRole('heading', { name: 'Alunos' })));
   await expect(acct.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Minha conta' })).toHaveAttribute('href', '/conta');
   const past = acct.getByTestId(`aula-${booking!.id}`);
   await past.getByRole('link', { name: 'Avaliar a aula' }).click();
@@ -337,6 +370,12 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await runSweeps(browser);
   expect(await q(`SELECT status FROM payouts WHERE booking_id = $1`, [booking!.id])).toEqual([{ status: 'released' }]);
   expect(await q(`SELECT count(*)::int AS n FROM dev_provider_calls WHERE operation = 'releaseEscrow'`)).toEqual([{ n: 1 }]);
+  // o painel interno mostra a situação em português
+  await staff.goto('/interno/aulas');
+  await expect(staff.getByRole('cell', { name: 'Liberado' })).toBeVisible();
+  await expect(staff.getByText('released')).toHaveCount(0);
+  await staff.goto('/interno');
+  await expect(staff.getByText(/avisos de pagamento não processados/)).toBeVisible();
 
   // 9. Nenhum par de aulas ativas do mesmo professor se sobrepõe.
   expect(await q(
@@ -344,4 +383,57 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
         ON a.teacher_id = b.teacher_id AND a.id < b.id AND a.blocked && b.blocked
      WHERE a.status IN ('held','confirmed') AND b.status IN ('held','confirmed')`,
   )).toEqual([{ n: 0 }]);
+});
+
+test('código por e-mail: reenviar depois de 60 s e usar outro e-mail', async ({ page }) => {
+  const email = 'reenvio.e2e@exemplo.com';
+  const sent = async () => (await q(`SELECT count(*)::int AS n FROM dev_outbox WHERE recipient = $1`, [email]))[0]!.n as number;
+  await page.clock.install(); // o relógio do navegador anda sozinho, e o teste pode adiantá-lo
+  await page.goto('/professor/entrar');
+  await expect(page.getByRole('link', { name: '← Voltar ao site' })).toHaveAttribute('href', '/');
+  await page.fill('#email', email);
+  await page.click('button:has-text("Receber código por e-mail")');
+  await page.waitForSelector('#code');
+  const resend = page.getByRole('button', { name: /Reenviar código/ });
+  await expect(resend).toBeDisabled();
+  await expect(resend).toHaveText(/Reenviar código em [01]:\d\d/);
+  await expect(page.getByText('Não chegou? Confira também a caixa de spam.')).toBeVisible();
+
+  // "Usar outro e-mail" volta ao primeiro passo, com o e-mail digitado
+  await page.getByRole('button', { name: 'Usar outro e-mail' }).click();
+  await expect(page.locator('#email')).toHaveValue(email);
+  await page.click('button:has-text("Receber código por e-mail")');
+  await page.waitForSelector('#code');
+
+  // passado 1 minuto, o reenvio libera e manda um código novo, que entra
+  const before = await sent();
+  await page.clock.fastForward('01:01');
+  await expect(resend).toBeEnabled();
+  await expect(resend).toHaveText('Reenviar código');
+  await resend.click();
+  await expect.poll(sent).toBeGreaterThan(before);
+  await expect(resend).toBeDisabled(); // a contagem recomeça
+  await page.fill('#code', await lastCode(email));
+  await page.click('button:has-text("Entrar")');
+  await page.waitForURL('**/professor/cadastro');
+});
+
+test('topo do site no celular: uma linha, com menu; "Para professores" no rodapé', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  expect((await page.locator('header').first().boundingBox())!.height).toBeLessThanOrEqual(80);
+  const nav = page.getByRole('navigation', { name: 'Principal' });
+  await expect(nav.getByRole('link', { name: 'Entrar' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Seja professor' })).toBeHidden();
+  await nav.getByText('Menu').click();
+  await expect(nav.getByRole('link', { name: 'Buscar professor' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Seja professor' })).toBeVisible();
+  await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Para professores' })).toHaveAttribute('href', '/professores');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  // ao escolher um link, o menu fecha na página seguinte
+  await nav.getByRole('link', { name: 'Seja professor' }).click();
+  await page.waitForURL('**/professores');
+  await expect(nav.getByRole('link', { name: 'Seja professor' })).toBeHidden();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  for (const name of ['Buscar professor', 'Entrar', 'Seja professor']) await expect(nav.getByRole('link', { name })).toBeVisible();
 });

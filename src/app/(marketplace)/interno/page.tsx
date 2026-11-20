@@ -27,7 +27,7 @@ export default async function StaffHome() {
         </Link>
         <Link href="/interno/aulas" className="card block hover:border-brand">
           <p className="text-sm text-slate-600">Aulas e repasses</p>
-          <p className="text-lg font-semibold">{c.releasing} repasses em liberação · {c.unprocessed} notificações sem efeito</p>
+          <p className="text-lg font-semibold">{c.releasing} repasses em liberação · {c.unprocessed} avisos de pagamento não processados</p>
         </Link>
       </div>
     </div>

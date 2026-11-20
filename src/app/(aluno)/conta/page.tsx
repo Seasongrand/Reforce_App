@@ -48,14 +48,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const btn = 'inline-flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold';
   return (
     <div className="space-y-7">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className={TITLE}>Olá, {v.name.split(/\s+/)[0]}</h1>
-          <p className="text-[15px] text-site-muted">Suas aulas e as dos alunos que você cadastrou.</p>
-        </div>
-        <form action={logoutAction}>
-          <button className="min-h-11 text-sm font-semibold text-indigo-600">Sair</button>
-        </form>
+      <div>
+        <h1 className={TITLE}>Olá, {v.name.split(/\s+/)[0]}</h1>
+        <p className="text-[15px] text-site-muted">Suas aulas e as dos alunos que você cadastrou.</p>
       </div>
 
       {avaliada && <p className="rounded-2xl bg-green-100 px-4 py-3 text-sm font-semibold text-green-800" role="status">Obrigado pela avaliação!</p>}
@@ -110,6 +105,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </ul>
         </section>
       )}
+
+      <form action={logoutAction} className="border-t border-site-line pt-5">
+        <button className="inline-flex min-h-11 items-center rounded-xl border border-site-field px-4 text-sm font-semibold text-indigo-950 hover:bg-violet-50">
+          Sair da conta
+        </button>
+      </form>
     </div>
   );
 }

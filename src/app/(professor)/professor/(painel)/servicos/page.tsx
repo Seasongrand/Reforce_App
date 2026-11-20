@@ -21,7 +21,7 @@ export default async function ServicesPage() {
   const floor = appDeps().config.priceFloorCents;
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Serviços</h1>
+      <h1 className="text-2xl font-semibold">Serviços e preços</h1>
       <p className="text-sm text-slate-600">
         Você define o preço{floor > 0 ? ` (mínimo da plataforma: ${formatBRL(floor)})` : ''}. Mudanças valem para as próximas
         reservas; aulas já reservadas mantêm o preço e a duração combinados.
