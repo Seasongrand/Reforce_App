@@ -404,6 +404,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   )).toEqual([{ gross_cents: 12100, commission_bps: 500, platform_cents: 605, teacher_cents: 11495, status: 'held' }]);
   await teacher.goto('/professor/aulas');
   await expect(teacher.getByTestId(`aula-${booking!.id}`).getByTestId('situacao')).toHaveText('Concluída');
+  // "Meus ganhos": a parte da professora fica a receber até a liberação
+  await teacher.goto('/professor/recebimento');
+  await expect(teacher.getByTestId('ganho-a-receber')).toContainText('R$ 114,95');
+  await expect(teacher.getByTestId(`repasse-${booking!.id}`)).toContainText('A receber');
 
   // 7b. Em "Minha conta" (entrada por código, sem senha), a responsável avalia a aula concluída;
   // a avaliação aparece no perfil com o autor abreviado, o telefone oculto e sem o nome da aluna.
@@ -440,6 +444,11 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await runSweeps(browser);
   expect(await q(`SELECT status FROM payouts WHERE booking_id = $1`, [booking!.id])).toEqual([{ status: 'released' }]);
   expect(await q(`SELECT count(*)::int AS n FROM dev_provider_calls WHERE operation = 'releaseEscrow'`)).toEqual([{ n: 1 }]);
+  // em "Meus ganhos", o valor passa de "a receber" para "liberado"
+  await teacher.goto('/professor/recebimento');
+  await expect(teacher.getByTestId('ganho-a-receber')).toContainText('R$ 0,00');
+  await expect(teacher.getByTestId('ganho-total')).toContainText('R$ 114,95');
+  await expect(teacher.getByTestId(`repasse-${booking!.id}`)).toContainText('Liberado');
   // o painel interno mostra a situação em português
   await staff.goto('/interno/aulas');
   await expect(staff.getByRole('cell', { name: 'Liberado' })).toBeVisible();
