@@ -5,7 +5,7 @@
  */
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import {
-  addOverride, addRule, connectCalendar, createService, removeRule, updateScheduleSettings, updateService,
+  addOverride, addRule, addRules, connectCalendar, createService, removeOverride, removeRule, updateScheduleSettings, updateService,
 } from '@/domain/teachers/schedule';
 import { availableSlots } from '@/domain/availability';
 import { closeAppDb } from '../helpers/app';
@@ -63,6 +63,48 @@ describe('regras semanais', () => {
     expect(await q(`SELECT status, starts_at FROM bookings WHERE id = $1`, [booking])).toEqual([
       { status: 'confirmed', starts_at: new Date(sp('2026-11-17 14:00')) },
     ]);
+  });
+});
+
+describe('vários dias de uma vez e desfazer', () => {
+  it('o mesmo horário em vários dias: os livres entram, o dia já ocupado fica de fora e é avisado', async () => {
+    const t = await teacher();
+    await addRule(deps(), t, { weekday: 3, start: '10:00', end: '11:00' });
+    const r = await addRules(deps(), t, { weekdays: [1, 2, 3, 4, 5, 6, 7], start: '08:00', end: '12:00' });
+    expect(r).toEqual({ added: [1, 2, 4, 5, 6, 7], conflicts: [3] });
+    expect(await q(`SELECT weekday, start_local, end_local FROM availability_rules WHERE teacher_id = $1 ORDER BY weekday, start_local`, [t]))
+      .toEqual([
+        ...[1, 2].map((w) => ({ weekday: w, start_local: '08:00:00', end_local: '12:00:00' })),
+        { weekday: 3, start_local: '10:00:00', end_local: '11:00:00' },
+        ...[4, 5, 6, 7].map((w) => ({ weekday: w, start_local: '08:00:00', end_local: '12:00:00' })),
+      ]);
+  });
+
+  it('vários dias: recusa horário inválido e lista vazia antes de gravar qualquer coisa', async () => {
+    const t = await teacher();
+    await expect(addRules(deps(), t, { weekdays: [], start: '08:00', end: '12:00' })).rejects.toThrow(/escolha ao menos um dia/);
+    await expect(addRules(deps(), t, { weekdays: [1, 2], start: '12:00', end: '08:00' })).rejects.toThrow(/fim depois do início/);
+    expect(await q(`SELECT count(*)::int AS n FROM availability_rules WHERE teacher_id = $1`, [t])).toEqual([{ n: 0 }]);
+  });
+
+  it('remover devolve a regra (com vigência), e recriá-la deixa tudo como estava', async () => {
+    const t = await teacher();
+    const id = await addRule(deps(), t, { weekday: 2, start: '14:00', end: '18:00', validFrom: '2026-12-01', validUntil: '2027-01-31' });
+    const removed = await removeRule(deps(), t, id);
+    expect(removed).toEqual({ weekday: 2, start: '14:00', end: '18:00', validFrom: '2026-12-01', validUntil: '2027-01-31' });
+    expect(await removeRule(deps(), t, id)).toBeNull(); // já removida: nada a devolver
+    await addRule(deps(), t, removed!);
+    expect(await q(`SELECT weekday, start_local, end_local, valid_from::text, valid_until::text FROM availability_rules WHERE teacher_id = $1`, [t]))
+      .toEqual([{ weekday: 2, start_local: '14:00:00', end_local: '18:00:00', valid_from: '2026-12-01', valid_until: '2027-01-31' }]);
+  });
+
+  it('remover uma folga ou horário extra devolve o que foi removido', async () => {
+    const t = await teacher();
+    const day = await addOverride(deps(), t, { date: '2026-11-28', kind: 'block' });
+    const extra = await addOverride(deps(), t, { date: '2026-11-25', kind: 'extra', start: '19:00', end: '21:00' });
+    expect(await removeOverride(deps(), t, day)).toEqual({ date: '2026-11-28', kind: 'block', start: null, end: null });
+    expect(await removeOverride(deps(), t, extra)).toEqual({ date: '2026-11-25', kind: 'extra', start: '19:00', end: '21:00' });
+    expect(await removeOverride(deps(), t, extra)).toBeNull();
   });
 });
 

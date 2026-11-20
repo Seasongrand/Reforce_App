@@ -57,10 +57,45 @@ export async function addRule(deps: Deps, teacherId: string, r: RuleInput): Prom
   await refresh(deps, teacherId);
   return ins.rows[0]!.id;
 }
+/**
+ * O mesmo horário em vários dias da semana (Agenda: "Adicionar horários").
+ * Os dias livres entram; o dia que já tem horário sobreposto fica de fora e
+ * volta em `conflicts`, para a tela avisar.
+ */
+export async function addRules(
+  deps: Deps,
+  teacherId: string,
+  r: { weekdays: number[]; start: string; end: string },
+): Promise<{ added: number[]; conflicts: number[] }> {
+  const days = [...new Set(r.weekdays)].sort((a, b) => a - b);
+  if (days.length === 0) throw new DomainError('invalid', 'escolha ao menos um dia');
+  const start = time(r.start, 'início');
+  const end = time(r.end, 'fim');
+  if (end <= start) throw new DomainError('invalid', 'o horário precisa ter fim depois do início');
+  const added: number[] = [];
+  const conflicts: number[] = [];
+  for (const weekday of days) {
+    try {
+      await addRule(deps, teacherId, { weekday, start, end });
+      added.push(weekday);
+    } catch (err) {
+      if (err instanceof DomainError && err.code === 'conflict') conflicts.push(weekday);
+      else throw err;
+    }
+  }
+  return { added, conflicts };
+}
 
-export async function removeRule(deps: Deps, teacherId: string, ruleId: string): Promise<void> {
-  await sql`DELETE FROM availability_rules WHERE id = ${ruleId} AND teacher_id = ${teacherId}`.execute(deps.db);
+/** Remove a regra e devolve o que ela era (para "Desfazer"); null se já não existia. */
+export async function removeRule(deps: Deps, teacherId: string, ruleId: string): Promise<RuleInput | null> {
+  const r = await sql<{ weekday: number; start: string; end: string; valid_from: string | null; valid_until: string | null }>`
+    DELETE FROM availability_rules WHERE id = ${ruleId} AND teacher_id = ${teacherId}
+    RETURNING weekday, to_char(start_local, 'HH24:MI') AS start, to_char(end_local, 'HH24:MI') AS end,
+              valid_from::text, valid_until::text`.execute(deps.db);
+  const row = r.rows[0];
+  if (!row) return null;
   await refresh(deps, teacherId);
+  return { weekday: row.weekday, start: row.start, end: row.end, validFrom: row.valid_from, validUntil: row.valid_until };
 }
 
 export interface OverrideInput {
@@ -88,9 +123,16 @@ export async function addOverride(deps: Deps, teacherId: string, o: OverrideInpu
   return ins.rows[0]!.id;
 }
 
-export async function removeOverride(deps: Deps, teacherId: string, overrideId: string): Promise<void> {
-  await sql`DELETE FROM availability_overrides WHERE id = ${overrideId} AND teacher_id = ${teacherId}`.execute(deps.db);
+/** Remove a folga ou o horário extra e devolve o que era (para "Desfazer"); null se já não existia. */
+export async function removeOverride(deps: Deps, teacherId: string, overrideId: string): Promise<OverrideInput | null> {
+  const r = await sql<{ date: string; kind: 'block' | 'extra'; start: string | null; end: string | null }>`
+    DELETE FROM availability_overrides WHERE id = ${overrideId} AND teacher_id = ${teacherId}
+    RETURNING on_date::text AS date, kind, to_char(start_local, 'HH24:MI') AS start, to_char(end_local, 'HH24:MI') AS end`
+    .execute(deps.db);
+  const row = r.rows[0];
+  if (!row) return null;
   await refresh(deps, teacherId);
+  return { date: row.date, kind: row.kind, start: row.start, end: row.end };
 }
 
 export const SLOT_STEPS = [10, 15, 20, 30, 60] as const;
