@@ -350,3 +350,35 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
      WHERE a.status IN ('held','confirmed') AND b.status IN ('held','confirmed')`,
   )).toEqual([{ n: 0 }]);
 });
+
+test('código por e-mail: reenviar depois de 60 s e usar outro e-mail', async ({ page }) => {
+  const email = 'reenvio.e2e@exemplo.com';
+  const sent = async () => (await q(`SELECT count(*)::int AS n FROM dev_outbox WHERE recipient = $1`, [email]))[0]!.n as number;
+  await page.clock.install(); // o relógio do navegador anda sozinho, e o teste pode adiantá-lo
+  await page.goto('/professor/entrar');
+  await page.fill('#email', email);
+  await page.click('button:has-text("Receber código por e-mail")');
+  await page.waitForSelector('#code');
+  const resend = page.getByRole('button', { name: /Reenviar código/ });
+  await expect(resend).toBeDisabled();
+  await expect(resend).toHaveText(/Reenviar código em [01]:\d\d/);
+  await expect(page.getByText('Não chegou? Confira também a caixa de spam.')).toBeVisible();
+
+  // "Usar outro e-mail" volta ao primeiro passo, com o e-mail digitado
+  await page.getByRole('button', { name: 'Usar outro e-mail' }).click();
+  await expect(page.locator('#email')).toHaveValue(email);
+  await page.click('button:has-text("Receber código por e-mail")');
+  await page.waitForSelector('#code');
+
+  // passado 1 minuto, o reenvio libera e manda um código novo, que entra
+  const before = await sent();
+  await page.clock.fastForward('01:01');
+  await expect(resend).toBeEnabled();
+  await expect(resend).toHaveText('Reenviar código');
+  await resend.click();
+  await expect.poll(sent).toBeGreaterThan(before);
+  await expect(resend).toBeDisabled(); // a contagem recomeça
+  await page.fill('#code', await lastCode(email));
+  await page.click('button:has-text("Entrar")');
+  await page.waitForURL('**/professor/cadastro');
+});
