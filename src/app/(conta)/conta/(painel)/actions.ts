@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { finishEmailChange, startEmailChange, updateGuardianProfile } from '@/domain/guardians/profile';
+import { sendMessage } from '@/domain/messages';
 import { addStudent, removeStudent, updateStudent } from '@/domain/guardians/students';
 import { submitReview } from '@/domain/reviews';
 import { appDeps, now } from '@/server/app';
@@ -90,4 +91,20 @@ export async function emailFinishAction(_: unknown, form: FormData): Promise<Act
   }
   revalidatePath('/conta/dados');
   return { ok: true, data: undefined };
+}
+
+const UUID = /^[0-9a-f-]{36}$/i;
+
+export async function sendToTeacherAction(_: unknown, form: FormData): Promise<ActionState<{ hidden: boolean }>> {
+  const guardianId = await currentSubject('guardian');
+  if (!guardianId) return { ok: false, error: 'Sua sessão expirou. Entre de novo.' };
+  const teacherId = field(form, 'teacherId');
+  if (!UUID.test(teacherId)) return { ok: false, error: 'professor não encontrado' };
+  try {
+    const r = await sendMessage(appDeps(), { teacherId, guardianId, from: 'guardian', body: field(form, 'body') }, await now());
+    revalidatePath('/conta', 'layout');
+    return { ok: true, data: r };
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
 }

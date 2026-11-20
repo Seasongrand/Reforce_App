@@ -172,9 +172,9 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.goto('/professor');
   await teacher.setViewportSize({ width: 390, height: 844 }); // no celular, o menu não cria rolagem lateral
   expect(await teacher.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-  // no celular, a barra de baixo tem Início, Aulas, Agenda e "Mais" com o resto
+  // no celular, a barra de baixo tem Início, Aulas, Mensagens, Agenda e "Mais" com o resto
   const tabs = teacher.getByRole('navigation', { name: 'Área do professor' });
-  for (const l of ['Início', 'Aulas', 'Agenda']) await expect(tabs.getByRole('link', { name: l })).toBeVisible();
+  for (const l of ['Início', 'Aulas', 'Mensagens', 'Agenda']) await expect(tabs.getByRole('link', { name: l })).toBeVisible();
   await expect(tabs.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page');
   await tabs.getByRole('button', { name: 'Mais' }).click();
   for (const l of ['Meu perfil', 'Serviços e preços', 'Documentos', 'Recebimento']) await expect(tabs.getByRole('link', { name: l })).toBeVisible();
@@ -548,6 +548,45 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await acct.fill('#code', await lastCode('mariana.e2e@exemplo.com'));
   await acct.click('button:has-text("Entrar")');
   await acct.waitForURL(/\/conta$/);
+  // Mensagens: sem entrar, "Mandar mensagem" leva a Entrar com volta para a conversa
+  const anonMsg = await (await browser.newContext()).newPage();
+  await anonMsg.goto(`/p/${SLUG}`);
+  await anonMsg.getByRole('link', { name: 'Mandar mensagem' }).click();
+  await anonMsg.waitForURL(`**/conta/entrar?voltar=%2Fconta%2Fmensagens%2F${SLUG}`);
+  await expect(anonMsg.getByRole('link', { name: 'Criar conta' })).toHaveAttribute('href', `/conta/criar?voltar=%2Fconta%2Fmensagens%2F${SLUG}`);
+  await anonMsg.close();
+  // a responsável escreve com telefone: o contato fica oculto, e ela vê o motivo
+  await acct.goto(`/p/${SLUG}`);
+  await acct.getByRole('link', { name: 'Mandar mensagem' }).click();
+  await acct.waitForURL(`**/conta/mensagens/${SLUG}`);
+  await acct.getByLabel('Sua mensagem').fill('Oi, Ana! A Joana tem prova sexta. Meu zap é 11 98888-1111.');
+  await acct.getByRole('button', { name: 'Enviar' }).click();
+  const famThread = acct.getByTestId('conversa');
+  await expect(famThread).toContainText('Meu zap é [contato oculto].');
+  await expect(acct.getByText(/Ocultamos um contato/)).toBeVisible();
+  // a professora vê 1 não lida no menu, abre a conversa e responde
+  await teacher.goto('/professor');
+  const teacherNav = teacher.getByRole('navigation', { name: 'Área do professor' });
+  await expect(teacherNav.getByRole('link', { name: /Mensagens/ })).toContainText('1');
+  await teacherNav.getByRole('link', { name: /Mensagens/ }).click();
+  await teacher.waitForURL('**/professor/mensagens');
+  await teacher.getByRole('link', { name: /Mariana L\./ }).click();
+  await expect(teacher.getByTestId('conversa')).toContainText('[contato oculto]');
+  await teacher.getByLabel('Sua mensagem').fill('Oi, Mariana! Vamos revisar frações.');
+  await teacher.getByRole('button', { name: 'Enviar' }).click();
+  await expect(teacher.getByTestId('conversa')).toContainText('Vamos revisar frações.');
+  await expect(teacherNav.getByRole('link', { name: /Mensagens/ })).not.toContainText('1');
+  // a responsável recebe um aviso por e-mail, sem o texto da mensagem, e vê a resposta
+  await runSweeps(browser);
+  const mails = await q(`SELECT subject, body FROM dev_outbox WHERE recipient = 'mariana.e2e@exemplo.com' AND subject LIKE 'Nova mensagem%'`);
+  expect(mails.map((m) => m.subject)).toEqual(['Nova mensagem de Ana Souza na Reforce']);
+  expect(mails[0]!.body).not.toContain('frações');
+  await acct.reload();
+  await expect(famThread).toContainText('Vamos revisar frações.');
+  await acct.getByRole('navigation', { name: 'Minha conta' }).getByRole('link', { name: /Mensagens/ }).click();
+  await acct.waitForURL('**/conta/mensagens');
+  await expect(acct.getByRole('link', { name: /Ana Souza/ })).toContainText('Vamos revisar frações.');
+
 
   // 8. Fechada a janela de contestação (24 h), o repasse é liberado uma vez.
   await setClock(new Date(endsAt.getTime() + 24 * 60 * 60_000 + 60_000));

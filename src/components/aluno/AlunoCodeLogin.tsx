@@ -9,7 +9,7 @@ import { ALERT, INPUT, LABEL, PRIMARY } from './ui';
 type StartAction = (prev: unknown, form: FormData) => Promise<ActionState<{ codeId: string; sentTo: string }>>;
 type FinishAction = (prev: unknown, form: FormData) => Promise<ActionState>;
 
-export function AlunoCodeLogin({ start, finish }: { start: StartAction; finish: FinishAction }) {
+export function AlunoCodeLogin({ start, finish, next }: { start: StartAction; finish: FinishAction; next?: string | null }) {
   const [startState, startRun, starting] = useActionState(start, null);
   const [finishState, finishRun, finishing] = useActionState(finish, null);
   const [email, setEmail] = useState('');
@@ -38,6 +38,7 @@ export function AlunoCodeLogin({ start, finish }: { start: StartAction; finish: 
         Se esse e-mail tiver uma conta, enviamos um código de 6 dígitos para <strong className="text-indigo-950">{sent.sentTo}</strong>.
       </p>
       <input type="hidden" name="codeId" value={sent.codeId} />
+      {next && <input type="hidden" name="voltar" value={next} />}
       <label className={LABEL}>Código
         <input id="code" name="code" inputMode="numeric" autoComplete="one-time-code" required maxLength={6} placeholder="000000"
           className="min-h-16 rounded-2xl border-2 border-indigo-600 px-4 text-center font-display text-3xl font-semibold tracking-[0.4em] focus:outline-none" />

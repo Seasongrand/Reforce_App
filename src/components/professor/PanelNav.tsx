@@ -9,11 +9,13 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export type PanelIcon = 'home' | 'user' | 'users' | 'tag' | 'calendar' | 'video' | 'shield' | 'wallet' | 'undo';
+export type PanelIcon = 'home' | 'user' | 'users' | 'tag' | 'calendar' | 'video' | 'shield' | 'wallet' | 'undo' | 'chat';
 export interface PanelNavItem {
   href: string;
   label: string;
   icon: PanelIcon;
+  /** Quantos itens pedem atenção (mensagens não lidas); 0 ou ausente não mostra nada. */
+  badge?: number;
 }
 
 const PATHS: Record<PanelIcon, React.ReactNode> = {
@@ -60,6 +62,7 @@ const PATHS: Record<PanelIcon, React.ReactNode> = {
       <path d="M2 10h20M16 15h2" />
     </>
   ),
+  chat: <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />,
   undo: (
     <>
       <path d="M9 14 4 9l5-5" />
@@ -70,6 +73,18 @@ const PATHS: Record<PanelIcon, React.ReactNode> = {
 
 function isCurrent(pathname: string, href: string, rootHref: string): boolean {
   return href === rootHref ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** Número de não lidas: visível como selo e lido por inteiro pelo leitor de tela. */
+function Badge({ n, onIcon = false }: { n?: number; onIcon?: boolean }) {
+  if (!n) return null;
+  const text = n > 99 ? '99+' : String(n);
+  return (
+    <>
+      <span aria-hidden="true" className={`min-w-5 rounded-full bg-rose-600 px-1.5 text-center text-[11px] font-bold leading-5 text-white ${onIcon ? 'absolute -right-1 -top-1' : 'ml-auto'}`}>{text}</span>
+      <span className="sr-only"> ({n === 1 ? '1 não lida' : `${n} não lidas`})</span>
+    </>
+  );
 }
 
 function Icon({ name }: { name: PanelIcon }) {
@@ -112,6 +127,7 @@ export function PanelNav({ items, label, primary: primaryHrefs }: { items: Panel
                     current ? 'bg-indigo-100 text-indigo-950' : 'text-indigo-700 hover:bg-white'}`}>
                   <Icon name={item.icon} />
                   {item.label}
+                  <Badge n={item.badge} />
                 </Link>
               </li>
             );
@@ -132,6 +148,7 @@ export function PanelNav({ items, label, primary: primaryHrefs }: { items: Panel
                     className={`flex min-h-12 items-center gap-3 rounded-xl px-3 text-[15px] font-semibold ${current ? 'bg-indigo-100 text-indigo-950' : 'text-indigo-700'}`}>
                     <Icon name={item.icon} />
                     {item.label}
+                    <Badge n={item.badge} />
                   </Link>
                 </li>
               );
@@ -145,7 +162,9 @@ export function PanelNav({ items, label, primary: primaryHrefs }: { items: Panel
               <li key={item.href}>
                 <Link href={item.href} aria-current={current ? 'page' : undefined}
                   className={`${tab} ${current ? 'text-indigo-950' : 'text-site-muted'}`}>
-                  <span className={`flex h-7 w-12 items-center justify-center rounded-full ${current ? 'bg-indigo-100' : ''}`}><Icon name={item.icon} /></span>
+                  <span className={`relative flex h-7 w-12 items-center justify-center rounded-full ${current ? 'bg-indigo-100' : ''}`}>
+                    <Icon name={item.icon} /><Badge n={item.badge} onIcon />
+                  </span>
                   {item.label}
                 </Link>
               </li>

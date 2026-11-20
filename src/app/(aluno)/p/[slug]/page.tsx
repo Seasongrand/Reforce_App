@@ -6,6 +6,8 @@ import { ProtectedNote } from '@/components/aluno/ProtectedNote';
 import { TeacherProfileView } from '@/components/aluno/TeacherProfileView';
 import { publicTeacherPage } from '@/domain/public/teacher-page';
 import { appDeps, now } from '@/server/app';
+import { currentSubject } from '@/server/session';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +30,9 @@ export default async function TeacherPublicPage({
   const share = `https://wa.me/?text=${encodeURIComponent(`Achei este professor para as minhas aulas: ${page.name}. Dá uma olhada e reserve comigo? ${link}`)}`;
   const record = page.badges.find((b) => b.kind === 'criminal_record');
   const durations = [...new Set(page.services.map((s) => s.durationMin))].sort((a, b) => a - b);
+  // conversa no site: quem não entrou passa por Entrar (ou Criar conta) e volta para ela
+  const thread = `/conta/mensagens/${page.slug}`;
+  const messageHref = (await currentSubject('guardian')) ? thread : `/conta/entrar?voltar=${encodeURIComponent(thread)}`;
   return (
     // no computador, duas colunas: o perfil à esquerda e, à direita, o cartão fixo com a aula,
     // os horários e "Reservar"; no celular, uma coluna (perfil, reserva e o resto)
@@ -50,16 +55,23 @@ export default async function TeacherPublicPage({
             label: 'Próximo horário',
             value: page.nextSlot ? <LocalWhen iso={page.nextSlot} teacherTz={page.timezone} /> : 'Sem horários',
           }}
-          afterStats={page.verified && (
-            <details className="rounded-2xl border border-site-line px-3.5 py-1">
+          afterStats={<>
+            {page.verified && <details className="rounded-2xl border border-site-line px-3.5 py-1">
               <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">O que verificamos</summary>
               <ul className="mb-3 space-y-2 text-sm text-site-muted">
                 <li>✓ Identidade conferida</li>
                 <li>✓ Certidão de antecedentes criminais{record?.validUntil ? `, válida até ${br(record.validUntil)}` : ''}</li>
                 <li>✓ Formação conferida</li>
               </ul>
-            </details>
-          )}
+            </details>}
+            <Link href={messageHref}
+              className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-site-field bg-white text-[15px] font-semibold text-indigo-950 hover:bg-violet-50">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
+              </svg>
+              Mandar mensagem
+            </Link>
+          </>}
         />
       </div>
       <aside aria-label="Reservar uma aula" className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
