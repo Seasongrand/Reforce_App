@@ -239,6 +239,11 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(fam1.getByText(EXPERIENCE)).toBeVisible();
   await expect(fam1.getByRole('img', { name: 'Foto de Ana Souza' })).toBeVisible();
   await fam1.getByRole('radio', { name: /online/i }).click();
+  // o mês todo: o calendário mostra, em cada dia, quantos horários livres ele tem
+  const monthDays = fam1.getByRole('group', { name: 'Dias do mês' });
+  await expect(monthDays).toBeVisible();
+  await expect(fam1.getByText(/^(Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro) de \d{4}$/)).toBeVisible();
+  await expect(monthDays.getByRole('button', { name: /\d+ horários? livres?$/ }).first()).toBeVisible();
   const slotButton = fam1.locator('button[data-slot]').first();
   const slotInstant = (await slotButton.getAttribute('data-slot'))!;
   await slotButton.click();

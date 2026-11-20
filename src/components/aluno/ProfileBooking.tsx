@@ -2,15 +2,15 @@
 
 /**
  * Escolha da aula e do horário no perfil do professor (tela 1): cartões de
- * serviço, faixa de dias e grade de horários no fuso de quem vê, e a barra
+ * serviço, calendário do mês com os horários no fuso de quem vê, e a barra
  * fixa com o horário escolhido e o botão "Reservar".
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { formatBRL } from '@/lib/money';
-import { daysForPicker, shortWhen } from '@/lib/profile-days';
-import { formatTime, zoneLabel } from '@/time/zoned';
-import { Temporal } from 'temporal-polyfill';
+import { shortWhen } from '@/lib/profile-days';
+import { zoneLabel } from '@/time/zoned';
+import { MonthSlots } from './MonthSlots';
 
 export interface BookingService {
   id: string;
@@ -40,14 +40,10 @@ export function ProfileBooking({ slug, teacherTz, services, gradeSlug }: {
   const [viewerTz, setViewerTz] = useState(teacherTz);
   useEffect(() => setViewerTz(Intl.DateTimeFormat().resolvedOptions().timeZone), []);
   const service = services.find((s) => s.id === serviceId);
-  const days = useMemo(() => daysForPicker(service?.slots ?? [], viewerTz), [service, viewerTz]);
-  const [dayKey, setDayKey] = useState<string | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
-  const day = days.find((d) => d.key === dayKey) ?? days[0];
 
   const pickService = (id: string) => {
     setServiceId(id);
-    setDayKey(null);
     setSlot(null);
   };
 
@@ -83,36 +79,7 @@ export function ProfileBooking({ slug, teacherTz, services, gradeSlug }: {
             {viewerTz === teacherTz ? 'no seu horário' : `no seu horário (${zoneLabel(viewerTz)})`}
           </span>
         </div>
-        {days.length === 0 ? (
-          <p className="text-site-muted">Sem horários livres nos próximos dias.</p>
-        ) : (
-          <>
-            <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1" role="group" aria-label="Dias">
-              {days.map((d) => {
-                const on = d.key === day?.key;
-                return (
-                  <button key={d.key} type="button" aria-pressed={on} aria-label={`${d.weekday}, ${d.day} de ${d.month}`}
-                    onClick={() => { setDayKey(d.key); setSlot(null); }}
-                    className={`flex min-h-16 w-16 flex-none flex-col items-center justify-center rounded-2xl text-[13px] font-semibold ${on ? 'bg-indigo-950 text-white' : 'border border-site-field bg-white'}`}>
-                    {d.weekday}
-                    <span className="text-xl">{d.day}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="grid grid-cols-3 gap-2" role="group" aria-label="Horários">
-              {day?.slots.map((s) => {
-                const on = s === slot;
-                return (
-                  <button key={s} type="button" data-slot={s} aria-pressed={on} onClick={() => setSlot(s)}
-                    className={`min-h-12 rounded-xl text-[15px] font-semibold ${on ? 'border-2 border-indigo-600 bg-indigo-50' : 'border border-site-field bg-white'}`}>
-                    {formatTime(Temporal.Instant.from(s), viewerTz)}
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
+        <MonthSlots key={`${service?.id}-${viewerTz}`} slots={service?.slots ?? []} tz={viewerTz} selected={slot} onPick={setSlot} />
       </section>
 
       {service && (
