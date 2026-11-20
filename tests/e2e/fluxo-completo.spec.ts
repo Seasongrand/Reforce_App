@@ -360,6 +360,12 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await runSweeps(browser);
   expect(await q(`SELECT status FROM payouts WHERE booking_id = $1`, [booking!.id])).toEqual([{ status: 'released' }]);
   expect(await q(`SELECT count(*)::int AS n FROM dev_provider_calls WHERE operation = 'releaseEscrow'`)).toEqual([{ n: 1 }]);
+  // o painel interno mostra a situação em português
+  await staff.goto('/interno/aulas');
+  await expect(staff.getByRole('cell', { name: 'Liberado' })).toBeVisible();
+  await expect(staff.getByText('released')).toHaveCount(0);
+  await staff.goto('/interno');
+  await expect(staff.getByText(/avisos de pagamento não processados/)).toBeVisible();
 
   // 9. Nenhum par de aulas ativas do mesmo professor se sobrepõe.
   expect(await q(

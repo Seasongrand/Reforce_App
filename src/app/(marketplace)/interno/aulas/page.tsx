@@ -16,6 +16,13 @@ const OUTCOMES = [
   ['teacher_no_show', 'Falta do professor (reembolso)'],
 ] as const;
 
+const PAYOUT_STATUS: Record<string, string> = {
+  held: 'Retido', releasing: 'Em liberação', released: 'Liberado', refunded: 'Devolvido',
+};
+const MODALITY: Record<string, string> = {
+  online: 'online', at_student: 'na casa do aluno', at_teacher: 'no endereço do professor',
+};
+
 export default async function StaffLessons() {
   await requireStaff();
   const deps = appDeps();
@@ -34,7 +41,7 @@ export default async function StaffLessons() {
         {pending.map((p) => (
           <div key={p.bookingId} className="space-y-2 border-t border-slate-100 pt-3">
             <p className="text-sm">
-              <strong>{p.teacherName}</strong> com {p.studentFirstName}, {formatPtBr(p.startsAt, 'America/Sao_Paulo')} ({p.modality})
+              <strong>{p.teacherName}</strong> com {p.studentFirstName}, {formatPtBr(p.startsAt, 'America/Sao_Paulo')} ({MODALITY[p.modality] ?? p.modality})
               <span className="block text-slate-600">{p.reason}</span>
             </p>
             <div className="flex flex-wrap gap-2">
@@ -54,7 +61,7 @@ export default async function StaffLessons() {
           <thead><tr className="text-left text-slate-600"><th>Situação</th><th>Quantidade</th><th>Parte dos professores</th></tr></thead>
           <tbody>
             {payouts.rows.map((r) => (
-              <tr key={r.status}><td>{r.status}</td><td>{r.n}</td><td>{formatBRL(r.teacher_cents)}</td></tr>
+              <tr key={r.status}><td>{PAYOUT_STATUS[r.status] ?? r.status}</td><td>{r.n}</td><td>{formatBRL(r.teacher_cents)}</td></tr>
             ))}
           </tbody>
         </table>
