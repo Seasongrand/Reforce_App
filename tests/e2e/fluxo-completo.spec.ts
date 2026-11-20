@@ -338,6 +338,8 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await acct.fill('#code', await lastCode('maria.e2e@exemplo.com'));
   await acct.click('button:has-text("Entrar")');
   await acct.waitForURL(/\/conta$/);
+  // "Sair da conta" fica no fim da página, depois dos alunos
+  expect(await top(acct.getByRole('button', { name: 'Sair da conta' }))).toBeGreaterThan(await top(acct.getByRole('heading', { name: 'Alunos' })));
   await expect(acct.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Minha conta' })).toHaveAttribute('href', '/conta');
   const past = acct.getByTestId(`aula-${booking!.id}`);
   await past.getByRole('link', { name: 'Avaliar a aula' }).click();
@@ -397,4 +399,20 @@ test('código por e-mail: reenviar depois de 60 s e usar outro e-mail', async ({
   await page.fill('#code', await lastCode(email));
   await page.click('button:has-text("Entrar")');
   await page.waitForURL('**/professor/cadastro');
+});
+
+test('topo do site no celular: uma linha, com menu; "Para professores" no rodapé', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  expect((await page.locator('header').first().boundingBox())!.height).toBeLessThanOrEqual(80);
+  const nav = page.getByRole('navigation', { name: 'Principal' });
+  await expect(nav.getByRole('link', { name: 'Entrar' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Seja professor' })).toBeHidden();
+  await nav.getByText('Menu').click();
+  await expect(nav.getByRole('link', { name: 'Buscar professor' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Seja professor' })).toBeVisible();
+  await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Para professores' })).toHaveAttribute('href', '/professores');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  for (const name of ['Buscar professor', 'Entrar', 'Seja professor']) await expect(nav.getByRole('link', { name })).toBeVisible();
 });
