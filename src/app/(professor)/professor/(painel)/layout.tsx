@@ -13,6 +13,8 @@ const ITEMS: PanelNavItem[] = [
   { href: '/professor/verificacao', label: 'Documentos', icon: 'shield' },
   { href: '/professor/recebimento', label: 'Recebimento', icon: 'wallet' },
 ];
+/** No celular, a barra de baixo tem estes; o resto fica em "Mais". */
+const PRIMARY = ['/professor', '/professor/aulas', '/professor/agenda'];
 
 /**
  * Painel do professor, no molde das plataformas de terapia (Telavita e
@@ -42,7 +44,7 @@ export default async function TeacherPanelLayout({ children }: { children: React
       </header>
       <div className="mx-auto grid max-w-6xl gap-6 px-5 pb-28 pt-6 md:grid-cols-[15rem_minmax(0,1fr)] md:gap-10 md:py-10">
         <aside className="min-w-0 max-md:contents md:sticky md:top-6 md:self-start">
-          <PanelNav items={ITEMS} label="Área do professor" />
+          <PanelNav items={ITEMS} label="Área do professor" primary={PRIMARY} />
         </aside>
         <main className="min-w-0">{children}</main>
       </div>

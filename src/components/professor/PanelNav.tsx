@@ -1,15 +1,15 @@
 'use client';
 
 /**
- * Menu da área do professor: lateral no computador; no celular, barra fixa embaixo
- * com Início, Aulas, Agenda e "Mais" (o resto).
+ * Menu dos painéis (professor e equipe): lateral no computador; no celular, barra
+ * fixa embaixo com os destinos de `primary` e "Mais" (o resto).
  * O item da página atual fica marcado (aria-current) e destacado.
  */
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export type PanelIcon = 'home' | 'user' | 'tag' | 'calendar' | 'video' | 'shield' | 'wallet';
+export type PanelIcon = 'home' | 'user' | 'users' | 'tag' | 'calendar' | 'video' | 'shield' | 'wallet' | 'undo';
 export interface PanelNavItem {
   href: string;
   label: string;
@@ -22,6 +22,12 @@ const PATHS: Record<PanelIcon, React.ReactNode> = {
     <>
       <circle cx="12" cy="8" r="4" />
       <path d="M4 21a8 8 0 0 1 16 0" />
+    </>
+  ),
+  users: (
+    <>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5" />
     </>
   ),
   tag: (
@@ -54,14 +60,17 @@ const PATHS: Record<PanelIcon, React.ReactNode> = {
       <path d="M2 10h20M16 15h2" />
     </>
   ),
+  undo: (
+    <>
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+    </>
+  ),
 };
 
 function isCurrent(pathname: string, href: string, rootHref: string): boolean {
   return href === rootHref ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 }
-
-/** Destinos que ficam na barra de baixo do celular; o resto vai para "Mais". */
-const PRIMARY = ['/professor', '/professor/aulas', '/professor/agenda'];
 
 function Icon({ name }: { name: PanelIcon }) {
   return (
@@ -72,7 +81,8 @@ function Icon({ name }: { name: PanelIcon }) {
   );
 }
 
-export function PanelNav({ items, label }: { items: PanelNavItem[]; label: string }) {
+/** `primary`: os destinos (até 3) que ficam na barra de baixo do celular; o resto vai para "Mais". */
+export function PanelNav({ items, label, primary: primaryHrefs }: { items: PanelNavItem[]; label: string; primary: string[] }) {
   const pathname = usePathname();
   const root = items[0]!.href;
   const [more, setMore] = useState(false);
@@ -84,8 +94,8 @@ export function PanelNav({ items, label }: { items: PanelNavItem[]; label: strin
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
   }, [more]);
-  const primary = PRIMARY.map((h) => items.find((i) => i.href === h)).filter((i): i is PanelNavItem => Boolean(i));
-  const rest = items.filter((i) => !PRIMARY.includes(i.href));
+  const primary = primaryHrefs.map((h) => items.find((i) => i.href === h)).filter((i): i is PanelNavItem => Boolean(i));
+  const rest = items.filter((i) => !primaryHrefs.includes(i.href));
   const inRest = rest.some((i) => isCurrent(pathname, i.href, root));
   const tab = 'flex min-h-14 w-full flex-col items-center justify-center gap-0.5 text-xs font-semibold';
   return (

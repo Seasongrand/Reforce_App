@@ -192,6 +192,17 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   const staff = await (await browser.newContext()).newPage();
   await codeLogin(staff, '/interno/entrar', STAFF_EMAIL);
   await staff.waitForURL('**/interno');
+  // o painel da equipe tem o molde da área do professor: topo com "Sair", menu lateral e, no celular, barra embaixo
+  const staffNav = staff.getByRole('navigation', { name: 'Painel da equipe' });
+  for (const label of ['Início', 'Verificações', 'Aulas', 'Professores', 'Reembolsos']) {
+    await expect(staffNav.getByRole('link', { name: label })).toBeVisible();
+  }
+  await expect(staffNav.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page');
+  await expect(staff.getByRole('button', { name: 'Sair' })).toBeVisible();
+  await staff.setViewportSize({ width: 390, height: 844 });
+  expect(await staff.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(staffNav.getByRole('link', { name: 'Verificações' })).toBeVisible(); // na barra de baixo
+  await staff.setViewportSize({ width: 1280, height: 720 });
   await staff.goto('/interno/verificacoes');
   const queue = staff.getByTestId(`fila-${SLUG}`);
   for (const kind of ['identity', 'criminal_record', 'education']) {
