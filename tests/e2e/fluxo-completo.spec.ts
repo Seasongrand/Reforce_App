@@ -105,6 +105,15 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.fill('#teachingSince', '2013');
   await expect(preview).toContainText('ENEM');
   await expect(preview).toContainText(EXPERIENCE);
+  // o formulário em seções; as séries em fichas grandes, por disciplina
+  for (const h of ['Sua página', 'O que você ensina', 'Contato', 'Aula presencial']) {
+    await expect(teacher.getByRole('heading', { name: h, exact: true })).toBeVisible();
+  }
+  expect((await teacher.locator('label:has(input[aria-label="Matemática, 9º ano"])').boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await teacher.getByRole('button', { name: 'Marcar todas as séries de Física' }).click();
+  await expect(teacher.locator('input[name=subj][aria-label^="Física,"]:checked')).toHaveCount(8);
+  await teacher.getByRole('button', { name: 'Desmarcar as séries de Física' }).click();
+  await expect(teacher.locator('input[name=subj][aria-label^="Física,"]:checked')).toHaveCount(0);
   await teacher.check('input[aria-label="Matemática, 9º ano"]');
   await teacher.fill('#phone', '(11) 97777-6666');
   await teacher.check('input[name=whatsappOptIn]');
@@ -119,8 +128,12 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(teacher.locator('#travelRadiusKm')).toHaveValue('5');
   await teacher.setViewportSize({ width: 390, height: 844 }); // no celular, o editor e a prévia cabem sem rolagem lateral
   expect(await teacher.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  // no celular, um atalho leva à prévia, que fica no fim da página
+  await expect(teacher.getByRole('link', { name: 'Ver como os alunos veem' })).toHaveAttribute('href', '#previa');
   await teacher.setViewportSize({ width: 1280, height: 720 });
+  await expect(teacher.getByRole('link', { name: 'Ver como os alunos veem' })).toBeHidden();
   const photoForm = teacher.getByTestId('foto');
+  expect((await photoForm.locator('input[type=file]').boundingBox())!.height).toBeGreaterThanOrEqual(44); // botão de arquivo grande
   await photoForm.locator('input[type=file]').setInputFiles(path.join(FIXTURES, 'foto.jpg'));
   await photoForm.locator('button:has-text("Enviar foto")').click();
   await expect(photoForm.getByText('Em análise')).toBeVisible();
@@ -132,6 +145,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   ];
   for (const [kind, files] of docs) {
     const section = teacher.locator(`[data-testid=verificacao-${kind}]`);
+    expect((await section.locator('input[type=file]').boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await section.locator('input[type=file]').setInputFiles(files.map((f) => path.join(FIXTURES, f)));
     await section.locator('button:has-text("Enviar")').click();
     await expect(section.getByText('Em análise')).toBeVisible();
