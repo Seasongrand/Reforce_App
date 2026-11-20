@@ -19,10 +19,10 @@ export default async function ReviewPage({ params }: { params: Promise<{ booking
   const v = await accountView(appDeps(), guardianId, await now());
   const l = v.past.find((x) => x.bookingId === booking);
   if (!l) notFound();
-  if (!l.canReview) redirect('/conta');
+  if (!l.canReview) redirect('/conta/aulas?aba=anteriores');
   return (
     <div className="space-y-5">
-      <Link href="/conta" className="inline-flex min-h-11 items-center text-sm font-medium text-indigo-600">← Minha conta</Link>
+      <Link href="/conta/aulas?aba=anteriores" className="inline-flex min-h-11 items-center text-sm font-medium text-indigo-600">← Aulas</Link>
       <div className="flex items-center gap-3">
         <TeacherPhoto photoUrl={l.teacherPhotoUrl} name={l.teacherName} size={56} />
         <div>

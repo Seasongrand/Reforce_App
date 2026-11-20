@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AlunoCodeLogin } from '@/components/aluno/AlunoCodeLogin';
 import { TITLE } from '@/components/aluno/ui';
@@ -19,6 +20,9 @@ export default async function GuardianLoginPage() {
         </p>
       </div>
       <AlunoCodeLogin start={startAction} finish={finishAction} />
+      <p className="text-sm text-site-muted">
+        Ainda não tem conta? <Link href="/conta/criar" className="inline-flex min-h-11 items-center font-semibold text-indigo-600 underline">Criar conta</Link>
+      </p>
     </div>
   );
 }

@@ -474,22 +474,80 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await acct.fill('#code', await lastCode('maria.e2e@exemplo.com'));
   await acct.click('button:has-text("Entrar")');
   await acct.waitForURL(/\/conta$/);
-  // "Sair da conta" fica no fim da página, depois dos alunos
-  expect(await top(acct.getByRole('button', { name: 'Sair da conta' }))).toBeGreaterThan(await top(acct.getByRole('heading', { name: 'Alunos' })));
+  // a conta tem o molde da área do professor: topo com "Sair" e menu com Início, Aulas, Alunos e Meus dados
+  const accNav = acct.getByRole('navigation', { name: 'Minha conta' });
+  for (const label of ['Início', 'Aulas', 'Alunos', 'Meus dados']) await expect(accNav.getByRole('link', { name: label })).toBeVisible();
+  await expect(accNav.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page');
+  await expect(acct.getByRole('button', { name: 'Sair' })).toBeVisible();
+  await expect(acct.getByTestId('cartao-alunos')).toContainText('Joana');
+  await acct.setViewportSize({ width: 390, height: 844 }); // no celular, o menu vai para baixo, sem rolagem lateral
+  expect(await acct.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(accNav.getByRole('link', { name: 'Meus dados' })).toBeVisible();
+  await acct.setViewportSize({ width: 1280, height: 720 });
+  // já conectada, o topo do site mostra "Minha conta"
+  await acct.goto('/');
   await expect(acct.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Minha conta' })).toHaveAttribute('href', '/conta');
-  const past = acct.getByTestId(`aula-${booking!.id}`);
-  await past.getByRole('link', { name: 'Avaliar a aula' }).click();
+  await acct.goto('/conta');
+  // o Início avisa da aula esperando avaliação e leva direto a ela
+  const toReview = acct.getByTestId('cartao-avaliar');
+  await expect(toReview).toContainText('1 aula esperando sua avaliação');
+  await toReview.getByRole('link').click();
+  await acct.waitForURL(`**/conta/avaliar/${booking!.id}`);
   await acct.getByRole('radio', { name: /^5 —/ }).check({ force: true });
   await acct.fill('textarea[name=comment]', 'Explica com calma. Meu WhatsApp é 11 98888-1111');
   await acct.click('button:has-text("Enviar avaliação")');
-  await acct.waitForURL('**/conta?avaliada=1');
+  await acct.waitForURL('**/conta/aulas?aba=anteriores&avaliada=1');
   await expect(acct.getByText('Obrigado pela avaliação!')).toBeVisible();
   await expect(acct.getByTestId(`aula-${booking!.id}`)).toContainText('Sua avaliação');
+  await acct.getByRole('navigation', { name: 'Minha conta' }).getByRole('link', { name: 'Início' }).click();
+  await expect(acct.getByTestId('cartao-avaliar')).toContainText('Nenhuma aula esperando avaliação');
+  // Alunos: cadastra, edita e remove um aluno sem aula; a aluna com aula não tem "Remover"
+  await acct.getByRole('navigation', { name: 'Minha conta' }).getByRole('link', { name: 'Alunos' }).click();
+  await acct.waitForURL('**/conta/alunos');
+  const addForm = acct.getByRole('region', { name: 'Cadastrar aluno' });
+  await addForm.getByLabel('Primeiro nome').fill('Pedro');
+  await addForm.getByLabel('Série').selectOption({ label: '1ª série do ensino médio' });
+  await addForm.getByRole('button', { name: 'Cadastrar aluno' }).click();
+  const pedro = acct.getByTestId('aluno-Pedro');
+  await expect(pedro).toContainText('1ª série do ensino médio');
+  await pedro.getByText('Editar').click();
+  await pedro.getByLabel('Série').selectOption({ label: '2ª série do ensino médio' });
+  await pedro.getByRole('button', { name: 'Salvar' }).click();
+  await expect(pedro).toContainText('2ª série do ensino médio');
+  await pedro.getByRole('button', { name: 'Remover' }).click();
+  await expect(acct.getByTestId('aluno-Pedro')).toHaveCount(0);
+  await expect(acct.getByTestId('aluno-Joana')).toContainText('Tem aulas na conta');
+  await expect(acct.getByTestId('aluno-Joana').getByRole('button', { name: 'Remover' })).toHaveCount(0);
   await acct.goto(`/p/${SLUG}`);
   const reviews = acct.locator('#avaliacoes');
   await expect(reviews).toContainText('Maria L.');
   await expect(reviews).toContainText('[contato removido]');
   await expect(reviews).not.toContainText('Joana');
+  // Meus dados: muda o nome (o "Olá" muda), desliga os avisos e troca o e-mail com o código; depois entra com o novo
+  await acct.goto('/conta/dados');
+  const myData = acct.getByRole('region', { name: 'Seus dados' });
+  await myData.getByLabel('Seu nome').fill('Mariana Lima');
+  await myData.getByLabel(/pelo WhatsApp/).uncheck();
+  await myData.getByRole('button', { name: 'Salvar' }).click();
+  await expect(myData.getByText('Dados salvos.')).toBeVisible();
+  expect(await q(`SELECT name, whatsapp_opt_in_at FROM guardians WHERE email = 'maria.e2e@exemplo.com'`))
+    .toEqual([{ name: 'Mariana Lima', whatsapp_opt_in_at: null }]);
+  const emailBox = acct.getByRole('region', { name: 'E-mail' });
+  await emailBox.getByLabel('E-mail novo').fill('mariana.e2e@exemplo.com');
+  await emailBox.getByRole('button', { name: 'Enviar código' }).click();
+  await emailBox.locator('#email-code').fill(await lastCode('mariana.e2e@exemplo.com'));
+  await emailBox.getByRole('button', { name: 'Confirmar' }).click();
+  await expect(emailBox.getByTestId('email-atual')).toHaveText('mariana.e2e@exemplo.com');
+  await acct.getByRole('navigation', { name: 'Minha conta' }).getByRole('link', { name: 'Início' }).click();
+  await expect(acct.getByRole('heading', { level: 1 })).toHaveText('Olá, Mariana');
+  await acct.getByRole('button', { name: 'Sair' }).click();
+  await acct.waitForURL('**/conta/entrar');
+  await acct.fill('#email', 'mariana.e2e@exemplo.com');
+  await acct.click('button:has-text("Receber código por e-mail")');
+  await acct.waitForSelector('#code');
+  await acct.fill('#code', await lastCode('mariana.e2e@exemplo.com'));
+  await acct.click('button:has-text("Entrar")');
+  await acct.waitForURL(/\/conta$/);
 
   // 8. Fechada a janela de contestação (24 h), o repasse é liberado uma vez.
   await setClock(new Date(endsAt.getTime() + 24 * 60 * 60_000 + 60_000));
@@ -507,6 +565,34 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(staff.getByText('released')).toHaveCount(0);
   await staff.goto('/interno');
   await expect(staff.getByText(/avisos de pagamento não processados/)).toBeVisible();
+
+  // 8b. Uma família nova cria a conta sem comprar (sem aluno ainda) e depois reserva informando só o aluno
+  const novaFam = await (await browser.newContext()).newPage();
+  await novaFam.goto('/conta/entrar');
+  await novaFam.getByRole('link', { name: 'Criar conta' }).click();
+  await novaFam.waitForURL('**/conta/criar');
+  await novaFam.getByLabel('Seu nome').fill('Carla Dias');
+  await novaFam.getByLabel('E-mail').fill('carla.e2e@exemplo.com');
+  await novaFam.getByLabel('WhatsApp', { exact: true }).fill('(11) 97777-2222');
+  await novaFam.click('button:has-text("Criar conta")');
+  await novaFam.waitForSelector('#code');
+  await novaFam.fill('#code', await lastCode('carla.e2e@exemplo.com'));
+  await novaFam.click('button:has-text("Confirmar e entrar")');
+  await novaFam.waitForURL(/\/conta$/);
+  await expect(novaFam.getByRole('heading', { level: 1 })).toHaveText('Olá, Carla');
+  await novaFam.goto(`/p/${SLUG}`);
+  await novaFam.locator('button[data-slot]').first().click();
+  await novaFam.getByRole('link', { name: 'Reservar' }).click();
+  await novaFam.waitForURL('**/reservar?**');
+  await expect(novaFam.getByRole('heading', { name: 'Para quem é a aula?' })).toBeVisible();
+  await expect(novaFam.getByRole('radio', { name: 'Novo aluno' })).toBeChecked();
+  await novaFam.getByLabel('Primeiro nome do aluno').fill('Lucas');
+  await novaFam.getByLabel('Série').selectOption({ label: '9º ano' });
+  await novaFam.click('button:has-text("Reservar e ir para o pagamento")');
+  await novaFam.waitForURL('**/pedido/**');
+  expect(await q(
+    `SELECT s.first_name FROM students s JOIN guardians g ON g.id = s.guardian_id WHERE g.email = 'carla.e2e@exemplo.com'`,
+  )).toEqual([{ first_name: 'Lucas' }]);
 
   // 9. Nenhum par de aulas ativas do mesmo professor se sobrepõe.
   expect(await q(

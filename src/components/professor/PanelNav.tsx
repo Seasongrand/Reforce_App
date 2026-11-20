@@ -81,7 +81,7 @@ function Icon({ name }: { name: PanelIcon }) {
   );
 }
 
-/** `primary`: os destinos (até 3) que ficam na barra de baixo do celular; o resto vai para "Mais". */
+/** `primary`: os destinos que ficam na barra de baixo do celular; o resto vai para "Mais" (sem resto, não há "Mais"). */
 export function PanelNav({ items, label, primary: primaryHrefs }: { items: PanelNavItem[]; label: string; primary: string[] }) {
   const pathname = usePathname();
   const root = items[0]!.href;
@@ -138,7 +138,7 @@ export function PanelNav({ items, label, primary: primaryHrefs }: { items: Panel
             })}
           </ul>
         )}
-        <ul className="grid grid-cols-4">
+        <ul className="grid" style={{ gridTemplateColumns: `repeat(${primary.length + (rest.length > 0 ? 1 : 0)}, minmax(0, 1fr))` }}>
           {primary.map((item) => {
             const current = isCurrent(pathname, item.href, root);
             return (
@@ -151,7 +151,7 @@ export function PanelNav({ items, label, primary: primaryHrefs }: { items: Panel
               </li>
             );
           })}
-          <li>
+          {rest.length > 0 && <li>
             <button type="button" aria-expanded={more} onClick={() => setMore((m) => !m)}
               className={`${tab} ${more || inRest ? 'text-indigo-950' : 'text-site-muted'}`}>
               <span className={`flex h-7 w-12 items-center justify-center rounded-full ${more || inRest ? 'bg-indigo-100' : ''}`}>
@@ -161,7 +161,7 @@ export function PanelNav({ items, label, primary: primaryHrefs }: { items: Panel
               </span>
               Mais
             </button>
-          </li>
+          </li>}
         </ul>
       </nav>
     </>

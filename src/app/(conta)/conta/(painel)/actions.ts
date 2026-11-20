@@ -1,0 +1,93 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { finishEmailChange, startEmailChange, updateGuardianProfile } from '@/domain/guardians/profile';
+import { addStudent, removeStudent, updateStudent } from '@/domain/guardians/students';
+import { submitReview } from '@/domain/reviews';
+import { appDeps, now } from '@/server/app';
+import { CODE_ERRORS, errorMessage, type ActionState } from '@/server/action-result';
+import { currentSubject, endSession } from '@/server/session';
+
+export async function logoutAction(): Promise<void> {
+  await endSession('guardian');
+  redirect('/conta/entrar');
+}
+
+export async function reviewAction(_: unknown, form: FormData): Promise<ActionState> {
+  const guardianId = await currentSubject('guardian');
+  if (!guardianId) return { ok: false, error: 'Sua sessão expirou. Entre de novo.' };
+  try {
+    await submitReview(appDeps(), {
+      guardianId,
+      bookingId: String(form.get('bookingId') ?? ''),
+      rating: Number(form.get('rating') ?? 0),
+      comment: String(form.get('comment') ?? ''),
+    }, await now());
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+  redirect('/conta/aulas?aba=anteriores&avaliada=1');
+}
+
+/** Ação de Minha conta: só com a sessão do responsável; erros de regra viram mensagem na tela. */
+async function asGuardian(run: (guardianId: string) => Promise<void>, path: string): Promise<ActionState> {
+  const guardianId = await currentSubject('guardian');
+  if (!guardianId) return { ok: false, error: 'Sua sessão expirou. Entre de novo.' };
+  try {
+    await run(guardianId);
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+  revalidatePath(path);
+  return { ok: true, data: undefined };
+}
+
+const field = (form: FormData, k: string) => String(form.get(k) ?? '');
+
+export async function addStudentAction(_: unknown, form: FormData): Promise<ActionState> {
+  return asGuardian(async (g) => {
+    await addStudent(appDeps().db, g, { firstName: field(form, 'firstName'), grade: field(form, 'grade') });
+  }, '/conta/alunos');
+}
+
+export async function updateStudentAction(_: unknown, form: FormData): Promise<ActionState> {
+  return asGuardian((g) => updateStudent(appDeps().db, g, field(form, 'studentId'), {
+    firstName: field(form, 'firstName'), grade: field(form, 'grade'),
+  }), '/conta/alunos');
+}
+
+export async function removeStudentAction(_: unknown, form: FormData): Promise<ActionState> {
+  return asGuardian((g) => removeStudent(appDeps().db, g, field(form, 'studentId')), '/conta/alunos');
+}
+
+export async function updateProfileAction(_: unknown, form: FormData): Promise<ActionState> {
+  const r = await asGuardian(async (g) => updateGuardianProfile(appDeps().db, g, {
+    name: field(form, 'name'), whatsappOptIn: form.get('whatsappOptIn') === 'on',
+  }, await now()), '/conta/dados');
+  if (r?.ok) revalidatePath('/conta', 'layout'); // o nome aparece no topo e no "Olá"
+  return r;
+}
+
+export async function emailStartAction(_: unknown, form: FormData): Promise<ActionState<{ codeId: string; sentTo: string }>> {
+  const guardianId = await currentSubject('guardian');
+  if (!guardianId) return { ok: false, error: 'Sua sessão expirou. Entre de novo.' };
+  try {
+    return { ok: true, data: await startEmailChange(appDeps(), guardianId, field(form, 'email'), await now()) };
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+}
+
+export async function emailFinishAction(_: unknown, form: FormData): Promise<ActionState> {
+  const guardianId = await currentSubject('guardian');
+  if (!guardianId) return { ok: false, error: 'Sua sessão expirou. Entre de novo.' };
+  try {
+    const r = await finishEmailChange(appDeps(), guardianId, { codeId: field(form, 'codeId'), code: field(form, 'code') }, await now());
+    if (!r.ok) return { ok: false, error: CODE_ERRORS[r.reason] };
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+  revalidatePath('/conta/dados');
+  return { ok: true, data: undefined };
+}

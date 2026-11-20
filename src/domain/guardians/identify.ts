@@ -5,7 +5,8 @@
  * código vai para o e-mail que já está na conta.
  */
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
-import { sql } from 'kysely';
+import { sql, type Transaction } from 'kysely';
+import type { DB } from '@/db/types';
 import type { Temporal } from 'temporal-polyfill';
 import { onlyDigits } from '@/providers/geocoding/fake';
 import { GRADE_LEVELS } from '../catalog';
@@ -40,7 +41,7 @@ interface Pending {
   existingGuardianId: string | null;
 }
 
-function validTimezone(tz: string): string {
+export function validTimezone(tz: string): string {
   try {
     new Intl.DateTimeFormat('pt-BR', { timeZone: tz });
     return tz;
@@ -81,35 +82,53 @@ export async function confirmGuardian(
   const v = await verifyCode(deps, { ...input, purpose: 'guardian_checkout' }, now);
   if (!v.ok) return v;
   const p = v.payload as unknown as Pending;
-  const optIn = p.whatsappOptIn ? now.toString() : null;
   const { guardianId, studentId } = await deps.db.transaction().execute(async (trx) => {
-    const g = await sql<{ id: string }>`
-      INSERT INTO guardians (name, phone_e164, email, timezone, whatsapp_opt_in_at)
-      VALUES (${p.name}, ${p.phone}, ${p.email}, ${p.timezone}, ${optIn}::timestamptz)
-      ON CONFLICT (phone_e164) DO UPDATE
-         SET timezone = EXCLUDED.timezone,
-             email = coalesce(guardians.email, EXCLUDED.email),
-             whatsapp_opt_in_at = CASE WHEN ${p.whatsappOptIn}
-                                       THEN coalesce(guardians.whatsapp_opt_in_at, EXCLUDED.whatsapp_opt_in_at)
-                                       ELSE NULL END
-      RETURNING id`.execute(trx);
-    const guardianId = g.rows[0]!.id;
-    const found = await sql<{ id: string }>`
-      SELECT id FROM students WHERE guardian_id = ${guardianId} AND lower(first_name) = lower(${p.student.firstName})
-       LIMIT 1`.execute(trx);
-    let studentId = found.rows[0]?.id;
-    if (studentId) {
-      await sql`UPDATE students SET grade = ${p.student.grade} WHERE id = ${studentId}`.execute(trx);
-    } else {
-      const s = await sql<{ id: string }>`
-        INSERT INTO students (guardian_id, first_name, grade) VALUES (${guardianId}, ${p.student.firstName}, ${p.student.grade})
-        RETURNING id`.execute(trx);
-      studentId = s.rows[0]!.id;
-    }
-    return { guardianId, studentId };
+    const guardianId = await upsertGuardianByPhone(trx, p, now);
+    return { guardianId, studentId: await upsertStudent(trx, guardianId, p.student) };
   });
   const token = await createSession(deps.db, 'guardian', guardianId, now);
   return { ok: true, token, guardianId, studentId };
+}
+
+/**
+ * Cria o responsável pelo WhatsApp ou, se o número já tem conta, atualiza fuso e
+ * avisos dela; o e-mail da conta existente nunca muda por aqui.
+ */
+export async function upsertGuardianByPhone(
+  trx: Transaction<DB>,
+  p: { name: string; phone: string; email: string; whatsappOptIn: boolean; timezone: string },
+  now: Temporal.Instant,
+): Promise<string> {
+  const optIn = p.whatsappOptIn ? now.toString() : null;
+  const g = await sql<{ id: string }>`
+    INSERT INTO guardians (name, phone_e164, email, timezone, whatsapp_opt_in_at)
+    VALUES (${p.name}, ${p.phone}, ${p.email}, ${p.timezone}, ${optIn}::timestamptz)
+    ON CONFLICT (phone_e164) DO UPDATE
+       SET timezone = EXCLUDED.timezone,
+           email = coalesce(guardians.email, EXCLUDED.email),
+           whatsapp_opt_in_at = CASE WHEN ${p.whatsappOptIn}
+                                     THEN coalesce(guardians.whatsapp_opt_in_at, EXCLUDED.whatsapp_opt_in_at)
+                                     ELSE NULL END
+    RETURNING id`.execute(trx);
+  return g.rows[0]!.id;
+}
+
+/** Aluno do responsável pelo primeiro nome (sem diferenciar maiúsculas): o mesmo nome atualiza a série. */
+export async function upsertStudent(
+  trx: Transaction<DB>, guardianId: string, student: { firstName: string; grade: string },
+): Promise<string> {
+  const found = await sql<{ id: string }>`
+    SELECT id FROM students WHERE guardian_id = ${guardianId} AND lower(first_name) = lower(${student.firstName})
+     LIMIT 1`.execute(trx);
+  const id = found.rows[0]?.id;
+  if (id) {
+    await sql`UPDATE students SET grade = ${student.grade} WHERE id = ${id}`.execute(trx);
+    return id;
+  }
+  const s = await sql<{ id: string }>`
+    INSERT INTO students (guardian_id, first_name, grade) VALUES (${guardianId}, ${student.firstName}, ${student.grade})
+    RETURNING id`.execute(trx);
+  return s.rows[0]!.id;
 }
 
 export interface AddressInput {

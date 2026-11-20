@@ -56,7 +56,7 @@ export default async function ReservePage({
       <BookingForm
         slug={slug} serviceId={service.id} startsAt={start.toString()} idempotencyKey={randomUUID()}
         atStudent={service.modality === 'at_student'} grades={grades.grades} selectedGrade={grades.selected}
-        loggedIn={guardianId !== null && students.length > 0} students={students} addresses={addresses}
+        loggedIn={guardianId !== null} students={students} addresses={addresses}
         holdMinutes={deps.config.holdMinutes}
         identify={identifyAction} confirmAndHold={confirmAndHoldAction} holdAsGuardian={holdAsGuardianAction} />
     </div>
