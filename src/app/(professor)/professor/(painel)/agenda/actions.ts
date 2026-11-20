@@ -6,6 +6,7 @@ import {
   addOverride, addRule, addRules, connectCalendar, createService, disconnectCalendar, removeOverride, removeRule,
   updateScheduleSettings, updateService, type Modality, type OverrideInput, type RuleInput,
 } from '@/domain/teachers/schedule';
+import { parsePriceBR } from '@/lib/money';
 import { parseTimeBR } from '@/lib/time-input';
 import { appDeps, now } from '@/server/app';
 import { errorMessage, type ActionState } from '@/server/action-result';
@@ -13,7 +14,8 @@ import { requireTeacher } from '@/server/session';
 
 const s = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
 const n = (f: FormData, k: string) => Number(s(f, k));
-const reais = (f: FormData, k: string) => Math.round(Number(s(f, k).replace(/\./g, '').replace(',', '.')) * 100);
+/** Preço digitado em centavos (aceita 121,00, 121.00 e 1.234,56); inválido vira 0, que o domínio recusa. */
+const reais = (f: FormData, k: string) => parsePriceBR(s(f, k)) ?? 0;
 
 async function run(fn: (teacherId: string) => Promise<unknown>, ...paths: string[]): Promise<ActionState> {
   const teacherId = await requireTeacher();
@@ -104,8 +106,9 @@ export async function createServiceAction(_: unknown, f: FormData) {
   return run((t) => createService(appDeps(), t, {
     subjectId: n(f, 'subjectId'), modality: s(f, 'modality') as Modality, durationMin: n(f, 'durationMin'),
     priceCents: reais(f, 'price'),
-    bufferBeforeMin: s(f, 'bufferBeforeMin') === '' ? undefined : n(f, 'bufferBeforeMin'),
-    bufferAfterMin: s(f, 'bufferAfterMin') === '' ? undefined : n(f, 'bufferAfterMin'),
+    // deslocamento: o mesmo tempo antes e depois (só na aula presencial; sem o campo, o padrão do domínio)
+    bufferBeforeMin: s(f, 'travelMin') === '' ? undefined : n(f, 'travelMin'),
+    bufferAfterMin: s(f, 'travelMin') === '' ? undefined : n(f, 'travelMin'),
   }), '/professor/servicos', '/professor/agenda');
 }
 

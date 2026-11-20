@@ -186,14 +186,24 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // 3. A professora configura serviços e agenda.
   await teacher.goto('/professor/servicos');
   await expect(teacher.getByRole('heading', { level: 1 })).toHaveText('Serviços e preços');
+  // enquanto digita o preço, o professor vê quanto recebe pelo link dele (5%) e pela busca (15%)
   await teacher.fill('input[name=price]', '121,00');
+  await expect(teacher.getByTestId('voce-recebe')).toHaveText('Você recebe R$ 114,95 pelo seu link e R$ 102,85 pela busca.');
   await teacher.click('button:has-text("Criar serviço")');
   await expect(teacher.getByText('Serviço criado.')).toBeVisible();
-  await teacher.selectOption('select[name=modality]', 'at_student');
+  await teacher.getByRole('radio', { name: 'Na casa do aluno' }).check();
+  await expect(teacher.getByLabel('Deslocamento')).toHaveValue('30');
   await teacher.fill('input[name=price]', '150,00');
   await teacher.click('button:has-text("Criar serviço")');
-  await expect(teacher.getByTestId('servicos')).toContainText('Na casa do aluno');
-  await expect(teacher.getByTestId('servicos')).toContainText('intervalo 30/30 min');
+  const services = teacher.getByTestId('servicos');
+  await expect(services).toContainText('Na casa do aluno');
+  await expect(services).toContainText('Deslocamento: 30 min antes e depois');
+  // pausar é uma ação secundária e dá para reativar
+  const atHome = services.getByRole('listitem').filter({ hasText: 'Na casa do aluno' });
+  await atHome.getByRole('button', { name: 'Pausar' }).click();
+  await expect(atHome).toContainText('Pausado');
+  await atHome.getByRole('button', { name: 'Reativar' }).click();
+  await expect(atHome.getByRole('button', { name: 'Pausar' })).toBeVisible();
 
   await teacher.goto('/professor/agenda');
   await expect(teacher.getByText('horário de São Paulo')).toBeVisible();
