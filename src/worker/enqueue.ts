@@ -12,7 +12,8 @@ export type TaskName =
   | 'payment.refund'
   | 'video.create_room'
   | 'calendar.create_event'
-  | 'search.refresh_teacher';
+  | 'search.refresh_teacher'
+  | 'message.notify';
 
 export async function enqueue(
   trx: Db | Transaction<DB>,

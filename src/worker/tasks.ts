@@ -5,6 +5,7 @@
 import { Logger, runOnce, type TaskList } from 'graphile-worker';
 import type { Deps } from '@/domain/deps';
 import { createCalendarEvent, createVideoRoom, refreshAllListed, refreshTeacher } from '@/domain/jobs';
+import { notifyNewMessages } from '@/domain/messages';
 import { refundPayment } from '@/domain/payment/refund';
 import { runMinuteSweeps } from '@/domain/sweeps';
 import { expireVerifications } from '@/domain/staff/review';
@@ -29,6 +30,11 @@ export function buildTaskList(makeDeps: () => Deps, clock: ClockSource): TaskLis
     'video.create_room': async (p) => { await withNow((d, n) => createVideoRoom(d, str(p, 'bookingId'), n)); },
     'calendar.create_event': async (p) => { await withNow((d, n) => createCalendarEvent(d, str(p, 'bookingId'), n)); },
     'search.refresh_teacher': async (p) => { await withNow((d, n) => refreshTeacher(d, str(p, 'teacherId'), n)); },
+    'message.notify': async (p) => {
+      const to = str(p, 'to');
+      if (to !== 'teacher' && to !== 'guardian') throw new Error('tarefa com destinatário inválido');
+      await withNow((d, n) => notifyNewMessages(d, { teacherId: str(p, 'teacherId'), guardianId: str(p, 'guardianId'), to }, n));
+    },
     'sweep_minute': async () => { await withNow(runMinuteSweeps); },
     'sweep_refresh_all': async () => { await withNow(refreshAllListed); },
     'sweep_daily': async () => { await withNow(expireVerifications); },
