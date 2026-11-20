@@ -32,7 +32,9 @@ const NOTE: Record<BookingService['modality'], string> = {
   at_teacher: 'endereço informado depois do pagamento',
 };
 
-export function ProfileBooking({ slug, teacherTz, services }: { slug: string; teacherTz: string; services: BookingService[] }) {
+export function ProfileBooking({ slug, teacherTz, services, gradeSlug }: {
+  slug: string; teacherTz: string; services: BookingService[]; gradeSlug?: string;
+}) {
   const [serviceId, setServiceId] = useState((services.find((s) => s.slots.length > 0) ?? services[0])?.id ?? '');
   // o servidor não sabe o fuso de quem vê: começa no do professor e troca depois de montar
   const [viewerTz, setViewerTz] = useState(teacherTz);
@@ -121,7 +123,7 @@ export function ProfileBooking({ slug, teacherTz, services }: { slug: string; te
               <p className="text-[17px] font-bold">{formatBRL(service.priceCents)} · {service.durationMin} min</p>
             </div>
             {slot ? (
-              <Link href={`/p/${slug}/reservar?servico=${service.id}&inicio=${encodeURIComponent(slot)}`}
+              <Link href={`/p/${slug}/reservar?servico=${service.id}&inicio=${encodeURIComponent(slot)}${gradeSlug && /^[a-z0-9]+$/.test(gradeSlug) ? `&serie=${gradeSlug}` : ''}`}
                 className="inline-flex min-h-13 items-center rounded-2xl bg-indigo-600 px-6 text-base font-semibold text-white hover:bg-indigo-700">
                 Reservar
               </Link>

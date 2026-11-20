@@ -68,6 +68,10 @@ async function runSweeps(browser: Browser) {
 
 async function identifyAndReserve(page: Page, slotUrl: string, who: { email: string; phone: string }) {
   await page.goto(slotUrl);
+  // a série vem da busca (ou a única do professor) e o aceite do WhatsApp começa desmarcado
+  await expect(page.locator('select[name=studentGrade]')).toHaveValue('9ano');
+  await expect(page.locator('input[name=whatsappOptIn]')).not.toBeChecked();
+  await page.check('input[name=whatsappOptIn]');
   await page.fill('input[name=name]', 'Maria Lima');
   await page.fill('input[name=phone]', who.phone);
   await page.fill('input[name=email]', who.email);
@@ -219,7 +223,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(card).toContainText('Perfil verificado');
   await expect(card).toContainText('Novo na Reforce');
   await card.click();
-  await fam1.waitForURL(`**/p/${SLUG}`);
+  await fam1.waitForURL(`**/p/${SLUG}?serie=9ano`); // o perfil guarda a série buscada
   await expect(fam1.getByText('Perfil verificado')).toBeVisible();
   await expect(fam1.getByText('ENEM', { exact: true })).toBeVisible();
   await expect(fam1.getByText(EXPERIENCE)).toBeVisible();
@@ -231,6 +235,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   const reserve = fam1.getByRole('link', { name: 'Reservar' });
   const slotUrl = new URL((await reserve.getAttribute('href'))!, fam1.url()).toString();
   expect(slotUrl).toContain(encodeURIComponent(slotInstant));
+  expect(slotUrl).toContain('serie=9ano'); // a série buscada segue até a reserva
 
   await identifyAndReserve(fam1, slotUrl, { email: 'maria.e2e@exemplo.com', phone: '(11) 98888-1111' });
   await fam1.waitForURL('**/pedido/**');

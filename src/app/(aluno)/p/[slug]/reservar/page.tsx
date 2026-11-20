@@ -6,7 +6,7 @@ import { BookingForm } from '@/components/BookingForm';
 import { LessonSummary } from '@/components/aluno/LessonSummary';
 import { LocalWhen } from '@/components/aluno/LocalWhen';
 import { Stepper } from '@/components/aluno/Stepper';
-import { GRADE_LEVELS } from '@/domain/catalog';
+import { bookingGrades } from '@/domain/public/booking-grades';
 import { publicTeacherPage } from '@/domain/public/teacher-page';
 import { appDeps, now } from '@/server/app';
 import { currentSubject } from '@/server/session';
@@ -18,9 +18,9 @@ const MODALITY: Record<string, string> = { online: 'online', at_teacher: 'no end
 
 export default async function ReservePage({
   params, searchParams,
-}: { params: Promise<{ slug: string }>; searchParams: Promise<{ servico?: string; inicio?: string }> }) {
+}: { params: Promise<{ slug: string }>; searchParams: Promise<{ servico?: string; inicio?: string; serie?: string }> }) {
   const { slug } = await params;
-  const { servico, inicio } = await searchParams;
+  const { servico, inicio, serie } = await searchParams;
   const deps = appDeps();
   const page = await publicTeacherPage(deps, slug, await now());
   if (!page || !page.sellable) notFound();
@@ -42,6 +42,7 @@ export default async function ReservePage({
         .map((a) => ({ id: a.id, label: `${a.street}${a.number ? `, ${a.number}` : ''}, ${a.city}` }))
     : [];
   const stillFree = service.slots.includes(start.toString());
+  const grades = bookingGrades({ teaches: page.subjects, subject: service.subject, wanted: serie });
   return (
     <div className="space-y-5">
       <Link href={`/p/${slug}`} className="inline-flex min-h-11 items-center text-sm font-medium text-indigo-600">← {page.name}</Link>
@@ -54,7 +55,7 @@ export default async function ReservePage({
       )}
       <BookingForm
         slug={slug} serviceId={service.id} startsAt={start.toString()} idempotencyKey={randomUUID()}
-        atStudent={service.modality === 'at_student'} grades={GRADE_LEVELS.map((g) => ({ slug: g.slug, name: g.name }))}
+        atStudent={service.modality === 'at_student'} grades={grades.grades} selectedGrade={grades.selected}
         loggedIn={guardianId !== null && students.length > 0} students={students} addresses={addresses}
         holdMinutes={deps.config.holdMinutes}
         identify={identifyAction} confirmAndHold={confirmAndHoldAction} holdAsGuardian={holdAsGuardianAction} />

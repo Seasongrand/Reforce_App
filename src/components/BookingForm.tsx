@@ -21,6 +21,8 @@ interface Props {
   idempotencyKey: string;
   atStudent: boolean;
   grades: Array<{ slug: string; name: string }>;
+  /** Série marcada ao abrir; vazia: a família escolhe. */
+  selectedGrade: string;
   loggedIn: boolean;
   students: Array<{ id: string; firstName: string }>;
   addresses: Array<{ id: string; label: string }>;
@@ -76,6 +78,16 @@ function AddressFields() {
   );
 }
 
+/** Opções de série; sem uma série certa, começa em "Escolha a série" (o envio exige escolher). */
+function GradeOptions({ grades, selected }: { grades: Array<{ slug: string; name: string }>; selected: string }) {
+  return (
+    <>
+      {!selected && <option value="" disabled>Escolha a série</option>}
+      {grades.map((g) => <option key={g.slug} value={g.slug}>{g.name}</option>)}
+    </>
+  );
+}
+
 const holdNote = (minutes: number) =>
   `Ao confirmar, o horário fica guardado para você por ${minutes} minutos enquanto paga.`;
 
@@ -113,8 +125,8 @@ export function BookingForm(p: Props) {
           </label>
           <div className="grid grid-cols-2 gap-2.5">
             <input className={INPUT} name="studentFirstName" placeholder="Primeiro nome" aria-label="Primeiro nome do aluno" />
-            <select className={INPUT} name="studentGrade" aria-label="Série">
-              {p.grades.map((g) => <option key={g.slug} value={g.slug}>{g.name}</option>)}
+            <select className={INPUT} name="studentGrade" aria-label="Série" defaultValue={p.selectedGrade}>
+              <GradeOptions grades={p.grades} selected={p.selectedGrade} />
             </select>
           </div>
         </fieldset>
@@ -152,15 +164,15 @@ export function BookingForm(p: Props) {
         <div className="grid grid-cols-2 gap-3">
           <label className={LABEL}>Primeiro nome do aluno<input className={INPUT} name="studentFirstName" required /></label>
           <label className={LABEL}>Série
-            <select className={INPUT} name="studentGrade" required>
-              {p.grades.map((g) => <option key={g.slug} value={g.slug}>{g.name}</option>)}
+            <select className={INPUT} name="studentGrade" required defaultValue={values.studentGrade ?? p.selectedGrade}>
+              <GradeOptions grades={p.grades} selected={p.selectedGrade} />
             </select>
           </label>
         </div>
         {p.atStudent && <AddressFields />}
         <label className="flex items-start gap-2.5 text-sm leading-normal text-[#3b3870]">
-          <input type="checkbox" name="whatsappOptIn" defaultChecked className="mt-0.5 size-4 accent-indigo-600" />
-          Quero receber a confirmação e os lembretes da aula pelo WhatsApp.
+          <input type="checkbox" name="whatsappOptIn" defaultChecked={values.whatsappOptIn === 'on'} className="mt-0.5 size-5 flex-none accent-indigo-600" />
+          Quero receber a confirmação e os lembretes da aula pelo WhatsApp (recomendado).
         </label>
         {idState && !idState.ok && <p className={ALERT} role="alert">{idState.error}</p>}
         <button className={PRIMARY} disabled={identifying}>{identifying ? 'Enviando…' : 'Continuar'}</button>
