@@ -79,7 +79,7 @@ export function ProfileBooking({ slug, teacherTz, services, gradeSlug }: {
       <section className="space-y-3 pt-7">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="font-display text-xl font-bold">Horários livres</h2>
-          <span className="text-xs text-site-muted">
+          <span className="text-[13px] text-site-muted">
             {viewerTz === teacherTz ? 'no seu horário' : `no seu horário (${zoneLabel(viewerTz)})`}
           </span>
         </div>

@@ -29,7 +29,7 @@ export default async function VerificationPage() {
         const canSend = !latest || latest.status === 'rejected' || latest.status === 'expired';
         return (
           <section key={kind} className="card space-y-3" data-testid={`verificacao-${kind}`}>
-            <h2 className="font-medium capitalize">{KIND_LABEL[kind]}</h2>
+            <h2 className="font-semibold">{KIND_LABEL[kind].charAt(0).toUpperCase() + KIND_LABEL[kind].slice(1)}</h2>
             <p className="text-sm text-slate-600">{HELP[kind]}</p>
             {latest && (
               <p className="text-sm">
@@ -44,7 +44,7 @@ export default async function VerificationPage() {
                 <input type="hidden" name="kind" value={kind} />
                 <input type="file" name="files" multiple={kind === 'identity'} required
                   accept="application/pdf,image/jpeg,image/png,image/webp" aria-label={`Arquivos de ${KIND_LABEL[kind]}`} />
-                {kind === 'identity' && <p className="text-xs text-slate-500">Selecione os dois arquivos juntos.</p>}
+                {kind === 'identity' && <p className="text-sm text-slate-500">Selecione os dois arquivos juntos.</p>}
               </ActionForm>
             )}
           </section>

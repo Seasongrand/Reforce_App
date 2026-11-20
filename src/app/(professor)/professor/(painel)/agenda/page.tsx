@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ActionForm } from '@/components/ActionForm';
 import { availableSlots } from '@/domain/availability';
 import { SLOT_STEPS } from '@/domain/teachers/schedule';
-import { formatDatePtBr, formatTime, groupByViewerDate } from '@/time/zoned';
+import { formatDatePtBr, formatTime, groupByViewerDate, zoneLabel } from '@/time/zoned';
 import { Temporal } from 'temporal-polyfill';
 import { appDeps, now } from '@/server/app';
 import { requireTeacher } from '@/server/session';
@@ -36,7 +36,7 @@ export default async function AgendaPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Agenda</h1>
-      <p className="text-sm text-slate-600">Horários no fuso do seu perfil ({t.timezone}).</p>
+      <p className="text-sm text-slate-600">Horários no fuso do seu perfil: horário de {zoneLabel(t.timezone)}.</p>
 
       <section className="card space-y-3">
         <h2 className="font-medium">Horários semanais</h2>

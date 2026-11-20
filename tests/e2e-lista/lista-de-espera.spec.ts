@@ -57,6 +57,7 @@ test('formulário em duas etapas: Enter avança, Voltar mantém, erro do servido
   await page.getByLabel('Formação').selectOption('doutorado');
   await page.getByLabel(/Currículo/).setInputFiles(path.resolve('tests/e2e/fixtures/documento.pdf'));
   await page.getByLabel(/Autorizo o contato/).check();
+  expect((await page.locator('input[name=consent]').boundingBox())!.width).toBeGreaterThanOrEqual(20); // caixa grande o bastante para o dedo
   await page.getByRole('button', { name: 'Entrar na lista de espera' }).click();
   await expect(page.locator('form').getByRole('alert')).toHaveText('escolha ao menos uma disciplina da lista');
   await expect(page.getByLabel('Ensino médio')).toBeChecked(); // o erro não apaga o que foi preenchido
@@ -91,6 +92,7 @@ test('botão Entrar: o aluno pede aviso da abertura; planilha dos alunos com sen
   await page.getByLabel('UF').fill('rj');
   await page.getByLabel('Ensino médio').check();
   await page.getByLabel(/Tenho 18 anos/).check();
+  expect((await page.locator('input[name=adult]').boundingBox())!.width).toBeGreaterThanOrEqual(20);
   await page.getByRole('button', { name: 'Quero ser avisado' }).click();
   await expect(page.locator('form').getByRole('alert')).toHaveText('escolha ao menos uma disciplina da lista');
   await expect(page.getByLabel('Cidade', { exact: true })).toHaveValue('Niterói'); // o erro não apaga o que foi preenchido

@@ -113,6 +113,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.fill('#teachingAddress', 'Rua das Flores, 100, Pinheiros');
   await teacher.click('button:has-text("Salvar perfil")');
   await expect(teacher.getByText('Perfil salvo.')).toBeVisible();
+  // telefone e raio voltam no formato brasileiro
+  await teacher.reload();
+  await expect(teacher.locator('#phone')).toHaveValue('(11) 97777-6666');
+  await expect(teacher.locator('#travelRadiusKm')).toHaveValue('5');
   await teacher.setViewportSize({ width: 390, height: 844 }); // no celular, o editor e a prévia cabem sem rolagem lateral
   expect(await teacher.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await teacher.setViewportSize({ width: 1280, height: 720 });
@@ -122,6 +126,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(photoForm.getByText('Em análise')).toBeVisible();
 
   await teacher.goto('/professor/verificacao');
+  expect(await teacher.getByTestId('verificacao-criminal_record').locator('h2').innerText()).toBe('Antecedentes criminais');
   const docs: Array<[string, string[]]> = [
     ['identity', ['documento.pdf', 'selfie.pdf']], ['criminal_record', ['documento.pdf']], ['education', ['documento.pdf']],
   ];
@@ -180,6 +185,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
 
   // 3. A professora configura serviços e agenda.
   await teacher.goto('/professor/servicos');
+  await expect(teacher.getByRole('heading', { level: 1 })).toHaveText('Serviços e preços');
   await teacher.fill('input[name=price]', '121,00');
   await teacher.click('button:has-text("Criar serviço")');
   await expect(teacher.getByText('Serviço criado.')).toBeVisible();
@@ -190,6 +196,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(teacher.getByTestId('servicos')).toContainText('intervalo 30/30 min');
 
   await teacher.goto('/professor/agenda');
+  await expect(teacher.getByText('horário de São Paulo')).toBeVisible();
   const ruleForm = teacher.locator('form:has(button:has-text("Adicionar horário"))');
   for (let day = 1; day <= 7; day++) {
     await ruleForm.locator('select[name=weekday]').selectOption(String(day));
@@ -225,6 +232,9 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await card.click();
   await fam1.waitForURL(`**/p/${SLUG}?serie=9ano`); // o perfil guarda a série buscada
   await expect(fam1.getByText('Perfil verificado')).toBeVisible();
+  // rótulos do resumo do perfil legíveis (antes, 12 px)
+  expect(await fam1.getByText('A partir de', { exact: true }).first().evaluate((e) => parseFloat(getComputedStyle(e).fontSize)))
+    .toBeGreaterThanOrEqual(13);
   await expect(fam1.getByText('ENEM', { exact: true })).toBeVisible();
   await expect(fam1.getByText(EXPERIENCE)).toBeVisible();
   await expect(fam1.getByRole('img', { name: 'Foto de Ana Souza' })).toBeVisible();
@@ -380,6 +390,7 @@ test('código por e-mail: reenviar depois de 60 s e usar outro e-mail', async ({
   const sent = async () => (await q(`SELECT count(*)::int AS n FROM dev_outbox WHERE recipient = $1`, [email]))[0]!.n as number;
   await page.clock.install(); // o relógio do navegador anda sozinho, e o teste pode adiantá-lo
   await page.goto('/professor/entrar');
+  await expect(page.getByRole('link', { name: '← Voltar ao site' })).toHaveAttribute('href', '/');
   await page.fill('#email', email);
   await page.click('button:has-text("Receber código por e-mail")');
   await page.waitForSelector('#code');

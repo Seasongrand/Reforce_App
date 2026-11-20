@@ -41,7 +41,7 @@ export interface TeacherProfileViewProps {
 function Stat({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl bg-violet-50 p-3">
-      <p className="text-xs text-site-muted">{label}</p>
+      <p className="text-[13px] text-site-muted">{label}</p>
       <div className="mt-0.5 text-sm font-semibold">{children}</div>
     </div>
   );

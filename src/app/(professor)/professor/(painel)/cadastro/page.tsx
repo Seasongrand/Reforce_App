@@ -1,4 +1,5 @@
 import { ActionForm } from '@/components/ActionForm';
+import { formatKm, formatPhoneBR } from '@/lib/format-br';
 import { ProfileEditor } from '@/components/professor/ProfileEditor';
 import { publicTeacherPage } from '@/domain/public/teacher-page';
 import { BRAZIL_TIMEZONES, currentYearSaoPaulo, MAX_SPECIALTIES, TEACHER_SPECIALTIES } from '@/domain/teachers/profile';
@@ -66,8 +67,8 @@ export default async function TeacherProfilePage() {
         action={saveProfileAction}
         initial={{
           displayName: t.display_name, slug: t.slug.startsWith('professor-') ? '' : t.slug, headline: t.headline ?? '',
-          bio: t.bio ?? '', timezone: t.timezone, phone: t.phone_e164 ?? '', whatsappOptIn: t.whatsapp_opt_in_at !== null,
-          baseCep: t.base_cep ?? '', travelRadiusKm: t.travel_radius_km ?? '', teachingAddress: t.teaching_address ?? '',
+          bio: t.bio ?? '', timezone: t.timezone, phone: formatPhoneBR(t.phone_e164), whatsappOptIn: t.whatsapp_opt_in_at !== null,
+          baseCep: t.base_cep ?? '', travelRadiusKm: formatKm(t.travel_radius_km), teachingAddress: t.teaching_address ?? '',
           subjects: chosen, specialties: t.specialties, teachingSince: t.teaching_since ? String(t.teaching_since) : '',
         }}
         subjects={subjects}

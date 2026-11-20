@@ -199,8 +199,8 @@ export function WaitlistForm({
           <span className="text-[13px] font-normal text-site-muted">PDF, DOC, DOCX ou ODT, até 5 MB. Só a equipe da Reforce vê.</span>
         </label>
         <Honeypot />
-        <label className="flex items-start gap-2.5 text-sm leading-normal text-site-muted">
-          <input type="checkbox" name="consent" required className="mt-1 size-4 accent-indigo-600" />
+        <label className="flex items-start gap-3 rounded-2xl border border-site-field p-3.5 text-sm leading-normal text-site-muted has-checked:border-indigo-600 has-checked:bg-indigo-50">
+          <input type="checkbox" name="consent" required className="mt-0.5 size-5 flex-none accent-indigo-600" />
           <span>
             Autorizo o contato por e-mail e WhatsApp sobre a seleção de professores, conforme a{' '}
             <Link className="text-indigo-600 underline" href="/privacidade">
