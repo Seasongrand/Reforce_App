@@ -37,6 +37,15 @@ export interface ProfileEditorProps {
   currentYear: number;
 }
 
+/** "6º ano" → "6º"; "1ª série do ensino médio" → "1ª EM"; "Pré-vestibular" → "Pré-vest." (o nome completo vai no aria-label). */
+function shortGrade(name: string): string {
+  const year = /^(\d[ºª]) ano/.exec(name);
+  if (year) return year[1]!;
+  const em = /^(\d[ºª]) série/.exec(name);
+  if (em) return `${em[1]} EM`;
+  return name.startsWith('Pré') ? 'Pré-vest.' : name;
+}
+
 export function ProfileEditor(p: ProfileEditorProps) {
   const [state, run, pending] = useActionState(p.action, null);
   const [name, setName] = useState(p.initial.displayName);
@@ -61,6 +70,7 @@ export function ProfileEditor(p: ProfileEditorProps) {
   return (
     // minmax(0, 1fr): a tabela de disciplinas rola dentro do cartão em vez de alargar a página no celular
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,23rem)]">
+      <a href="#previa" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-site-field bg-white px-4 font-semibold text-indigo-950 hover:bg-violet-50 lg:hidden">Ver como os alunos veem</a>
       <form
         className="card min-w-0 space-y-5"
         onSubmit={(e) => {
@@ -69,6 +79,7 @@ export function ProfileEditor(p: ProfileEditorProps) {
           startTransition(() => run(data));
         }}
       >
+        <h3 className="border-t border-site-line pt-5 font-display text-lg font-bold first:border-0 first:pt-0">Sua página</h3>
         <div>
           <label className="label" htmlFor="displayName">Nome na página</label>
           <input className="input" id="displayName" name="displayName" required value={name} onChange={(e) => setName(e.target.value)} />
@@ -95,6 +106,7 @@ export function ProfileEditor(p: ProfileEditorProps) {
             value={since} onChange={(e) => setSince(e.target.value.replace(/\D/g, ''))} placeholder="2015" />
           <p className="mt-1 text-[13px] text-site-muted">Aparece como “anos de experiência” na sua página.</p>
         </div>
+        <h3 className="border-t border-site-line pt-5 font-display text-lg font-bold first:border-0 first:pt-0">O que você ensina</h3>
         <fieldset className="min-w-0">
           <legend className="label">Especialidades <span className="font-normal text-site-muted">({specialties.size} de {p.maxSpecialties})</span></legend>
           <div className="flex flex-wrap gap-2">
@@ -111,33 +123,39 @@ export function ProfileEditor(p: ProfileEditorProps) {
             })}
           </div>
         </fieldset>
-        {/* min-w-0: por padrão, fieldset cresce até caber a tabela e anula a rolagem dela */}
-        <fieldset className="min-w-0">
+        <fieldset className="min-w-0 space-y-2.5">
           <legend className="label">Disciplinas e séries</legend>
-          <div className="overflow-x-auto">
-            <table className="text-sm">
-              <thead>
-                <tr><th></th>{p.grades.map((g) => <th key={g.id} className="px-1 font-normal text-site-muted">{g.name}</th>)}</tr>
-              </thead>
-              <tbody>
-                {p.subjects.map((s) => (
-                  <tr key={s.id}>
-                    <th className="pr-2 text-left font-medium">{s.name}</th>
-                    {p.grades.map((g) => {
-                      const key = `${s.id}:${g.id}`;
-                      return (
-                        <td key={g.id} className="text-center">
-                          <input type="checkbox" name="subj" value={key} aria-label={`${s.name}, ${g.name}`} checked={pairs.has(key)}
-                            onChange={(e) => setPairs((x) => toggle(x, key, e.target.checked))} className="size-4 accent-indigo-600" />
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {p.subjects.map((sub) => {
+            const keys = p.grades.map((g) => `${sub.id}:${g.id}`);
+            const all = keys.every((k) => pairs.has(k));
+            return (
+              <div key={sub.id} className="space-y-2 rounded-2xl border border-site-line p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <strong>{sub.name}</strong>
+                  <button type="button" className="min-h-11 px-1 text-sm font-semibold text-indigo-600"
+                    aria-label={all ? `Desmarcar as séries de ${sub.name}` : `Marcar todas as séries de ${sub.name}`}
+                    onClick={() => setPairs((x) => { const next = new Set(x); for (const k of keys) { if (all) next.delete(k); else next.add(k); } return next; })}>
+                    {all ? 'Nenhuma' : 'Todas'}
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {p.grades.map((g) => {
+                    const key = `${sub.id}:${g.id}`;
+                    const on = pairs.has(key);
+                    return (
+                      <label key={g.id} className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm font-semibold ${on ? 'border-indigo-600 bg-indigo-50' : 'border-site-field'}`}>
+                        <input type="checkbox" name="subj" value={key} aria-label={`${sub.name}, ${g.name}`} checked={on}
+                          onChange={(e) => setPairs((x) => toggle(x, key, e.target.checked))} className="size-5 accent-indigo-600" />
+                        {shortGrade(g.name)}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </fieldset>
+        <h3 className="border-t border-site-line pt-5 font-display text-lg font-bold first:border-0 first:pt-0">Contato</h3>
         <div>
           <label className="label" htmlFor="timezone">Fuso horário da sua agenda</label>
           <select className="input" id="timezone" name="timezone" defaultValue={p.initial.timezone}>
@@ -154,8 +172,9 @@ export function ProfileEditor(p: ProfileEditorProps) {
             Aceito receber avisos de aula pelo WhatsApp
           </label>
         </div>
+        <h3 className="border-t border-site-line pt-5 font-display text-lg font-bold first:border-0 first:pt-0">Aula presencial</h3>
         <fieldset className="space-y-3">
-          <legend className="label">Aula presencial</legend>
+          <legend className="sr-only">Aula presencial</legend>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="label" htmlFor="baseCep">CEP de onde você sai</label>
@@ -176,7 +195,7 @@ export function ProfileEditor(p: ProfileEditorProps) {
         <button className="btn" disabled={pending}>{pending ? 'Salvando…' : 'Salvar perfil'}</button>
       </form>
 
-      <aside className="min-w-0 lg:sticky lg:top-6 lg:self-start" aria-label="Prévia da sua página">
+      <aside id="previa" className="min-w-0 scroll-mt-4 lg:sticky lg:top-6 lg:self-start" aria-label="Prévia da sua página">
         <p className="mb-2 text-sm font-semibold text-site-muted">Prévia: como os alunos veem</p>
         <div className="rounded-2xl border border-site-line bg-white p-5" data-testid="previa">
           <TeacherProfileView

@@ -43,7 +43,8 @@ export default async function VerificationPage() {
                 className="space-y-3">
                 <input type="hidden" name="kind" value={kind} />
                 <input type="file" name="files" multiple={kind === 'identity'} required
-                  accept="application/pdf,image/jpeg,image/png,image/webp" aria-label={`Arquivos de ${KIND_LABEL[kind]}`} />
+                  accept="application/pdf,image/jpeg,image/png,image/webp" aria-label={`Arquivos de ${KIND_LABEL[kind]}`}
+                  className="block w-full min-h-11 rounded-xl border border-dashed border-site-field px-3 py-2 text-sm file:mr-3 file:min-h-9 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3.5 file:font-semibold file:text-indigo-950" />
                 {kind === 'identity' && <p className="text-sm text-slate-500">Selecione os dois arquivos juntos.</p>}
               </ActionForm>
             )}

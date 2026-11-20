@@ -27,7 +27,7 @@ export async function finishAction(_: unknown, form: FormData): Promise<ActionSt
   }
   if (!r.ok) return { ok: false, error: CODE_ERRORS[r.reason] };
   await setSessionCookie('teacher', r.token);
-  redirect(r.isNew ? '/professor/cadastro' : '/professor');
+  redirect(r.isNew ? '/professor/boas-vindas' : '/professor');
 }
 
 export async function logoutAction(): Promise<void> {

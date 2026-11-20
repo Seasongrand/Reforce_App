@@ -33,6 +33,39 @@ function Check({ done }: { done: boolean }) {
   );
 }
 
+type Step = Awaited<ReturnType<typeof teacherDashboard>>['steps'][number];
+
+/** Os 7 passos; cada linha leva à tela do passo (menos a análise, que é da equipe). */
+function StepList({ steps }: { steps: Step[] }) {
+  return (
+    <ol className="divide-y divide-site-line">
+      {steps.map((s) => {
+        const body = (
+          <>
+            <Check done={s.done} />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">{s.label}<span className="sr-only">{s.done ? ' (feito)' : ' (falta)'}</span></p>
+              <p className="text-[13px] text-site-muted">{s.detail}</p>
+            </div>
+          </>
+        );
+        return (
+          <li key={s.key} data-testid={`passo-${s.key}`}>
+            {s.href !== '/professor' ? (
+              <Link href={s.href} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-3 hover:bg-violet-50">
+                {body}
+                <span className="flex-none text-sm font-semibold text-indigo-600">{s.done ? 'Ver' : 'Fazer'} ›</span>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-3 py-3">{body}</div>
+            )}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 /** Início da área do professor: o que falta para vender aulas, as próximas aulas e a página pública. */
 export default async function TeacherHome() {
   const teacherId = await requireTeacher();
@@ -43,6 +76,49 @@ export default async function TeacherHome() {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(d.pageUrl)}`,
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(d.pageUrl)}`,
   };
+  const complete = d.done === d.total && Boolean(d.pageUrl);
+  const upcoming = (
+    <section className={`${CARD} space-y-3`} aria-labelledby="proximas">
+      <h2 id="proximas" className="font-display text-xl font-bold">Próximas aulas</h2>
+      {d.upcoming.length === 0 ? (
+        <p className="text-[15px] text-site-muted">Nenhuma aula marcada ainda. Divulgue sua página para seus alunos.</p>
+      ) : (
+        <ul className="space-y-2">
+          {d.upcoming.map((l) => (
+            <li key={l.bookingId} className="rounded-xl bg-violet-50 px-3.5 py-2.5 text-sm">
+              <p className="font-semibold">{formatPtBr(l.startsAt, d.timezone)}</p>
+              <p className="text-site-muted">{l.subject} com {l.studentFirstName} · {MODALITY[l.modality]}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link href="/professor/aulas" className="inline-block text-sm font-semibold text-indigo-600 underline">Ver todas as aulas</Link>
+    </section>
+  );
+  const pageCard = (
+    <section className={`${CARD} space-y-3`} aria-labelledby="pagina">
+      <h2 id="pagina" className="font-display text-xl font-bold">Sua página</h2>
+      {d.pageUrl && share ? (
+        <>
+          <a href={d.pageUrl} id="pagina-endereco" className="block break-all text-[15px] font-semibold text-indigo-600 underline" data-testid="pagina-link">
+            {d.pageUrl}
+          </a>
+          <p className="text-sm text-site-muted">Mande para seus alunos: quem chega pelo seu link paga a comissão menor.</p>
+          <div className="flex flex-wrap gap-2">
+            <a className={SHARE} href={share.whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>
+            <a className={SHARE} href={share.facebook} target="_blank" rel="noreferrer">Facebook</a>
+            <a className={SHARE} href={share.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>
+            <CopyButton text={d.pageUrl} label="Copiar link" copiedLabel="Link copiado" className={SHARE} targetId="pagina-endereco" />
+          </div>
+        </>
+      ) : (
+        <p className="text-[15px] text-site-muted" data-testid="pagina-aviso">
+          Sua página entra no ar depois da aprovação da equipe. Enquanto isso, monte o perfil em{' '}
+          <Link href="/professor/cadastro" className="font-semibold text-indigo-600 underline">Meu perfil</Link>.
+        </p>
+      )}
+    </section>
+  );
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -52,7 +128,28 @@ export default async function TeacherHome() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      {complete ? (
+        <>
+          {/* com os 7 passos feitos, o que importa vem primeiro: as aulas e o link para divulgar */}
+          <section className="flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4">
+            <Check done />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-green-900">Tudo pronto: sua página está no ar.</p>
+              <p className="text-sm text-green-900/80">Agora é divulgar o link para os seus alunos.</p>
+            </div>
+            <span className="flex-none whitespace-nowrap text-sm font-semibold text-green-900" data-testid="progresso">{d.done} de {d.total}</span>
+          </section>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {upcoming}
+            {pageCard}
+          </div>
+          <details className={CARD}>
+            <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Ver os passos</summary>
+            <StepList steps={d.steps} />
+          </details>
+        </>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <section className={`${CARD} space-y-4`} aria-labelledby="passos">
           <div className="space-y-2">
             <div className="flex items-baseline justify-between gap-3">
@@ -63,22 +160,7 @@ export default async function TeacherHome() {
               <div className="h-2 rounded-full bg-indigo-600" style={{ width: `${pct}%` }} />
             </div>
           </div>
-          <ol className="divide-y divide-site-line">
-            {d.steps.map((s) => (
-              <li key={s.key} className="flex items-center gap-3 py-3" data-testid={`passo-${s.key}`}>
-                <Check done={s.done} />
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold">{s.label}<span className="sr-only">{s.done ? ' (feito)' : ' (falta)'}</span></p>
-                  <p className="text-[13px] text-site-muted">{s.detail}</p>
-                </div>
-                {s.href !== '/professor' && (
-                  <Link href={s.href} className="flex-none text-sm font-semibold text-indigo-600 underline">
-                    {s.done ? 'Ver' : 'Fazer'}
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ol>
+          <StepList steps={d.steps} />
           {d.canSubmit && (
             <ActionForm action={submitForReviewAction} submitLabel="Enviar para análise" className="space-y-2">
               <p className="text-sm text-site-muted">Tudo pronto. A equipe confere seus documentos e a sua foto.</p>
@@ -86,48 +168,12 @@ export default async function TeacherHome() {
           )}
         </section>
 
-        <div className="space-y-6">
-          <section className={`${CARD} space-y-3`} aria-labelledby="proximas">
-            <h2 id="proximas" className="font-display text-xl font-bold">Próximas aulas</h2>
-            {d.upcoming.length === 0 ? (
-              <p className="text-[15px] text-site-muted">Nenhuma aula marcada ainda. Divulgue sua página para seus alunos.</p>
-            ) : (
-              <ul className="space-y-2">
-                {d.upcoming.map((l) => (
-                  <li key={l.bookingId} className="rounded-xl bg-violet-50 px-3.5 py-2.5 text-sm">
-                    <p className="font-semibold">{formatPtBr(l.startsAt, d.timezone)}</p>
-                    <p className="text-site-muted">{l.subject} com {l.studentFirstName} · {MODALITY[l.modality]}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Link href="/professor/aulas" className="inline-block text-sm font-semibold text-indigo-600 underline">Ver todas as aulas</Link>
-          </section>
-
-          <section className={`${CARD} space-y-3`} aria-labelledby="pagina">
-            <h2 id="pagina" className="font-display text-xl font-bold">Sua página</h2>
-            {d.pageUrl && share ? (
-              <>
-                <a href={d.pageUrl} id="pagina-endereco" className="block break-all text-[15px] font-semibold text-indigo-600 underline" data-testid="pagina-link">
-                  {d.pageUrl}
-                </a>
-                <p className="text-sm text-site-muted">Mande para seus alunos: quem chega pelo seu link paga a comissão menor.</p>
-                <div className="flex flex-wrap gap-2">
-                  <a className={SHARE} href={share.whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>
-                  <a className={SHARE} href={share.facebook} target="_blank" rel="noreferrer">Facebook</a>
-                  <a className={SHARE} href={share.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>
-                  <CopyButton text={d.pageUrl} label="Copiar link" copiedLabel="Link copiado" className={SHARE} targetId="pagina-endereco" />
-                </div>
-              </>
-            ) : (
-              <p className="text-[15px] text-site-muted" data-testid="pagina-aviso">
-                Sua página entra no ar depois da aprovação da equipe. Enquanto isso, monte o perfil em{' '}
-                <Link href="/professor/cadastro" className="font-semibold text-indigo-600 underline">Meu perfil</Link>.
-              </p>
-            )}
-          </section>
+          <div className="space-y-6">
+            {upcoming}
+            {pageCard}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

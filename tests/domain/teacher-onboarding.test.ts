@@ -5,7 +5,7 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
-import { experienceLabel, updateTeacherProfile, type ProfileInput } from '@/domain/teachers/profile';
+import { experienceLabel, setDisplayName, updateTeacherProfile, type ProfileInput } from '@/domain/teachers/profile';
 import { listVerifications, submitVerificationDocument } from '@/domain/teachers/verification';
 import { openPaymentAccount, isValidCpfCnpj } from '@/domain/teachers/payment-account';
 import { submitForReview } from '@/domain/teachers/review';
@@ -43,6 +43,17 @@ const ACCOUNT = {
   name: 'Ana Souza', email: 'ana@exemplo.com', cpfCnpj: '529.982.247-25', birthDate: '1990-05-10',
   phone: '11977776666', postalCode: '01310-100', address: 'Av. Paulista', addressNumber: '1000', incomeValueCents: 500000,
 };
+
+describe('nome no primeiro acesso', () => {
+  it('grava o nome digitado (sem espaços nas pontas) e recusa nome curto, vazio ou longo demais', async () => {
+    const t = await insertTeacher(testPool());
+    await setDisplayName(testDeps(), t, '  Ana Souza ');
+    expect((await testPool().query(`SELECT display_name FROM teachers WHERE id = $1`, [t])).rows).toEqual([{ display_name: 'Ana Souza' }]);
+    for (const bad of ['', '   ', 'An', 'x'.repeat(81)]) {
+      await expect(setDisplayName(testDeps(), t, bad)).rejects.toThrow(/informe seu nome como deve aparecer na página/);
+    }
+  });
+});
 
 describe('perfil', () => {
   it('salva perfil, disciplinas, telefone em E.164 e o centro do CEP; enfileira o índice de busca', async () => {

@@ -16,8 +16,8 @@ const ITEMS: PanelNavItem[] = [
 
 /**
  * Painel do professor, no molde das plataformas de terapia (Telavita e
- * outras): topo com o nome e "Sair", menu lateral (no celular, uma faixa
- * rolável acima do conteúdo) e o conteúdo da página.
+ * outras): topo com o nome e "Sair", menu lateral (no celular, uma barra
+ * fixa embaixo) e o conteúdo da página.
  */
 export default async function TeacherPanelLayout({ children }: { children: React.ReactNode }) {
   const teacherId = await requireTeacher();
@@ -40,8 +40,8 @@ export default async function TeacherPanelLayout({ children }: { children: React
           </div>
         </div>
       </header>
-      <div className="mx-auto grid max-w-6xl gap-6 px-5 py-6 md:grid-cols-[15rem_minmax(0,1fr)] md:gap-10 md:py-10">
-        <aside className="min-w-0 md:sticky md:top-6 md:self-start">
+      <div className="mx-auto grid max-w-6xl gap-6 px-5 pb-28 pt-6 md:grid-cols-[15rem_minmax(0,1fr)] md:gap-10 md:py-10">
+        <aside className="min-w-0 max-md:contents md:sticky md:top-6 md:self-start">
           <PanelNav items={ITEMS} label="Área do professor" />
         </aside>
         <main className="min-w-0">{children}</main>

@@ -87,7 +87,16 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // 1. A professora se cadastra, envia documentos, abre a conta de recebimento e pede análise.
   const teacher = await (await browser.newContext()).newPage();
   await codeLogin(teacher, '/professor/entrar', TEACHER_EMAIL);
-  await teacher.waitForURL('**/professor/cadastro');
+  // primeiro acesso: só o nome, depois o Início com os passos
+  await teacher.waitForURL('**/professor/boas-vindas');
+  await expect(teacher.getByRole('heading', { level: 1 })).toHaveText('Como você quer ser chamado?');
+  await teacher.fill('#nome', 'Ana Souza');
+  await teacher.getByRole('button', { name: 'Continuar' }).click();
+  await teacher.waitForURL(/\/professor$/);
+  await expect(teacher.getByRole('heading', { level: 1 })).toHaveText('Olá, Ana');
+  // cada passo é clicável na linha inteira
+  await expect(teacher.getByTestId('passo-perfil').getByRole('link')).toHaveAttribute('href', '/professor/cadastro');
+  await teacher.goto('/professor/cadastro');
   // a área do professor tem o menu do painel, com a página atual marcada
   const nav = teacher.getByRole('navigation', { name: 'Área do professor' });
   for (const label of ['Início', 'Meu perfil', 'Serviços e preços', 'Agenda', 'Aulas', 'Documentos', 'Recebimento']) {
@@ -105,6 +114,15 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.fill('#teachingSince', '2013');
   await expect(preview).toContainText('ENEM');
   await expect(preview).toContainText(EXPERIENCE);
+  // o formulário em seções; as séries em fichas grandes, por disciplina
+  for (const h of ['Sua página', 'O que você ensina', 'Contato', 'Aula presencial']) {
+    await expect(teacher.getByRole('heading', { name: h, exact: true })).toBeVisible();
+  }
+  expect((await teacher.locator('label:has(input[aria-label="Matemática, 9º ano"])').boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await teacher.getByRole('button', { name: 'Marcar todas as séries de Física' }).click();
+  await expect(teacher.locator('input[name=subj][aria-label^="Física,"]:checked')).toHaveCount(8);
+  await teacher.getByRole('button', { name: 'Desmarcar as séries de Física' }).click();
+  await expect(teacher.locator('input[name=subj][aria-label^="Física,"]:checked')).toHaveCount(0);
   await teacher.check('input[aria-label="Matemática, 9º ano"]');
   await teacher.fill('#phone', '(11) 97777-6666');
   await teacher.check('input[name=whatsappOptIn]');
@@ -119,8 +137,12 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(teacher.locator('#travelRadiusKm')).toHaveValue('5');
   await teacher.setViewportSize({ width: 390, height: 844 }); // no celular, o editor e a prévia cabem sem rolagem lateral
   expect(await teacher.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  // no celular, um atalho leva à prévia, que fica no fim da página
+  await expect(teacher.getByRole('link', { name: 'Ver como os alunos veem' })).toHaveAttribute('href', '#previa');
   await teacher.setViewportSize({ width: 1280, height: 720 });
+  await expect(teacher.getByRole('link', { name: 'Ver como os alunos veem' })).toBeHidden();
   const photoForm = teacher.getByTestId('foto');
+  expect((await photoForm.locator('input[type=file]').boundingBox())!.height).toBeGreaterThanOrEqual(44); // botão de arquivo grande
   await photoForm.locator('input[type=file]').setInputFiles(path.join(FIXTURES, 'foto.jpg'));
   await photoForm.locator('button:has-text("Enviar foto")').click();
   await expect(photoForm.getByText('Em análise')).toBeVisible();
@@ -132,6 +154,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   ];
   for (const [kind, files] of docs) {
     const section = teacher.locator(`[data-testid=verificacao-${kind}]`);
+    expect((await section.locator('input[type=file]').boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await section.locator('input[type=file]').setInputFiles(files.map((f) => path.join(FIXTURES, f)));
     await section.locator('button:has-text("Enviar")').click();
     await expect(section.getByText('Em análise')).toBeVisible();
@@ -149,6 +172,13 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.goto('/professor');
   await teacher.setViewportSize({ width: 390, height: 844 }); // no celular, o menu não cria rolagem lateral
   expect(await teacher.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  // no celular, a barra de baixo tem Início, Aulas, Agenda e "Mais" com o resto
+  const tabs = teacher.getByRole('navigation', { name: 'Área do professor' });
+  for (const l of ['Início', 'Aulas', 'Agenda']) await expect(tabs.getByRole('link', { name: l })).toBeVisible();
+  await expect(tabs.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page');
+  await tabs.getByRole('button', { name: 'Mais' }).click();
+  for (const l of ['Meu perfil', 'Serviços e preços', 'Documentos', 'Recebimento']) await expect(tabs.getByRole('link', { name: l })).toBeVisible();
+  await tabs.getByRole('button', { name: 'Mais' }).click();
   await teacher.setViewportSize({ width: 1280, height: 720 });
   // o painel Início mostra os passos feitos (foto em análise, perfil, documentos e conta) e que a página ainda não está no ar
   await expect(teacher.getByRole('heading', { level: 1 })).toHaveText('Olá, Ana');
@@ -186,14 +216,24 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // 3. A professora configura serviços e agenda.
   await teacher.goto('/professor/servicos');
   await expect(teacher.getByRole('heading', { level: 1 })).toHaveText('Serviços e preços');
+  // enquanto digita o preço, o professor vê quanto recebe pelo link dele (5%) e pela busca (15%)
   await teacher.fill('input[name=price]', '121,00');
+  await expect(teacher.getByTestId('voce-recebe')).toHaveText('Você recebe R$ 114,95 pelo seu link e R$ 102,85 pela busca.');
   await teacher.click('button:has-text("Criar serviço")');
   await expect(teacher.getByText('Serviço criado.')).toBeVisible();
-  await teacher.selectOption('select[name=modality]', 'at_student');
+  await teacher.getByRole('radio', { name: 'Na casa do aluno' }).check();
+  await expect(teacher.getByLabel('Deslocamento')).toHaveValue('30');
   await teacher.fill('input[name=price]', '150,00');
   await teacher.click('button:has-text("Criar serviço")');
-  await expect(teacher.getByTestId('servicos')).toContainText('Na casa do aluno');
-  await expect(teacher.getByTestId('servicos')).toContainText('intervalo 30/30 min');
+  const services = teacher.getByTestId('servicos');
+  await expect(services).toContainText('Na casa do aluno');
+  await expect(services).toContainText('Deslocamento: 30 min antes e depois');
+  // pausar é uma ação secundária e dá para reativar
+  const atHome = services.getByRole('listitem').filter({ hasText: 'Na casa do aluno' });
+  await atHome.getByRole('button', { name: 'Pausar' }).click();
+  await expect(atHome).toContainText('Pausado');
+  await atHome.getByRole('button', { name: 'Reativar' }).click();
+  await expect(atHome.getByRole('button', { name: 'Pausar' })).toBeVisible();
 
   await teacher.goto('/professor/agenda');
   await expect(teacher.getByText('horário de São Paulo')).toBeVisible();
@@ -230,6 +270,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // aprovada, com serviço e agenda: os sete passos feitos e o link da página para divulgar
   await teacher.goto('/professor');
   await expect(teacher.getByTestId('progresso')).toHaveText('7 de 7');
+  // com tudo pronto, o Início fica enxuto: "Tudo pronto" e as próximas aulas antes dos passos
+  await expect(teacher.getByText('Tudo pronto: sua página está no ar.')).toBeVisible();
+  const top = async (l: Locator) => (await l.boundingBox())!.y;
+  expect(await top(teacher.getByRole('heading', { name: 'Próximas aulas' }))).toBeLessThan(await top(teacher.getByText('Ver os passos')));
   await expect(teacher.getByTestId('pagina-link')).toHaveAttribute('href', new RegExp(`/p/${SLUG}$`));
 
   // 4. Uma família abre o link, reserva o primeiro horário online e paga por PIX (simulado).
@@ -281,7 +325,6 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(fam1.getByTestId('pix').locator('img')).toBeVisible();
   await expect(fam1.getByRole('button', { name: 'Copiar código PIX' })).toBeVisible();
   // no computador o QR vem primeiro; no celular, quem paga no mesmo aparelho usa o "copia e cola", que vem antes
-  const top = async (l: Locator) => (await l.boundingBox())!.y;
   const qrImg = fam1.getByTestId('pix').locator('img');
   const copyPix = fam1.getByRole('button', { name: 'Copiar código PIX' });
   expect(await top(qrImg)).toBeLessThan(await top(copyPix));
@@ -442,7 +485,7 @@ test('código por e-mail: reenviar depois de 60 s e usar outro e-mail', async ({
   await expect(resend).toBeDisabled(); // a contagem recomeça
   await page.fill('#code', await lastCode(email));
   await page.click('button:has-text("Entrar")');
-  await page.waitForURL('**/professor/cadastro');
+  await page.waitForURL('**/professor/boas-vindas');
 });
 
 test('topo do site no celular: uma linha, com menu; "Para professores" no rodapé', async ({ page }) => {
