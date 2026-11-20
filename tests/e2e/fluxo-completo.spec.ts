@@ -223,6 +223,17 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await queue.locator('button:has-text("Aprovar perfil")').click();
   await expect.poll(async () => (await q(`SELECT status FROM teachers WHERE slug = $1`, [SLUG]))[0]!.status).toBe('approved');
   expect(await q(`SELECT count(*)::int AS n FROM teachers_listed`)).toEqual([{ n: 1 }]);
+  // Professores: a professora aparece em "Aprovado"; a aba "Em análise" fica vazia
+  await staff.getByRole('navigation', { name: 'Painel da equipe' }).getByRole('link', { name: 'Professores' }).click();
+  await staff.waitForURL('**/interno/professores');
+  await expect(staff.getByTestId(`professor-${SLUG}`)).toContainText('Aprovado');
+  await staff.getByRole('navigation', { name: 'Situação' }).getByRole('link', { name: /Em análise/ }).click();
+  await staff.waitForURL('**/interno/professores?situacao=in_review');
+  await expect(staff.getByTestId(`professor-${SLUG}`)).toHaveCount(0);
+  await expect(staff.getByText('Nenhum professor nesta situação.')).toBeVisible();
+  // Reembolsos: nenhum pedido devolvido ainda
+  await staff.goto('/interno/reembolsos');
+  await expect(staff.getByText('Nenhum reembolso ainda.')).toBeVisible();
 
   // 3. A professora configura serviços e agenda.
   await teacher.goto('/professor/servicos');
@@ -403,6 +414,10 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   const startsAt = booking!.starts_at as Date;
   const endsAt = booking!.ends_at as Date;
   await setClock(new Date(startsAt.getTime() - 5 * 60_000));
+  // no dia da aula, a equipe a vê em "Aulas de hoje"
+  await staff.goto('/interno/aulas');
+  await expect(staff.getByTestId(`hoje-${booking!.id}`)).toContainText('Ana Souza');
+  await expect(staff.getByTestId(`hoje-${booking!.id}`)).toContainText('Confirmada');
 
   // a aula marcada fica em "Próximas" (aba aberta por padrão), com a contagem na aba
   await teacher.goto('/professor/aulas');
