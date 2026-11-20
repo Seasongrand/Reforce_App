@@ -523,6 +523,31 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(reviews).toContainText('Maria L.');
   await expect(reviews).toContainText('[contato removido]');
   await expect(reviews).not.toContainText('Joana');
+  // Meus dados: muda o nome (o "Olá" muda), desliga os avisos e troca o e-mail com o código; depois entra com o novo
+  await acct.goto('/conta/dados');
+  const myData = acct.getByRole('region', { name: 'Seus dados' });
+  await myData.getByLabel('Seu nome').fill('Mariana Lima');
+  await myData.getByLabel(/pelo WhatsApp/).uncheck();
+  await myData.getByRole('button', { name: 'Salvar' }).click();
+  await expect(myData.getByText('Dados salvos.')).toBeVisible();
+  expect(await q(`SELECT name, whatsapp_opt_in_at FROM guardians WHERE email = 'maria.e2e@exemplo.com'`))
+    .toEqual([{ name: 'Mariana Lima', whatsapp_opt_in_at: null }]);
+  const emailBox = acct.getByRole('region', { name: 'E-mail' });
+  await emailBox.getByLabel('E-mail novo').fill('mariana.e2e@exemplo.com');
+  await emailBox.getByRole('button', { name: 'Enviar código' }).click();
+  await emailBox.locator('#email-code').fill(await lastCode('mariana.e2e@exemplo.com'));
+  await emailBox.getByRole('button', { name: 'Confirmar' }).click();
+  await expect(emailBox.getByTestId('email-atual')).toHaveText('mariana.e2e@exemplo.com');
+  await acct.getByRole('navigation', { name: 'Minha conta' }).getByRole('link', { name: 'Início' }).click();
+  await expect(acct.getByRole('heading', { level: 1 })).toHaveText('Olá, Mariana');
+  await acct.getByRole('button', { name: 'Sair' }).click();
+  await acct.waitForURL('**/conta/entrar');
+  await acct.fill('#email', 'mariana.e2e@exemplo.com');
+  await acct.click('button:has-text("Receber código por e-mail")');
+  await acct.waitForSelector('#code');
+  await acct.fill('#code', await lastCode('mariana.e2e@exemplo.com'));
+  await acct.click('button:has-text("Entrar")');
+  await acct.waitForURL(/\/conta$/);
 
   // 8. Fechada a janela de contestação (24 h), o repasse é liberado uma vez.
   await setClock(new Date(endsAt.getTime() + 24 * 60 * 60_000 + 60_000));

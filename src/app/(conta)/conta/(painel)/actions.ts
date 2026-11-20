@@ -2,10 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { finishEmailChange, startEmailChange, updateGuardianProfile } from '@/domain/guardians/profile';
 import { addStudent, removeStudent, updateStudent } from '@/domain/guardians/students';
 import { submitReview } from '@/domain/reviews';
 import { appDeps, now } from '@/server/app';
-import { errorMessage, type ActionState } from '@/server/action-result';
+import { CODE_ERRORS, errorMessage, type ActionState } from '@/server/action-result';
 import { currentSubject, endSession } from '@/server/session';
 
 export async function logoutAction(): Promise<void> {
@@ -58,4 +59,35 @@ export async function updateStudentAction(_: unknown, form: FormData): Promise<A
 
 export async function removeStudentAction(_: unknown, form: FormData): Promise<ActionState> {
   return asGuardian((g) => removeStudent(appDeps().db, g, field(form, 'studentId')), '/conta/alunos');
+}
+
+export async function updateProfileAction(_: unknown, form: FormData): Promise<ActionState> {
+  const r = await asGuardian(async (g) => updateGuardianProfile(appDeps().db, g, {
+    name: field(form, 'name'), whatsappOptIn: form.get('whatsappOptIn') === 'on',
+  }, await now()), '/conta/dados');
+  if (r?.ok) revalidatePath('/conta', 'layout'); // o nome aparece no topo e no "Olá"
+  return r;
+}
+
+export async function emailStartAction(_: unknown, form: FormData): Promise<ActionState<{ codeId: string; sentTo: string }>> {
+  const guardianId = await currentSubject('guardian');
+  if (!guardianId) return { ok: false, error: 'Sua sessão expirou. Entre de novo.' };
+  try {
+    return { ok: true, data: await startEmailChange(appDeps(), guardianId, field(form, 'email'), await now()) };
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+}
+
+export async function emailFinishAction(_: unknown, form: FormData): Promise<ActionState> {
+  const guardianId = await currentSubject('guardian');
+  if (!guardianId) return { ok: false, error: 'Sua sessão expirou. Entre de novo.' };
+  try {
+    const r = await finishEmailChange(appDeps(), guardianId, { codeId: field(form, 'codeId'), code: field(form, 'code') }, await now());
+    if (!r.ok) return { ok: false, error: CODE_ERRORS[r.reason] };
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+  revalidatePath('/conta/dados');
+  return { ok: true, data: undefined };
 }
