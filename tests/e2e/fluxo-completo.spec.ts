@@ -501,6 +501,23 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(acct.getByTestId(`aula-${booking!.id}`)).toContainText('Sua avaliação');
   await acct.getByRole('navigation', { name: 'Minha conta' }).getByRole('link', { name: 'Início' }).click();
   await expect(acct.getByTestId('cartao-avaliar')).toContainText('Nenhuma aula esperando avaliação');
+  // Alunos: cadastra, edita e remove um aluno sem aula; a aluna com aula não tem "Remover"
+  await acct.getByRole('navigation', { name: 'Minha conta' }).getByRole('link', { name: 'Alunos' }).click();
+  await acct.waitForURL('**/conta/alunos');
+  const addForm = acct.getByRole('region', { name: 'Cadastrar aluno' });
+  await addForm.getByLabel('Primeiro nome').fill('Pedro');
+  await addForm.getByLabel('Série').selectOption({ label: '1ª série do ensino médio' });
+  await addForm.getByRole('button', { name: 'Cadastrar aluno' }).click();
+  const pedro = acct.getByTestId('aluno-Pedro');
+  await expect(pedro).toContainText('1ª série do ensino médio');
+  await pedro.getByText('Editar').click();
+  await pedro.getByLabel('Série').selectOption({ label: '2ª série do ensino médio' });
+  await pedro.getByRole('button', { name: 'Salvar' }).click();
+  await expect(pedro).toContainText('2ª série do ensino médio');
+  await pedro.getByRole('button', { name: 'Remover' }).click();
+  await expect(acct.getByTestId('aluno-Pedro')).toHaveCount(0);
+  await expect(acct.getByTestId('aluno-Joana')).toContainText('Tem aulas na conta');
+  await expect(acct.getByTestId('aluno-Joana').getByRole('button', { name: 'Remover' })).toHaveCount(0);
   await acct.goto(`/p/${SLUG}`);
   const reviews = acct.locator('#avaliacoes');
   await expect(reviews).toContainText('Maria L.');
