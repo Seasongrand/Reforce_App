@@ -6,6 +6,7 @@ import { finishGuardianSignup, startGuardianSignup } from '@/domain/guardians/si
 import { appDeps, now } from '@/server/app';
 import { CODE_ERRORS, errorMessage, type ActionState } from '@/server/action-result';
 import { setSessionCookie } from '@/server/session';
+import { safeReturnPath } from '@/lib/return-path';
 
 export async function startAction(_: unknown, form: FormData): Promise<ActionState<{ codeId: string; sentTo: string }>> {
   try {
@@ -24,7 +25,7 @@ export async function finishAction(_: unknown, form: FormData): Promise<ActionSt
   }
   if (!r.ok) return { ok: false, error: CODE_ERRORS[r.reason] };
   await setSessionCookie('guardian', r.token);
-  redirect('/conta');
+  redirect(safeReturnPath(form.get('voltar')) ?? '/conta');
 }
 
 export async function signupStartAction(_: unknown, form: FormData): Promise<ActionState<{ codeId: string; sentTo: string }>> {
@@ -51,5 +52,5 @@ export async function signupFinishAction(_: unknown, form: FormData): Promise<Ac
   }
   if (!r.ok) return { ok: false, error: CODE_ERRORS[r.reason] };
   await setSessionCookie('guardian', r.token);
-  redirect('/conta');
+  redirect(safeReturnPath(form.get('voltar')) ?? '/conta');
 }

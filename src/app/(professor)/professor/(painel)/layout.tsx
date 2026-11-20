@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PanelNav, type PanelNavItem } from '@/components/professor/PanelNav';
+import { unreadTotal } from '@/domain/messages';
 import { appDeps } from '@/server/app';
 import { requireTeacher } from '@/server/session';
 import { logoutAction } from '../entrar/actions';
@@ -10,11 +11,12 @@ const ITEMS: PanelNavItem[] = [
   { href: '/professor/servicos', label: 'Serviços e preços', icon: 'tag' },
   { href: '/professor/agenda', label: 'Agenda', icon: 'calendar' },
   { href: '/professor/aulas', label: 'Aulas', icon: 'video' },
+  { href: '/professor/mensagens', label: 'Mensagens', icon: 'chat' },
   { href: '/professor/verificacao', label: 'Documentos', icon: 'shield' },
   { href: '/professor/recebimento', label: 'Recebimento', icon: 'wallet' },
 ];
 /** No celular, a barra de baixo tem estes; o resto fica em "Mais". */
-const PRIMARY = ['/professor', '/professor/aulas', '/professor/agenda'];
+const PRIMARY = ['/professor', '/professor/aulas', '/professor/mensagens', '/professor/agenda'];
 
 /**
  * Painel do professor, no molde das plataformas de terapia (Telavita e
@@ -23,7 +25,10 @@ const PRIMARY = ['/professor', '/professor/aulas', '/professor/agenda'];
  */
 export default async function TeacherPanelLayout({ children }: { children: React.ReactNode }) {
   const teacherId = await requireTeacher();
-  const t = await appDeps().db.selectFrom('teachers').select('display_name').where('id', '=', teacherId).executeTakeFirstOrThrow();
+  const { db } = appDeps();
+  const t = await db.selectFrom('teachers').select('display_name').where('id', '=', teacherId).executeTakeFirstOrThrow();
+  const unread = await unreadTotal(db, { kind: 'teacher', id: teacherId });
+  const items = ITEMS.map((i) => (i.href === '/professor/mensagens' ? { ...i, badge: unread } : i));
   return (
     <>
       <header className="bg-indigo-950 text-white">
@@ -44,7 +49,7 @@ export default async function TeacherPanelLayout({ children }: { children: React
       </header>
       <div className="mx-auto grid max-w-6xl gap-6 px-5 pb-28 pt-6 md:grid-cols-[15rem_minmax(0,1fr)] md:gap-10 md:py-10">
         <aside className="min-w-0 max-md:contents md:sticky md:top-6 md:self-start">
-          <PanelNav items={ITEMS} label="Área do professor" primary={PRIMARY} />
+          <PanelNav items={items} label="Área do professor" primary={PRIMARY} />
         </aside>
         <main className="min-w-0">{children}</main>
       </div>
