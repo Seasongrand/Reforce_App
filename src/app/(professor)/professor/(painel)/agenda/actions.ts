@@ -1,10 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { DomainError } from '@/domain/errors';
 import {
-  addOverride, addRule, connectCalendar, createService, disconnectCalendar, removeOverride, removeRule,
-  updateScheduleSettings, updateService, type Modality,
+  addOverride, addRule, addRules, connectCalendar, createService, disconnectCalendar, removeOverride, removeRule,
+  updateScheduleSettings, updateService, type Modality, type OverrideInput, type RuleInput,
 } from '@/domain/teachers/schedule';
+import { parseTimeBR } from '@/lib/time-input';
 import { appDeps, now } from '@/server/app';
 import { errorMessage, type ActionState } from '@/server/action-result';
 import { requireTeacher } from '@/server/session';
@@ -24,30 +26,66 @@ async function run(fn: (teacherId: string) => Promise<unknown>, ...paths: string
   return { ok: true, data: undefined };
 }
 
-export async function addRuleAction(_: unknown, f: FormData) {
-  return run((t) => addRule(appDeps(), t, {
-    weekday: n(f, 'weekday'), start: s(f, 'start'), end: s(f, 'end'),
-    validFrom: s(f, 'validFrom') || null, validUntil: s(f, 'validUntil') || null,
-  }), '/professor/agenda');
+/** Como `run`, devolvendo o resultado do domínio para a tela (Agenda: avisos e "Desfazer"). */
+async function runData<T>(fn: (teacherId: string) => Promise<T>): Promise<ActionState<T>> {
+  const teacherId = await requireTeacher();
+  try {
+    const data = await fn(teacherId);
+    revalidatePath('/professor/agenda');
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
 }
 
-export async function removeRuleAction(_: unknown, f: FormData) {
-  return run((t) => removeRule(appDeps(), t, s(f, 'id')), '/professor/agenda');
+/** Horário digitado (8h, 830, 08:30...) no formato guardado; recusa o resto com o exemplo do formato. */
+function typedTime(f: FormData, k: string): string {
+  const v = parseTimeBR(s(f, k));
+  if (!v) throw new DomainError('invalid', 'Digite o horário assim: 08:00, 8h30 ou 830.');
+  return v;
 }
 
-export async function addOverrideAction(_: unknown, f: FormData) {
-  return run((t) => addOverride(appDeps(), t, {
-    date: s(f, 'date'), kind: s(f, 'kind') as 'block' | 'extra', start: s(f, 'start') || null, end: s(f, 'end') || null,
-  }), '/professor/agenda');
+/** "Adicionar horários": o mesmo horário nos dias marcados. */
+export async function addRulesAction(f: FormData) {
+  return runData((t) => addRules(appDeps(), t, {
+    weekdays: f.getAll('weekday').map(Number), start: typedTime(f, 'start'), end: typedTime(f, 'end'),
+  }));
 }
 
-export async function removeOverrideAction(_: unknown, f: FormData) {
-  return run((t) => removeOverride(appDeps(), t, s(f, 'id')), '/professor/agenda');
+export async function removeRuleAction(id: string) {
+  return runData((t) => removeRule(appDeps(), t, String(id)));
+}
+
+/** "Desfazer" depois de remover: recria a mesma regra. */
+export async function restoreRuleAction(rule: RuleInput) {
+  return runData((t) => addRule(appDeps(), t, rule).then(() => undefined));
+}
+
+/** "Folga ou horário extra": dia todo bloqueado, período bloqueado ou horário extra. */
+export async function addOverrideAction(f: FormData) {
+  return runData(async (t) => {
+    const what = s(f, 'what');
+    if (!['day', 'block', 'extra'].includes(what)) throw new DomainError('invalid', 'escolha o que fazer nesse dia');
+    await addOverride(appDeps(), t, {
+      date: s(f, 'date'),
+      kind: what === 'extra' ? 'extra' : 'block',
+      start: what === 'day' ? null : typedTime(f, 'start'),
+      end: what === 'day' ? null : typedTime(f, 'end'),
+    });
+  });
+}
+
+export async function removeOverrideAction(id: string) {
+  return runData((t) => removeOverride(appDeps(), t, String(id)));
+}
+
+export async function restoreOverrideAction(o: OverrideInput) {
+  return runData((t) => addOverride(appDeps(), t, o).then(() => undefined));
 }
 
 export async function saveSettingsAction(_: unknown, f: FormData) {
   return run((t) => updateScheduleSettings(appDeps(), t, {
-    minNoticeMin: Math.round(Number(s(f, 'minNoticeHours').replace(',', '.')) * 60),
+    minNoticeMin: n(f, 'minNoticeMin'),
     horizonDays: n(f, 'horizonDays'),
     slotStepMin: n(f, 'slotStepMin'),
     maxLessonsPerDay: s(f, 'maxLessonsPerDay') ? n(f, 'maxLessonsPerDay') : null,

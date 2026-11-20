@@ -1,20 +1,30 @@
 import Link from 'next/link';
 import { ActionForm } from '@/components/ActionForm';
+import { MonthSlots } from '@/components/aluno/MonthSlots';
+import { ExceptionsEditor } from '@/components/professor/ExceptionsEditor';
+import { WeekEditor } from '@/components/professor/WeekEditor';
 import { availableSlots } from '@/domain/availability';
+import { PUBLIC_DAYS } from '@/domain/public/teacher-page';
 import { SLOT_STEPS } from '@/domain/teachers/schedule';
-import { formatDatePtBr, formatTime, groupByViewerDate, zoneLabel } from '@/time/zoned';
-import { Temporal } from 'temporal-polyfill';
+import { zoneLabel } from '@/time/zoned';
 import { appDeps, now } from '@/server/app';
 import { requireTeacher } from '@/server/session';
 import {
-  addOverrideAction, addRuleAction, connectCalendarAction, disconnectCalendarAction, removeOverrideAction,
-  removeRuleAction, saveSettingsAction,
+  addOverrideAction, addRulesAction, connectCalendarAction, disconnectCalendarAction, removeOverrideAction,
+  removeRuleAction, restoreOverrideAction, restoreRuleAction, saveSettingsAction,
 } from './actions';
 
 export const dynamic = 'force-dynamic';
 
-const WEEKDAYS = ['', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-const hhmm = (t: string) => t.slice(0, 5);
+const hhmm = (t: string | null) => (t ? t.slice(0, 5) : null);
+const CARD = 'rounded-3xl border border-site-line bg-white p-5';
+
+/** Opções das frases de "Regras de reserva", com o valor atual incluído se for diferente das sugestões. */
+function options(values: Array<[number | '', string]>, current: number | '', label: (v: number) => string) {
+  const list = values.some(([v]) => v === current) || current === '' ? values : [...values, [current, label(current)] as [number, string]];
+  return list.map(([v, l]) => <option key={String(v)} value={v}>{l}</option>);
+}
+const minutesLabel = (m: number) => (m % 1440 === 0 ? `${m / 1440} ${m === 1440 ? 'dia' : 'dias'}` : m % 60 === 0 ? `${m / 60} ${m === 60 ? 'hora' : 'horas'}` : `${m} minutos`);
 
 export default async function AgendaPage() {
   const teacherId = await requireTeacher();
@@ -23,113 +33,137 @@ export default async function AgendaPage() {
   const t = await deps.db.selectFrom('teachers')
     .select(['timezone', 'min_notice_min', 'horizon_days', 'slot_step_min', 'max_lessons_per_day'])
     .where('id', '=', teacherId).executeTakeFirstOrThrow();
+  const today = at.toZonedDateTimeISO(t.timezone).toPlainDate().toString();
   const rules = await deps.db.selectFrom('availability_rules').selectAll().where('teacher_id', '=', teacherId)
     .orderBy('weekday').orderBy('start_local').execute();
   const overrides = await deps.db.selectFrom('availability_overrides').selectAll().where('teacher_id', '=', teacherId)
-    .where('on_date', '>=', at.toZonedDateTimeISO(t.timezone).toPlainDate().toString()).orderBy('on_date').execute();
+    .where('on_date', '>=', today).orderBy('on_date').execute();
   const cal = await deps.db.selectFrom('calendar_connections').select(['status', 'last_error'])
     .where('teacher_id', '=', teacherId).executeTakeFirst();
   const svc = await deps.db.selectFrom('services').select(['id', 'duration_min']).where('teacher_id', '=', teacherId)
     .where('active', '=', true).orderBy('duration_min').executeTakeFirst();
-  const preview = svc ? groupByViewerDate(await availableSlots(deps, { teacherId, serviceId: svc.id, days: 7 }, at), t.timezone) : null;
+  const preview = svc
+    ? (await availableSlots(deps, { teacherId, serviceId: svc.id, days: Math.min(t.horizon_days, PUBLIC_DAYS) }, at)).map((s) => s.toString())
+    : null;
+
+  const weekMinutes = rules.reduce((n, r) => {
+    const [sh, sm] = r.start_local.split(':').map(Number) as [number, number];
+    const [eh, em] = r.end_local.split(':').map(Number) as [number, number];
+    return n + (eh * 60 + em) - (sh * 60 + sm);
+  }, 0);
+  const openDays = new Set(rules.map((r) => r.weekday)).size;
+  const pill = 'inline-flex min-h-8 items-center rounded-full border border-site-line bg-white px-3 text-[13px] font-semibold';
+  const sentence = 'flex flex-wrap items-center gap-2 font-semibold';
+  const select = 'min-h-11 rounded-xl border border-site-field bg-white px-3 font-semibold';
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Agenda</h1>
-      <p className="text-sm text-slate-600">Horários no fuso do seu perfil: horário de {zoneLabel(t.timezone)}.</p>
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
+      <div className="space-y-1.5 xl:col-span-2">
+        <h1 className="font-display text-3xl font-bold">Agenda</h1>
+        <p className="text-site-muted">Os alunos veem e reservam só os horários livres desta agenda. Horário de {zoneLabel(t.timezone)}.</p>
+        <div className="flex flex-wrap gap-2 pt-1">
+          <span className={pill}>{Math.round(weekMinutes / 60)} horas abertas por semana</span>
+          <span className={pill}>{openDays} {openDays === 1 ? 'dia' : 'dias'} com aula</span>
+        </div>
+      </div>
 
-      <section className="card space-y-3">
-        <h2 className="font-medium">Horários semanais</h2>
-        <ul className="space-y-1 text-sm" data-testid="regras">
-          {rules.map((r) => (
-            <li key={r.id} className="flex items-center justify-between">
-              <span>{WEEKDAYS[r.weekday]}, {hhmm(r.start_local)} às {hhmm(r.end_local)}
-                {(r.valid_from || r.valid_until) && ` (de ${r.valid_from ?? '…'} a ${r.valid_until ?? '…'})`}</span>
-              <ActionForm action={removeRuleAction} submitLabel="Remover" className="">
-                <input type="hidden" name="id" value={r.id} />
-              </ActionForm>
-            </li>
-          ))}
-          {rules.length === 0 && <li className="text-slate-600">Nenhum horário ainda.</li>}
-        </ul>
-        <ActionForm action={addRuleAction} submitLabel="Adicionar horário" className="grid gap-2 sm:grid-cols-4">
-          <select name="weekday" className="input" aria-label="Dia da semana">
-            {WEEKDAYS.slice(1).map((d, i) => <option key={d} value={i + 1}>{d}</option>)}
-          </select>
-          <input name="start" type="time" className="input" aria-label="Início" required />
-          <input name="end" type="time" className="input" aria-label="Fim" required />
-          <span />
-        </ActionForm>
-      </section>
+      <div className="min-w-0 space-y-5">
+        <section className={CARD}>
+          <WeekEditor
+            rules={rules.map((r) => ({
+              id: r.id, weekday: r.weekday, start: hhmm(r.start_local)!, end: hhmm(r.end_local)!,
+              validFrom: r.valid_from ? String(r.valid_from).slice(0, 10) : null, validUntil: r.valid_until ? String(r.valid_until).slice(0, 10) : null,
+            }))}
+            addRules={addRulesAction} removeRule={removeRuleAction} restoreRule={restoreRuleAction} />
+        </section>
 
-      <section className="card space-y-3">
-        <h2 className="font-medium">Bloqueios e horários extras</h2>
-        <ul className="space-y-1 text-sm">
-          {overrides.map((o) => (
-            <li key={o.id} className="flex items-center justify-between">
-              <span>{o.on_date}: {o.kind === 'block' ? 'bloqueado' : 'horário extra'}
-                {o.start_local ? `, ${hhmm(o.start_local)} às ${hhmm(o.end_local ?? '')}` : ', dia inteiro'}</span>
-              <ActionForm action={removeOverrideAction} submitLabel="Remover" className="">
-                <input type="hidden" name="id" value={o.id} />
-              </ActionForm>
-            </li>
-          ))}
-        </ul>
-        <ActionForm action={addOverrideAction} submitLabel="Adicionar" className="grid gap-2 sm:grid-cols-5">
-          <input name="date" type="date" className="input" aria-label="Data" required />
-          <select name="kind" className="input" aria-label="Tipo">
-            <option value="block">Bloquear</option>
-            <option value="extra">Horário extra</option>
-          </select>
-          <input name="start" type="time" className="input" aria-label="Início (vazio: dia inteiro)" />
-          <input name="end" type="time" className="input" aria-label="Fim" />
-          <span />
-        </ActionForm>
-      </section>
+        <section className={`${CARD} xl:hidden`} aria-labelledby="previa-celular">
+          <Preview id="previa-celular" slots={preview} tz={t.timezone} />
+        </section>
 
-      <section className="card">
-        <h2 className="mb-3 font-medium">Ajustes</h2>
-        <ActionForm action={saveSettingsAction} submitLabel="Salvar ajustes" successMessage="Ajustes salvos." className="grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">Antecedência mínima (horas)
-            <input name="minNoticeHours" className="input" inputMode="decimal" defaultValue={t.min_notice_min / 60} /></label>
-          <label className="text-sm">Janela de agendamento (dias)
-            <input name="horizonDays" className="input" inputMode="numeric" defaultValue={t.horizon_days} /></label>
-          <label className="text-sm">Grade de horários (minutos)
-            <select name="slotStepMin" className="input" defaultValue={t.slot_step_min}>
-              {SLOT_STEPS.map((x) => <option key={x} value={x}>{x}</option>)}
-            </select></label>
-          <label className="text-sm">Limite de aulas por dia (vazio: sem limite)
-            <input name="maxLessonsPerDay" className="input" inputMode="numeric" defaultValue={t.max_lessons_per_day ?? ''} /></label>
-        </ActionForm>
-      </section>
+        <section className={CARD}>
+          <ExceptionsEditor
+            items={overrides.map((o) => ({
+              id: o.id, date: String(o.on_date).slice(0, 10), kind: o.kind as 'block' | 'extra', start: hhmm(o.start_local), end: hhmm(o.end_local),
+            }))}
+            today={today} add={addOverrideAction} remove={removeOverrideAction} restore={restoreOverrideAction} />
+        </section>
 
-      <section className="card space-y-2">
-        <h2 className="font-medium">Calendário</h2>
-        <p className="text-sm text-slate-600">
-          Conectado, seus compromissos pessoais bloqueiam horários (só o período ocupado, nunca o título) e as aulas entram
-          num calendário próprio, “Aulas”.
-        </p>
-        {cal?.status === 'active' ? (
-          <>
-            <p className="text-sm">Conectado{cal.last_error ? ` (último erro: ${cal.last_error})` : ''}.</p>
-            <ActionForm action={disconnectCalendarAction} submitLabel="Desconectar" className="" />
-          </>
-        ) : (
-          <ActionForm action={connectCalendarAction} submitLabel="Conectar Google Calendar" className="" />
-        )}
-      </section>
+        <section className={CARD} aria-labelledby="regras">
+          <h2 id="regras" className="font-display text-xl font-bold">Regras de reserva</h2>
+          <p className="text-sm text-site-muted">Valem para todas as suas aulas.</p>
+          <ActionForm action={saveSettingsAction} submitLabel="Salvar regras" successMessage="Regras salvas." className="mt-3 divide-y divide-site-line">
+            <div className="space-y-1 pb-3">
+              <label className={sentence} htmlFor="minNoticeMin">Aceitar reservas com pelo menos
+                <select id="minNoticeMin" name="minNoticeMin" className={select} defaultValue={t.min_notice_min}>
+                  {options([[0, 'nenhuma'], [60, '1 hora'], [120, '2 horas'], [180, '3 horas'], [360, '6 horas'], [720, '12 horas'], [1440, '1 dia'], [2880, '2 dias'], [10080, '7 dias']], t.min_notice_min, minutesLabel)}
+                </select> de antecedência</label>
+              <p className="text-[13px] text-site-muted">Assim ninguém marca uma aula para daqui a 10 minutos.</p>
+            </div>
+            <div className="space-y-1 py-3">
+              <label className={sentence} htmlFor="horizonDays">Mostrar horários para os próximos
+                <select id="horizonDays" name="horizonDays" className={select} defaultValue={t.horizon_days}>
+                  {options([[7, '7 dias'], [14, '14 dias'], [30, '30 dias'], [60, '60 dias'], [90, '90 dias'], [180, '180 dias']], t.horizon_days, (v) => `${v} dias`)}
+                </select></label>
+              <p className="text-[13px] text-site-muted">Depois disso a agenda fica fechada, para você não se comprometer cedo demais.</p>
+            </div>
+            <div className="space-y-1 py-3">
+              <label className={sentence} htmlFor="slotStepMin">As aulas podem começar a cada
+                <select id="slotStepMin" name="slotStepMin" className={select} defaultValue={t.slot_step_min}>
+                  {SLOT_STEPS.map((x) => <option key={x} value={x}>{x === 60 ? '1 hora' : `${x} minutos`}</option>)}
+                </select></label>
+              <p className="text-[13px] text-site-muted">Com 30 minutos, por exemplo: 08:00, 08:30, 09:00…</p>
+            </div>
+            <div className="space-y-1 pb-1 pt-3">
+              <label className={sentence} htmlFor="maxLessonsPerDay">Aulas por dia, no máximo:
+                <select id="maxLessonsPerDay" name="maxLessonsPerDay" className={select} defaultValue={t.max_lessons_per_day ?? ''}>
+                  {options([['', 'sem limite'], [2, '2 aulas'], [3, '3 aulas'], [4, '4 aulas'], [5, '5 aulas'], [6, '6 aulas'], [8, '8 aulas'], [10, '10 aulas']], t.max_lessons_per_day ?? '', (v) => `${v} aulas`)}
+                </select></label>
+              <p className="text-[13px] text-site-muted">Quando o dia chega ao limite, os outros horários dele somem da sua página.</p>
+            </div>
+          </ActionForm>
+        </section>
 
-      <section className="card space-y-2">
-        <h2 className="font-medium">Próximos 7 dias livres</h2>
-        {!svc && <p className="text-sm text-slate-600">Cadastre um <Link className="text-brand underline" href="/professor/servicos">serviço</Link> para ver os horários.</p>}
-        {preview && preview.size === 0 && <p className="text-sm text-slate-600">Nenhum horário livre na semana.</p>}
-        {preview && [...preview.entries()].map(([day, slots]) => (
-          <p key={day} className="text-sm">
-            <span className="font-medium">{formatDatePtBr(Temporal.PlainDate.from(day))}:</span>{' '}
-            {slots.map((s) => formatTime(s, t.timezone)).join(', ')}
+        <section className={CARD} aria-labelledby="google">
+          <h2 id="google" className="font-display text-xl font-bold">Google Agenda</h2>
+          <p className="mt-1 text-sm text-site-muted">
+            Conectada, seus compromissos pessoais bloqueiam os horários sozinhos. Usamos só o período ocupado, nunca o título.
+            As aulas entram num calendário próprio, “Aulas”.
           </p>
-        ))}
+          <div className="mt-3">
+            {cal?.status === 'active' ? (
+              <>
+                <p className="text-sm font-semibold text-green-800">Conectada{cal.last_error ? ` (último erro: ${cal.last_error})` : ''}.</p>
+                <ActionForm action={disconnectCalendarAction} submitLabel="Desconectar" className="mt-2" buttonClassName="btn-secondary" />
+              </>
+            ) : (
+              <ActionForm action={connectCalendarAction} submitLabel="Conectar Google Agenda" className="" buttonClassName="btn-secondary" />
+            )}
+          </div>
+        </section>
+      </div>
+
+      <section className={`${CARD} hidden xl:sticky xl:top-5 xl:block`} aria-labelledby="previa">
+        <Preview id="previa" slots={preview} tz={t.timezone} />
       </section>
+    </div>
+  );
+}
+
+function Preview({ id, slots, tz }: { id: string; slots: string[] | null; tz: string }) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <h2 id={id} className="font-display text-xl font-bold">Como os alunos veem</h2>
+        <p className="text-sm text-site-muted">O mês todo, para a sua aula mais curta. O número em cada dia é quantos horários estão livres.</p>
+      </div>
+      {slots === null ? (
+        <p className="text-sm text-site-muted">
+          Cadastre um <Link className="font-semibold text-indigo-600 underline" href="/professor/servicos">serviço</Link> para ver os horários.
+        </p>
+      ) : (
+        <MonthSlots slots={slots} tz={tz} empty="Nenhum horário livre: adicione horários na sua semana." />
+      )}
     </div>
   );
 }
