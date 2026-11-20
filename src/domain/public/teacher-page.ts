@@ -51,7 +51,8 @@ export interface PublicTeacherPage {
   reviews: PublicReviews['reviews'];
 }
 
-export const PUBLIC_DAYS = 14;
+/** Dias de horários livres no perfil público: o calendário mostra até dois meses. */
+export const PUBLIC_DAYS = 62;
 
 export async function publicTeacherPage(deps: Deps, slug: string, now: Temporal.Instant): Promise<PublicTeacherPage | null> {
   const t = await deps.db.selectFrom('teachers')

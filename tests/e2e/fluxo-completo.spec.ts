@@ -197,14 +197,36 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
 
   await teacher.goto('/professor/agenda');
   await expect(teacher.getByText('horário de São Paulo')).toBeVisible();
-  const ruleForm = teacher.locator('form:has(button:has-text("Adicionar horário"))');
-  for (let day = 1; day <= 7; day++) {
-    await ruleForm.locator('select[name=weekday]').selectOption(String(day));
-    await ruleForm.locator('input[name=start]').fill('08:00');
-    await ruleForm.locator('input[name=end]').fill('21:00');
-    await ruleForm.locator('button:has-text("Adicionar horário")').click();
-    await expect(teacher.getByTestId('regras').locator('li')).toHaveCount(day);
-  }
+  // a semana inteira de uma vez: o início digitado ("8h") e o fim escolhido na lista
+  await teacher.getByRole('button', { name: '+ Adicionar horários' }).click();
+  await teacher.getByRole('button', { name: 'Todos os dias' }).click();
+  await teacher.getByLabel('Das', { exact: true }).fill('8h');
+  await teacher.getByRole('button', { name: 'Escolher até na lista' }).click();
+  await teacher.getByRole('option', { name: '21:00' }).click();
+  await teacher.getByRole('button', { name: 'Adicionar em 7 dias' }).click();
+  const week = teacher.getByTestId('semana');
+  await expect(week.getByText('08:00 – 21:00')).toHaveCount(7);
+  // remover mostra "Desfazer", que devolve o horário
+  await week.getByRole('button', { name: 'Remover domingo, 08:00 às 21:00' }).click();
+  await expect(week.getByText('08:00 – 21:00')).toHaveCount(6);
+  await teacher.getByRole('button', { name: 'Desfazer' }).click();
+  await expect(week.getByText('08:00 – 21:00')).toHaveCount(7);
+  // folga de dia inteiro daqui a 40 dias, longe das aulas do teste
+  const dayOff = new Date(Date.now() + 40 * 24 * 60 * 60_000).toISOString().slice(0, 10);
+  await teacher.getByRole('button', { name: '+ Folga ou horário extra' }).click();
+  await teacher.getByLabel('Dia', { exact: true }).fill(dayOff);
+  await teacher.getByRole('radio', { name: 'Bloquear o dia todo' }).check();
+  await teacher.getByRole('button', { name: 'Salvar folga' }).click();
+  await expect(teacher.getByTestId('folgas')).toContainText('dia todo');
+  // regras de reserva em frases
+  await teacher.locator('#minNoticeMin').selectOption('120');
+  await teacher.getByRole('button', { name: 'Salvar regras' }).click();
+  await expect(teacher.getByText('Regras salvas.')).toBeVisible();
+  // "Como os alunos veem": o calendário do mês
+  await expect(teacher.getByRole('group', { name: 'Dias do mês' })).toBeVisible();
+  await teacher.setViewportSize({ width: 390, height: 844 }); // no celular, a Agenda cabe sem rolagem lateral
+  expect(await teacher.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await teacher.setViewportSize({ width: 1280, height: 720 });
   // aprovada, com serviço e agenda: os sete passos feitos e o link da página para divulgar
   await teacher.goto('/professor');
   await expect(teacher.getByTestId('progresso')).toHaveText('7 de 7');
@@ -239,6 +261,11 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(fam1.getByText(EXPERIENCE)).toBeVisible();
   await expect(fam1.getByRole('img', { name: 'Foto de Ana Souza' })).toBeVisible();
   await fam1.getByRole('radio', { name: /online/i }).click();
+  // o mês todo: o calendário mostra, em cada dia, quantos horários livres ele tem
+  const monthDays = fam1.getByRole('group', { name: 'Dias do mês' });
+  await expect(monthDays).toBeVisible();
+  await expect(fam1.getByText(/^(Janeiro|Fevereiro|Março|Abril|Maio|Junho|Julho|Agosto|Setembro|Outubro|Novembro|Dezembro) de \d{4}$/)).toBeVisible();
+  await expect(monthDays.getByRole('button', { name: /\d+ horários? livres?$/ }).first()).toBeVisible();
   const slotButton = fam1.locator('button[data-slot]').first();
   const slotInstant = (await slotButton.getAttribute('data-slot'))!;
   await slotButton.click();
