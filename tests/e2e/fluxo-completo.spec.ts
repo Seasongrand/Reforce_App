@@ -317,6 +317,20 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   const slotUrl = new URL((await reserve.getAttribute('href'))!, fam1.url()).toString();
   expect(slotUrl).toContain(encodeURIComponent(slotInstant));
   expect(slotUrl).toContain('serie=9ano'); // a série buscada segue até a reserva
+  // no computador, duas colunas: o cartão com a aula, os horários e "Reservar" fica fixo à direita do perfil
+  const about = fam1.getByRole('heading', { name: 'Dá aula de', exact: true });
+  const bookingCard = fam1.getByTestId('cartao-reserva');
+  const bookingBar = fam1.getByTestId('barra-reservar');
+  const box = async (l: typeof about) => (await l.boundingBox())!;
+  expect((await box(bookingCard)).x).toBeGreaterThan((await box(about)).x + (await box(about)).width);
+  expect(await bookingCard.evaluate((e) => getComputedStyle(e).position)).toBe('sticky');
+  expect(await bookingBar.evaluate((e) => getComputedStyle(e).position)).not.toBe('fixed');
+  // no celular, uma coluna: a reserva vem depois do perfil e a barra fica fixa embaixo
+  await fam1.setViewportSize({ width: 390, height: 844 });
+  expect((await box(bookingCard)).y).toBeGreaterThan((await box(about)).y);
+  expect(await bookingBar.evaluate((e) => getComputedStyle(e).position)).toBe('fixed');
+  expect(await fam1.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await fam1.setViewportSize({ width: 1280, height: 720 });
 
   await identifyAndReserve(fam1, slotUrl, { email: 'maria.e2e@exemplo.com', phone: '(11) 98888-1111' });
   await fam1.waitForURL('**/pedido/**');
