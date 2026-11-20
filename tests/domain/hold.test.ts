@@ -214,6 +214,23 @@ describe('holdSlots', () => {
   });
 });
 
+describe('origem da família na reserva', () => {
+  it('família que veio da busca paga a comissão da busca (15%); o primeiro vínculo prevalece', async () => {
+    const t = await listedTeacher();
+    const fam = await family();
+    const r = await holdSlots(deps(), await request(t, { acquisition: 'marketplace' }, fam), NOW);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const { rows } = await testPool().query(`SELECT commission_bps FROM orders WHERE id = $1`, [r.orderId]);
+    expect(rows).toEqual([{ commission_bps: 1500 }]);
+    // a segunda reserva, mesmo marcada como vinda do link, mantém a origem registrada na primeira
+    const r2 = await holdSlots(deps(), await request(t, { acquisition: 'teacher_link', startsAt: [TUE_14.add({ hours: 2 })] }, fam), NOW);
+    expect(r2.ok).toBe(true);
+    if (!r2.ok) return;
+    expect((await testPool().query(`SELECT commission_bps FROM orders WHERE id = $1`, [r2.orderId])).rows).toEqual([{ commission_bps: 1500 }]);
+  });
+});
+
 describe('startPayment', () => {
   it('cria a cobrança com divisão e retenção, expira 1 minuto antes da reserva e congela a taxa', async () => {
     const t = await listedTeacher();

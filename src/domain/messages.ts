@@ -52,7 +52,7 @@ export function shortName(name: string): string {
 
 export async function sendMessage(
   deps: Deps,
-  input: { teacherId: string; guardianId: string; from: Side; body: string },
+  input: { teacherId: string; guardianId: string; from: Side; body: string; acquisition?: 'marketplace' | 'teacher_link' },
   now: Temporal.Instant,
 ): Promise<{ hidden: boolean }> {
   const body = input.body.trim();
@@ -64,9 +64,9 @@ export async function sendMessage(
     if (input.from === 'guardian') {
       const t = await trx.selectFrom('teachers').select('status').where('id', '=', input.teacherId).executeTakeFirst();
       if (t?.status !== 'approved') throw new DomainError('not_found', 'professor não encontrado');
-      // o vínculo nasce como na reserva (src/domain/booking/hold.ts): a origem da família ainda não é registrada
+      // o vínculo nasce como na reserva (src/domain/booking/hold.ts), com a origem da família; o primeiro prevalece
       await sql`INSERT INTO teacher_guardian_links (teacher_id, guardian_id, acquisition)
-                VALUES (${input.teacherId}, ${input.guardianId}, 'teacher_link')
+                VALUES (${input.teacherId}, ${input.guardianId}, ${input.acquisition ?? 'teacher_link'})
                 ON CONFLICT (teacher_id, guardian_id) DO NOTHING`.execute(trx);
     } else {
       const link = await trx.selectFrom('teacher_guardian_links').select('teacher_id')
