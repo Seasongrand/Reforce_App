@@ -347,6 +347,9 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   expect((await box(bookingCard)).x).toBeGreaterThan((await box(about)).x + (await box(about)).width);
   expect(await bookingCard.evaluate((e) => getComputedStyle(e).position)).toBe('sticky');
   expect(await bookingBar.evaluate((e) => getComputedStyle(e).position)).not.toBe('fixed');
+  // mesmo com muitos horários no dia, "Reservar" fica dentro da tela (o cartão rola por dentro)
+  const reserveBox = await box(fam1.getByRole('link', { name: 'Reservar' }));
+  expect(reserveBox.y + reserveBox.height).toBeLessThanOrEqual(720);
   // no celular, uma coluna: a reserva vem depois do perfil e a barra fica fixa embaixo
   await fam1.setViewportSize({ width: 390, height: 844 });
   expect((await box(bookingCard)).y).toBeGreaterThan((await box(about)).y);

@@ -63,11 +63,11 @@ export default async function TeacherPublicPage({
         />
       </div>
       <aside aria-label="Reservar uma aula" className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-        <div data-testid="cartao-reserva" className="lg:sticky lg:top-6 lg:rounded-3xl lg:border lg:border-site-line lg:p-6 lg:shadow-sm">
+        <div data-testid="cartao-reserva" className="lg:sticky lg:top-6 lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto lg:rounded-3xl lg:border lg:border-site-line lg:bg-white lg:px-6 lg:pt-6 lg:shadow-sm">
           {page.sellable ? (
             <ProfileBooking slug={page.slug} teacherTz={page.timezone} services={page.services} gradeSlug={serie} />
           ) : (
-            <p className="notice mt-7 lg:mt-0">Agenda indisponível no momento.</p>
+            <p className="notice mt-7 lg:mb-6 lg:mt-0">Agenda indisponível no momento.</p>
           )}
         </div>
       </aside>
