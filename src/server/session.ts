@@ -43,6 +43,12 @@ export async function requireTeacher(): Promise<string> {
   return id;
 }
 
+export async function requireGuardian(): Promise<string> {
+  const id = await currentSubject('guardian');
+  if (!id) redirect('/conta/entrar');
+  return id;
+}
+
 export async function requireStaff(): Promise<string> {
   const id = await currentSubject('staff');
   if (!id) redirect('/interno/entrar');

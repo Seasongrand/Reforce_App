@@ -474,17 +474,33 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await acct.fill('#code', await lastCode('maria.e2e@exemplo.com'));
   await acct.click('button:has-text("Entrar")');
   await acct.waitForURL(/\/conta$/);
-  // "Sair da conta" fica no fim da página, depois dos alunos
-  expect(await top(acct.getByRole('button', { name: 'Sair da conta' }))).toBeGreaterThan(await top(acct.getByRole('heading', { name: 'Alunos' })));
+  // a conta tem o molde da área do professor: topo com "Sair" e menu com Início, Aulas, Alunos e Meus dados
+  const accNav = acct.getByRole('navigation', { name: 'Minha conta' });
+  for (const label of ['Início', 'Aulas', 'Alunos', 'Meus dados']) await expect(accNav.getByRole('link', { name: label })).toBeVisible();
+  await expect(accNav.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page');
+  await expect(acct.getByRole('button', { name: 'Sair' })).toBeVisible();
+  await expect(acct.getByTestId('cartao-alunos')).toContainText('Joana');
+  await acct.setViewportSize({ width: 390, height: 844 }); // no celular, o menu vai para baixo, sem rolagem lateral
+  expect(await acct.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(accNav.getByRole('link', { name: 'Meus dados' })).toBeVisible();
+  await acct.setViewportSize({ width: 1280, height: 720 });
+  // já conectada, o topo do site mostra "Minha conta"
+  await acct.goto('/');
   await expect(acct.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Minha conta' })).toHaveAttribute('href', '/conta');
-  const past = acct.getByTestId(`aula-${booking!.id}`);
-  await past.getByRole('link', { name: 'Avaliar a aula' }).click();
+  await acct.goto('/conta');
+  // o Início avisa da aula esperando avaliação e leva direto a ela
+  const toReview = acct.getByTestId('cartao-avaliar');
+  await expect(toReview).toContainText('1 aula esperando sua avaliação');
+  await toReview.getByRole('link').click();
+  await acct.waitForURL(`**/conta/avaliar/${booking!.id}`);
   await acct.getByRole('radio', { name: /^5 —/ }).check({ force: true });
   await acct.fill('textarea[name=comment]', 'Explica com calma. Meu WhatsApp é 11 98888-1111');
   await acct.click('button:has-text("Enviar avaliação")');
-  await acct.waitForURL('**/conta?avaliada=1');
+  await acct.waitForURL('**/conta/aulas?aba=anteriores&avaliada=1');
   await expect(acct.getByText('Obrigado pela avaliação!')).toBeVisible();
   await expect(acct.getByTestId(`aula-${booking!.id}`)).toContainText('Sua avaliação');
+  await acct.getByRole('navigation', { name: 'Minha conta' }).getByRole('link', { name: 'Início' }).click();
+  await expect(acct.getByTestId('cartao-avaliar')).toContainText('Nenhuma aula esperando avaliação');
   await acct.goto(`/p/${SLUG}`);
   const reviews = acct.locator('#avaliacoes');
   await expect(reviews).toContainText('Maria L.');
