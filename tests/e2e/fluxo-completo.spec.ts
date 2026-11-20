@@ -379,7 +379,11 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   const endsAt = booking!.ends_at as Date;
   await setClock(new Date(startsAt.getTime() - 5 * 60_000));
 
+  // a aula marcada fica em "Próximas" (aba aberta por padrão), com a contagem na aba
   await teacher.goto('/professor/aulas');
+  const lessonTabs = teacher.getByRole('navigation', { name: 'Aulas' });
+  await expect(lessonTabs.getByRole('link', { name: /Próximas/ })).toHaveAttribute('aria-current', 'page');
+  await expect(lessonTabs.getByRole('link', { name: /Próximas/ })).toContainText('1');
   await teacher.getByTestId(`aula-${booking!.id}`).locator('button:has-text("Entrar na sala")').click();
   await teacher.waitForURL('**/dev/sala/**');
   await teacher.click('button:has-text("Entrar")');
@@ -402,7 +406,12 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   expect(await q(
     `SELECT gross_cents, commission_bps, platform_cents, teacher_cents, status FROM payouts WHERE booking_id = $1`, [booking!.id],
   )).toEqual([{ gross_cents: 12100, commission_bps: 500, platform_cents: 605, teacher_cents: 11495, status: 'held' }]);
+  // concluída, a aula sai de "Próximas" e vai para "Anteriores"
   await teacher.goto('/professor/aulas');
+  await expect(teacher.getByTestId(`aula-${booking!.id}`)).toHaveCount(0);
+  await expect(teacher.getByText('Nenhuma aula marcada por enquanto.')).toBeVisible();
+  await teacher.getByRole('navigation', { name: 'Aulas' }).getByRole('link', { name: /Anteriores/ }).click();
+  await teacher.waitForURL('**/professor/aulas?aba=anteriores');
   await expect(teacher.getByTestId(`aula-${booking!.id}`).getByTestId('situacao')).toHaveText('Concluída');
   // "Meus ganhos": a parte da professora fica a receber até a liberação
   await teacher.goto('/professor/recebimento');

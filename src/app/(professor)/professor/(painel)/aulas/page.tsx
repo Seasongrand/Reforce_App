@@ -1,5 +1,6 @@
+import Link from 'next/link';
 import { ActionForm } from '@/components/ActionForm';
-import { teacherLessons } from '@/domain/teachers/lessons';
+import { splitLessons, teacherLessons } from '@/domain/teachers/lessons';
 import { formatBRL } from '@/lib/money';
 import { formatPtBr } from '@/time/zoned';
 import { appDeps, now } from '@/server/app';
@@ -8,30 +9,58 @@ import { checkinAction, joinRoomAction, refundNoShowAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
+/** Quantos dias de aulas anteriores a aba mostra. */
+const PAST_DAYS = 90;
 const MODALITY: Record<string, string> = { online: 'Online', at_teacher: 'No seu endereço', at_student: 'Na casa do aluno' };
 const STATUS: Record<string, string> = {
   confirmed: 'Confirmada', completed: 'Concluída', no_show: 'Aluno faltou', cancelled: 'Cancelada',
 };
+const CARD = 'rounded-3xl border border-site-line bg-white p-5';
 
-export default async function TeacherLessonsPage() {
+/** Aulas em duas abas: Próximas (a mais perto primeiro) e Anteriores (a mais recente primeiro). */
+export default async function TeacherLessonsPage({ searchParams }: { searchParams: Promise<{ aba?: string }> }) {
   const teacherId = await requireTeacher();
   const deps = appDeps();
   const at = await now();
+  const { aba } = await searchParams;
+  const tab = aba === 'anteriores' ? 'past' : 'upcoming';
   const tz = (await deps.db.selectFrom('teachers').select('timezone').where('id', '=', teacherId).executeTakeFirstOrThrow()).timezone;
-  const lessons = await teacherLessons(deps.db, teacherId, at);
+  const { upcoming, past } = splitLessons(await teacherLessons(deps.db, teacherId, at, PAST_DAYS), at);
+  const lessons = tab === 'past' ? past : upcoming;
+  const tabs = [
+    { key: 'upcoming', label: 'Próximas', href: '/professor/aulas', count: upcoming.length },
+    { key: 'past', label: 'Anteriores', href: '/professor/aulas?aba=anteriores', count: past.length },
+  ] as const;
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Aulas</h1>
-      {lessons.length === 0 && <p className="text-slate-600">Nenhuma aula paga ainda.</p>}
+      <h1 className="font-display text-3xl font-bold">Aulas</h1>
+      <nav aria-label="Aulas" className="flex gap-2 border-b border-site-line">
+        {tabs.map((t) => (
+          <Link key={t.key} href={t.href} aria-current={tab === t.key ? 'page' : undefined}
+            className={`-mb-px flex min-h-11 items-center gap-2 border-b-2 px-3 font-semibold ${tab === t.key ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-site-muted hover:text-slate-900'}`}>
+            {t.label}
+            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${tab === t.key ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-700'}`}>{t.count}</span>
+          </Link>
+        ))}
+      </nav>
+
+      {lessons.length === 0 && (
+        <p className={`${CARD} text-site-muted`}>
+          {tab === 'past'
+            ? `Nenhuma aula nos últimos ${PAST_DAYS} dias.`
+            : 'Nenhuma aula marcada por enquanto. Quando um aluno reservar e pagar, a aula aparece aqui.'}
+        </p>
+      )}
       <ul className="space-y-3">
         {lessons.map((l) => (
-          <li key={l.bookingId} className="card space-y-2" data-testid={`aula-${l.bookingId}`}>
-            <p className="font-medium">{formatPtBr(l.startsAt, tz)} · {l.subject} · {l.studentFirstName}
-              {l.studentGrade && ` (${l.studentGrade})`}</p>
-            <p className="text-sm text-slate-600">{MODALITY[l.modality]} · <span data-testid="situacao">{STATUS[l.status] ?? l.status}</span>
+          <li key={l.bookingId} className={`${CARD} space-y-2`} data-testid={`aula-${l.bookingId}`}>
+            <p className="font-display text-lg font-bold">{formatPtBr(l.startsAt, tz)}</p>
+            <p className="font-semibold">{l.subject} · {l.studentFirstName}{l.studentGrade && ` (${l.studentGrade})`}</p>
+            <p className="text-sm text-site-muted">{MODALITY[l.modality]} · <span data-testid="situacao">{STATUS[l.status] ?? l.status}</span>
               {l.checkedIn && ' · presença registrada'}</p>
             {l.address && <p className="text-sm">Endereço: {l.address}</p>}
-            {l.refunded && <p className="text-sm text-slate-600" data-testid="devolvida">Valor devolvido ao aluno (falta justificada).</p>}
+            {l.refunded && <p className="text-sm text-site-muted" data-testid="devolvida">Valor devolvido ao aluno (falta justificada).</p>}
             {l.refundableUntil && l.refundCents !== null && (
               <details className="text-sm">
                 <summary className="cursor-pointer text-brand">O aluno justificou a falta?</summary>
