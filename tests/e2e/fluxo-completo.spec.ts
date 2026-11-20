@@ -379,7 +379,11 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   const endsAt = booking!.ends_at as Date;
   await setClock(new Date(startsAt.getTime() - 5 * 60_000));
 
+  // a aula marcada fica em "Próximas" (aba aberta por padrão), com a contagem na aba
   await teacher.goto('/professor/aulas');
+  const lessonTabs = teacher.getByRole('navigation', { name: 'Aulas' });
+  await expect(lessonTabs.getByRole('link', { name: /Próximas/ })).toHaveAttribute('aria-current', 'page');
+  await expect(lessonTabs.getByRole('link', { name: /Próximas/ })).toContainText('1');
   await teacher.getByTestId(`aula-${booking!.id}`).locator('button:has-text("Entrar na sala")').click();
   await teacher.waitForURL('**/dev/sala/**');
   await teacher.click('button:has-text("Entrar")');
@@ -402,8 +406,17 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   expect(await q(
     `SELECT gross_cents, commission_bps, platform_cents, teacher_cents, status FROM payouts WHERE booking_id = $1`, [booking!.id],
   )).toEqual([{ gross_cents: 12100, commission_bps: 500, platform_cents: 605, teacher_cents: 11495, status: 'held' }]);
+  // concluída, a aula sai de "Próximas" e vai para "Anteriores"
   await teacher.goto('/professor/aulas');
+  await expect(teacher.getByTestId(`aula-${booking!.id}`)).toHaveCount(0);
+  await expect(teacher.getByText('Nenhuma aula marcada por enquanto.')).toBeVisible();
+  await teacher.getByRole('navigation', { name: 'Aulas' }).getByRole('link', { name: /Anteriores/ }).click();
+  await teacher.waitForURL('**/professor/aulas?aba=anteriores');
   await expect(teacher.getByTestId(`aula-${booking!.id}`).getByTestId('situacao')).toHaveText('Concluída');
+  // "Meus ganhos": a parte da professora fica a receber até a liberação
+  await teacher.goto('/professor/recebimento');
+  await expect(teacher.getByTestId('ganho-a-receber')).toContainText('R$ 114,95');
+  await expect(teacher.getByTestId(`repasse-${booking!.id}`)).toContainText('A receber');
 
   // 7b. Em "Minha conta" (entrada por código, sem senha), a responsável avalia a aula concluída;
   // a avaliação aparece no perfil com o autor abreviado, o telefone oculto e sem o nome da aluna.
@@ -440,6 +453,11 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await runSweeps(browser);
   expect(await q(`SELECT status FROM payouts WHERE booking_id = $1`, [booking!.id])).toEqual([{ status: 'released' }]);
   expect(await q(`SELECT count(*)::int AS n FROM dev_provider_calls WHERE operation = 'releaseEscrow'`)).toEqual([{ n: 1 }]);
+  // em "Meus ganhos", o valor passa de "a receber" para "liberado"
+  await teacher.goto('/professor/recebimento');
+  await expect(teacher.getByTestId('ganho-a-receber')).toContainText('R$ 0,00');
+  await expect(teacher.getByTestId('ganho-total')).toContainText('R$ 114,95');
+  await expect(teacher.getByTestId(`repasse-${booking!.id}`)).toContainText('Liberado');
   // o painel interno mostra a situação em português
   await staff.goto('/interno/aulas');
   await expect(staff.getByRole('cell', { name: 'Liberado' })).toBeVisible();

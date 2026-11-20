@@ -72,3 +72,17 @@ export async function teacherLessons(db: Db, teacherId: string, now: Temporal.In
     refunded: r.status === 'no_show' && r.payout_status === 'refunded',
   }));
 }
+
+/**
+ * As abas da tela Aulas. Próximas: confirmadas que ainda não terminaram (a em
+ * andamento inclusive), a mais perto primeiro. Anteriores: todo o resto, a mais
+ * recente primeiro.
+ */
+export function splitLessons(lessons: TeacherLesson[], now: Temporal.Instant): { upcoming: TeacherLesson[]; past: TeacherLesson[] } {
+  const ahead = (l: TeacherLesson) => l.status === 'confirmed' && l.endsAt.epochMilliseconds > now.epochMilliseconds;
+  const by = (l: TeacherLesson) => l.startsAt.epochMilliseconds;
+  return {
+    upcoming: lessons.filter(ahead).sort((a, b) => by(a) - by(b)),
+    past: lessons.filter((l) => !ahead(l)).sort((a, b) => by(b) - by(a)),
+  };
+}
