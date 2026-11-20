@@ -27,7 +27,7 @@ export default async function GuardianData() {
 
       <section className={CARD} aria-labelledby="seus-dados">
         <h2 id="seus-dados" className="font-display text-xl font-bold">Seus dados</h2>
-        <ActionForm action={updateProfileAction} submitLabel="Salvar" successMessage="Dados salvos." className="space-y-4" buttonClassName={SAVE}>
+        <ActionForm action={updateProfileAction} submitLabel="Salvar" successMessage="Dados salvos." className="max-w-xl space-y-4" buttonClassName={SAVE}>
           <label className={LABEL}>Seu nome<input className={INPUT} name="name" required autoComplete="name" defaultValue={p.name} /></label>
           <label className="flex min-h-11 items-start gap-2.5 text-sm leading-normal">
             <input type="checkbox" name="whatsappOptIn" defaultChecked={p.whatsappOptIn} className="mt-0.5 size-5 flex-none accent-indigo-600" />

@@ -20,7 +20,7 @@ export function EmailChange({ start, finish }: { start: StartAction; finish: Fin
 
   if (!sent) {
     return (
-      <form action={startRun} className="space-y-3">
+      <form action={startRun} className="max-w-xl space-y-3">
         <label className={LABEL}>E-mail novo<input className={INPUT} name="email" type="email" required autoComplete="email" /></label>
         {startState && !startState.ok && <p className={ALERT} role="alert">{startState.error}</p>}
         {done && <p className="rounded-2xl bg-green-100 px-4 py-3 text-sm font-semibold text-green-800" role="status">E-mail trocado.</p>}
@@ -29,7 +29,7 @@ export function EmailChange({ start, finish }: { start: StartAction; finish: Fin
     );
   }
   return (
-    <form action={finishRun} className="space-y-3">
+    <form action={finishRun} className="max-w-xl space-y-3">
       <p className="text-sm text-site-muted">Enviamos um código para <strong className="text-indigo-950">{sent.sentTo}</strong>. O e-mail só muda depois que você confirmar.</p>
       <input type="hidden" name="codeId" value={sent.codeId} />
       <label className={LABEL}>Código

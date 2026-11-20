@@ -24,7 +24,8 @@ export default async function GuardianHome() {
           <h1 className="font-display text-3xl font-bold">Olá, {v.name.split(/\s+/)[0]}</h1>
           <p className="text-site-muted">Suas aulas e as dos alunos que você cadastrou.</p>
         </div>
-        <Link href="/buscar" className={`${BTN} bg-indigo-600 text-white hover:bg-indigo-700`}>Buscar professor</Link>
+        {/* sem aula marcada, o cartão abaixo já leva à busca */}
+        {next && <Link href="/buscar" className={`${BTN} bg-indigo-600 text-white hover:bg-indigo-700`}>Buscar professor</Link>}
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
