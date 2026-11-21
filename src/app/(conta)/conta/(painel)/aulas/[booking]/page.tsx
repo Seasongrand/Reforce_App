@@ -56,7 +56,7 @@ export default async function ChangeLesson({ params }: { params: Promise<{ booki
         <section className={CARD} aria-labelledby="cancelar">
           <div className="space-y-1">
             <h2 id="cancelar" className="font-display text-xl font-bold">Cancelar</h2>
-            <p className="text-sm text-site-muted">Devolvemos {formatBRL(options.refundCents)} pelo mesmo meio de pagamento, e {l.teacherName} é avisado na hora.</p>
+            <p className="text-sm text-site-muted">Devolvemos {formatBRL(options.refundCents)} pelo mesmo meio de pagamento e avisamos {l.teacherName} na hora.</p>
           </div>
           <ActionForm action={cancelLessonAction} submitLabel={`Cancelar a aula e receber ${formatBRL(options.refundCents)}`} className="space-y-3"
             buttonClassName="inline-flex min-h-12 items-center rounded-2xl border border-red-300 bg-white px-5 font-semibold text-red-800 hover:bg-red-50 disabled:opacity-50">
