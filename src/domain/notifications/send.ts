@@ -12,8 +12,8 @@ import { loadMessageContext, render } from './templates';
 
 const NEEDS_CONFIRMED = new Set<Template>([
   'confirmacao_responsavel', 'lembrete_24h_responsavel', 'lembrete_1h_responsavel', 'confirmacao_professor',
-  'remarcada_professor', 'remarcada_responsavel',
 ]);
+// o aviso de remarcação sai mesmo se a aula nova for cancelada logo depois: o professor precisa saber da mudança de data
 
 export async function sendDueNotifications(
   deps: Deps,

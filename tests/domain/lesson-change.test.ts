@@ -95,6 +95,18 @@ describe('remarcar', () => {
       .toEqual([{ status: 'cancelled' }]);
   });
 
+  it('remarcar e logo depois cancelar: o professor recebe os dois avisos, nesta ordem', async () => {
+    const l = await paidLesson();
+    const r = await rescheduleByFamily(testDeps(), { guardianId: l.guardianId, bookingId: l.bookingId, startsAt: NEXT_TUE }, NOW);
+    if (!r.ok) throw new Error('esperava remarcar');
+    await cancelByFamily(testDeps(), { guardianId: l.guardianId, bookingId: r.bookingId }, NOW);
+    await sendDueNotifications(testDeps(), NOW);
+    expect(await q(
+      `SELECT template, status FROM notifications WHERE booking_id = $1 AND template IN ('remarcada_professor', 'cancelada_pela_familia') AND channel = 'email' ORDER BY template`,
+      [r.bookingId],
+    )).toEqual([{ template: 'cancelada_pela_familia', status: 'sent' }, { template: 'remarcada_professor', status: 'sent' }]);
+  });
+
   it('com menos de 24 horas ainda remarca', async () => {
     const l = await paidLesson();
     const r = await rescheduleByFamily(testDeps(), { guardianId: l.guardianId, bookingId: l.bookingId, startsAt: NEXT_TUE }, TUE_14.subtract({ hours: 3 }));

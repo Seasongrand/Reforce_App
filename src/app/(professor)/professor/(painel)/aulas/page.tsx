@@ -5,7 +5,7 @@ import { formatBRL } from '@/lib/money';
 import { formatPtBr } from '@/time/zoned';
 import { appDeps, now } from '@/server/app';
 import { requireTeacher } from '@/server/session';
-import { checkinAction, joinRoomAction, refundNoShowAction } from './actions';
+import { cancelLessonByTeacherAction, checkinAction, joinRoomAction, refundNoShowAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,6 +83,21 @@ export default async function TeacherLessonsPage({ searchParams }: { searchParam
               <ActionForm action={joinRoomAction} submitLabel="Entrar na sala" className="">
                 <input type="hidden" name="bookingId" value={l.bookingId} />
               </ActionForm>
+            )}
+            {tab === 'upcoming' && l.startsAt.epochMilliseconds > at.epochMilliseconds && (
+              <details className="text-sm">
+                <summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-site-muted">Não vai poder dar esta aula?</summary>
+                <div className="mt-2 space-y-2">
+                  <p>Se cancelar, a família recebe o valor integral de volta e é avisada na hora. Cancelamentos repetidos podem tirar seu perfil da busca.</p>
+                  <ActionForm action={cancelLessonByTeacherAction} submitLabel="Cancelar a aula" successMessage="Aula cancelada. A família foi avisada." className="space-y-2" buttonClassName="btn-secondary">
+                    <input type="hidden" name="bookingId" value={l.bookingId} />
+                    <label className="flex items-start gap-2">
+                      <input type="checkbox" name="confirm" required className="mt-1" />
+                      <span>Confirmo que não vou dar esta aula.</span>
+                    </label>
+                  </ActionForm>
+                </div>
+              </details>
             )}
             {l.status === 'confirmed' && l.modality !== 'online' && !l.checkedIn && (
               <ActionForm action={checkinAction} submitLabel="Registrar chegada" successMessage="Presença registrada." className="flex flex-wrap items-center gap-2">

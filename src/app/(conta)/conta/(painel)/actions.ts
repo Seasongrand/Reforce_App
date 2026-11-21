@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { finishEmailChange, startEmailChange, updateGuardianProfile } from '@/domain/guardians/profile';
 import { sendMessage } from '@/domain/messages';
+import { cancelByFamily, rescheduleByFamily, type RescheduleReason } from '@/domain/lessons/change';
+import { Temporal } from 'temporal-polyfill';
 import { addStudent, removeStudent, updateStudent } from '@/domain/guardians/students';
 import { submitReview } from '@/domain/reviews';
 import { appDeps, now } from '@/server/app';
@@ -107,4 +109,43 @@ export async function sendToTeacherAction(_: unknown, form: FormData): Promise<A
   } catch (err) {
     return { ok: false, error: errorMessage(err) };
   }
+}
+
+const RESCHEDULE: Record<RescheduleReason, string> = {
+  ocupado: 'Esse horário acabou de ser reservado. Escolha outro.',
+  indisponivel: 'Esse horário não está mais disponível. Escolha outro.',
+  antecedencia: 'Esse horário está perto demais para o professor se preparar. Escolha outro.',
+  limite_diario: 'O professor já tem o máximo de aulas nesse dia. Escolha outro dia.',
+};
+
+export async function rescheduleAction(_: unknown, form: FormData): Promise<ActionState> {
+  const guardianId = await currentSubject('guardian');
+  if (!guardianId) return { ok: false, error: 'Sua sessão expirou. Entre de novo.' };
+  let startsAt: Temporal.Instant;
+  try {
+    startsAt = Temporal.Instant.from(field(form, 'startsAt'));
+  } catch {
+    return { ok: false, error: 'Escolha o novo horário.' };
+  }
+  try {
+    const r = await rescheduleByFamily(appDeps(), { guardianId, bookingId: field(form, 'bookingId'), startsAt }, await now());
+    if (!r.ok) return { ok: false, error: RESCHEDULE[r.reason] };
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+  revalidatePath('/conta', 'layout');
+  redirect('/conta/aulas?remarcada=1');
+}
+
+export async function cancelLessonAction(_: unknown, form: FormData): Promise<ActionState> {
+  const guardianId = await currentSubject('guardian');
+  if (!guardianId) return { ok: false, error: 'Sua sessão expirou. Entre de novo.' };
+  if (form.get('confirm') !== 'on') return { ok: false, error: 'Marque a confirmação para cancelar.' };
+  try {
+    await cancelByFamily(appDeps(), { guardianId, bookingId: field(form, 'bookingId') }, await now());
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+  revalidatePath('/conta', 'layout');
+  redirect('/conta/aulas?cancelada=1');
 }
