@@ -7,3 +7,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Design: skill design-taste-frontend
+
+Toda tela (site público, perfil, reserva, painéis) segue a skill do projeto `.claude/skills/design-taste-frontend`, por decisão do dono em 21/11, com uma exceção também decidida por ele:
+
+- **Cores da marca ficam:** o índigo e o violeta da Reforce continuam. A regra da skill que troca violeta e lilás (matiz 270–330 em OKLCH) por azul ou rosa não vale neste projeto. As demais regras valem.
