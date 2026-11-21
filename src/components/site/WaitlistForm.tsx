@@ -6,10 +6,9 @@
  * do servidor, que continua decidindo. A etapa 1 é conferida antes de avançar.
  */
 import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import type { ActionState } from '@/server/action-result';
 import { step1Errors, stepOfServerError, type Step1Field } from '@/lib/waitlist-step1';
-import { Chips, FormAlert, Honeypot, INPUT, LABEL, SuccessMark, WhatsAppInvite, type Option } from './form-ui';
+import { Chips, FormAlert, Honeypot, WhatsAppInvite, type Option } from './form-ui';
 
 type Result = ActionState<{ created: boolean }>;
 
@@ -37,7 +36,7 @@ export function WaitlistForm({
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<Step1Field, string>>>({});
   const [serverError, setServerError] = useState<{ message: string; step: 1 | 2 } | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const titles = { 1: useRef<HTMLHeadingElement>(null), 2: useRef<HTMLHeadingElement>(null) };
+  const titles = { 1: useRef<HTMLParagraphElement>(null), 2: useRef<HTMLParagraphElement>(null) };
   const moved = useRef(false);
 
   const goTo = (s: 1 | 2) => {
@@ -79,14 +78,13 @@ export function WaitlistForm({
 
   if (state?.ok) {
     return (
-      <div role="status" data-testid="lista-ok" className="flex flex-col items-start gap-3.5">
-        <SuccessMark />
-        <h3 className="font-display text-3xl font-bold">Inscrição recebida!</h3>
-        <p className="leading-relaxed text-site-muted">
+      <div role="status" data-testid="lista-ok" className="form-done stack-4">
+        <h3>Inscrição recebida!</h3>
+        <p>
           {state.data.created ? 'Vamos entrar em contato' : 'Atualizamos seus dados e vamos entrar em contato'} quando abrirmos a
           seleção de professores na sua região e disciplina.
         </p>
-        <p className="mt-2 font-semibold">Conhece outro professor que ia gostar?</p>
+        <p className="form-done__ask">Conhece outro professor que ia gostar?</p>
         <WhatsAppInvite text={INVITE_TEXT + inviteUrl} label="Convidar pelo WhatsApp" />
       </div>
     );
@@ -95,37 +93,26 @@ export function WaitlistForm({
   const alert = serverError && serverError.step === step && <FormAlert message={serverError.message} />;
 
   const field = ({ name, label, type, autoComplete, placeholder, maxLength }: (typeof STEP1)[number]) => (
-    <div key={name}>
-      <label className={LABEL}>
-        {label}
-        <input
-          className={INPUT}
-          name={name}
-          type={type ?? 'text'}
-          autoComplete={autoComplete}
-          placeholder={placeholder}
-          maxLength={maxLength}
-          aria-invalid={fieldErrors[name] ? true : undefined}
-          aria-describedby={fieldErrors[name] ? `erro-${name}` : undefined}
-        />
-      </label>
-      {fieldErrors[name] && (
-        <p id={`erro-${name}`} className="mt-1 text-sm text-red-700">
-          {fieldErrors[name]}
-        </p>
-      )}
+    <div key={name} className={`field field--${name}`}>
+      <label htmlFor={`lista-${name}`}>{label}</label>
+      <input
+        id={`lista-${name}`}
+        name={name}
+        type={type ?? 'text'}
+        autoComplete={autoComplete}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        aria-invalid={fieldErrors[name] ? true : undefined}
+        aria-describedby={fieldErrors[name] ? `erro-${name}` : undefined}
+      />
+      {fieldErrors[name] && <p id={`erro-${name}`} className="field__error">{fieldErrors[name]}</p>}
     </div>
   );
 
   const header = (n: 1 | 2, title: string) => (
-    <div className="flex flex-col gap-2.5">
-      <h3 ref={titles[n]} tabIndex={-1} className="text-sm font-semibold text-site-muted outline-none">
-        {`Etapa ${n} de 2 · ${title}`}
-      </h3>
-      <div className="grid grid-cols-2 gap-1.5" aria-hidden="true">
-        <span className="h-1.5 rounded-full bg-indigo-600" />
-        <span className={`h-1.5 rounded-full ${n === 2 ? 'bg-indigo-600' : 'bg-site-line'}`} />
-      </div>
+    <div className="form-steps">
+      <p ref={titles[n]} tabIndex={-1} className="t-label">{`Etapa ${n} de 2 · ${title}`}</p>
+      <div className={`form-steps__bar${n === 2 ? ' is-full' : ''}`} aria-hidden="true" />
     </div>
   );
 
@@ -134,7 +121,7 @@ export function WaitlistForm({
     // cada envio, e uma recusa do servidor apagaria tudo o que a pessoa preencheu.
     <form
       ref={formRef}
-      className="flex flex-col"
+      className="rf-form"
       onSubmit={(e) => {
         e.preventDefault();
         if (step === 1) return next();
@@ -144,7 +131,7 @@ export function WaitlistForm({
     >
       <div
         hidden={step !== 1}
-        className="flex flex-col gap-5"
+        className="rf-form__step"
         onKeyDown={(e) => {
           if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
             e.preventDefault();
@@ -154,76 +141,49 @@ export function WaitlistForm({
       >
         {header(1, 'Seus dados')}
         {alert}
-        <div className="grid gap-3.5 sm:grid-cols-2">
-          {STEP1.slice(0, 3).map(field)}
-          <div className="grid grid-cols-[1fr_5rem] gap-3">{STEP1.slice(3).map(field)}</div>
-        </div>
-        <button
-          type="button"
-          onClick={next}
-          className="min-h-14 rounded-2xl bg-indigo-600 text-[17px] font-semibold text-white hover:bg-indigo-700"
-        >
-          Continuar
-        </button>
-        <p className="text-center text-[13px] text-site-muted">Na próxima etapa: disciplinas, etapas e formação.</p>
+        <div className="rf-form__grid">{STEP1.map(field)}</div>
+        <div className="btn-row"><button type="button" onClick={next} className="btn btn--primary">Continuar</button></div>
+        <p className="t-small muted">Na próxima etapa: disciplinas, etapas e formação.</p>
       </div>
 
-      <div hidden={step !== 2} className="flex flex-col gap-5">
+      <div hidden={step !== 2} className="rf-form__step">
         {header(2, 'Suas aulas')}
         {alert}
+        <div className="rf-form__cols">
         <Chips name="subject" legend="Disciplinas" options={subjects} />
+        <div className="rf-form__step">
         <Chips name="stage" legend="Etapas" options={stages} />
         <Chips name="modality" legend="Modalidade" options={modalities} />
-        <label className={LABEL}>
-          Formação
-          <select className={INPUT} name="education" required defaultValue="">
-            <option value="" disabled>
-              Escolha
-            </option>
-            {education.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
+        <div className="field">
+          <label htmlFor="lista-education">Formação</label>
+          <select id="lista-education" name="education" required defaultValue="">
+            <option value="" disabled>Escolha</option>
+            {education.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-        </label>
-        <label className={LABEL}>
-          Conte um pouco da sua experiência (opcional)
-          <textarea className={`${INPUT} py-3`} name="notes" rows={3} maxLength={1000} />
-        </label>
-        <label className={LABEL}>
-          Currículo (opcional)
-          <input type="file" name="cv"
-            accept=".pdf,.doc,.docx,.odt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text"
-            className="block w-full rounded-xl border border-dashed border-site-field px-3.5 py-3 text-sm font-normal file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-3 file:py-2 file:font-semibold file:text-indigo-950" />
-          <span className="text-[13px] font-normal text-site-muted">PDF, DOC, DOCX ou ODT, até 5 MB. Só a equipe da Reforce vê.</span>
-        </label>
+        </div>
+        <div className="field">
+          <label htmlFor="lista-notes">Conte um pouco da sua experiência (opcional)</label>
+          <textarea id="lista-notes" name="notes" rows={2} maxLength={1000} />
+        </div>
+        <div className="field">
+          <label htmlFor="lista-cv">Currículo (opcional)</label>
+          <input id="lista-cv" type="file" name="cv" aria-describedby="lista-cv-help"
+            accept=".pdf,.doc,.docx,.odt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text" />
+          <p id="lista-cv-help" className="t-small muted">PDF, DOC, DOCX ou ODT, até 5 MB. Só a equipe da Reforce vê.</p>
+        </div>
+        </div>
+        </div>
         <Honeypot />
-        <label className="flex items-start gap-3 rounded-2xl border border-site-field p-3.5 text-sm leading-normal text-site-muted has-checked:border-indigo-600 has-checked:bg-indigo-50">
-          <input type="checkbox" name="consent" required className="mt-0.5 size-5 flex-none accent-indigo-600" />
+        <label className="consent">
+          <input type="checkbox" name="consent" required />
           <span>
             Autorizo o contato por e-mail e WhatsApp sobre a seleção de professores, conforme a{' '}
-            <Link className="text-indigo-600 underline" href="/privacidade">
-              política de privacidade
-            </Link>
-            .
+            <a className="link" href="/privacidade">política de privacidade</a>.
           </span>
         </label>
-        <div className="flex flex-wrap gap-2.5">
-          <button
-            type="button"
-            onClick={() => goTo(1)}
-            className="min-h-14 rounded-2xl border border-site-field px-6 font-semibold text-indigo-950 hover:bg-violet-50"
-          >
-            Voltar
-          </button>
-          <button
-            type="submit"
-            disabled={pending}
-            className="min-h-14 flex-[1_1_14rem] rounded-2xl bg-indigo-600 text-[17px] font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
-          >
-            {pending ? 'Enviando…' : 'Entrar na lista de espera'}
-          </button>
+        <div className="btn-row">
+          <button type="button" onClick={() => goTo(1)} className="btn btn--secondary">Voltar</button>
+          <button type="submit" disabled={pending} className="btn btn--primary">{pending ? 'Enviando…' : 'Entrar na lista de espera'}</button>
         </div>
       </div>
     </form>

@@ -304,8 +304,8 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await fam1.goto('/buscar?disciplina=3&serie=9&modalidade=online');
   await expect(fam1.getByText('Nenhum professor com horário livre')).toBeVisible();
   await fam1.goto('/');
-  await fam1.getByLabel('Disciplina').selectOption({ label: 'Matemática' });
-  await fam1.getByLabel('Série').selectOption({ label: '9º ano' });
+  await fam1.getByLabel('Disciplina', { exact: true }).selectOption({ label: 'Matemática' });
+  await fam1.getByLabel('Série', { exact: true }).selectOption({ label: '9º ano' });
   await fam1.getByRole('radio', { name: 'Online' }).check();
   await fam1.getByRole('button', { name: 'Buscar professores' }).click();
   await fam1.waitForURL('**/buscar?**');
@@ -466,7 +466,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // O botão "Entrar" do topo leva ao login; já conectada, o topo mostra "Minha conta".
   const acct = await (await browser.newContext()).newPage();
   await acct.goto('/');
-  await acct.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Entrar' }).click();
+  await acct.getByRole('banner').getByRole('link', { name: 'Entrar', exact: true }).click();
   await acct.waitForURL('**/conta/entrar');
   await acct.fill('#email', 'maria.e2e@exemplo.com');
   await acct.click('button:has-text("Receber código por e-mail")');
@@ -486,7 +486,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await acct.setViewportSize({ width: 1280, height: 720 });
   // já conectada, o topo do site mostra "Minha conta"
   await acct.goto('/');
-  await expect(acct.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Minha conta' })).toHaveAttribute('href', '/conta');
+  await expect(acct.getByRole('banner').getByRole('link', { name: 'Minha conta' })).toHaveAttribute('href', '/conta');
   await acct.goto('/conta');
   // o Início avisa da aula esperando avaliação e leva direto a ela
   const toReview = acct.getByTestId('cartao-avaliar');
@@ -674,22 +674,24 @@ test('código por e-mail: reenviar depois de 60 s e usar outro e-mail', async ({
   await page.waitForURL('**/professor/boas-vindas');
 });
 
-test('topo do site no celular: uma linha, com menu; "Para professores" no rodapé', async ({ page }) => {
+test('topo do site no celular: uma linha, com a folha do menu; "Professores" no rodapé', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  expect((await page.locator('header').first().boundingBox())!.height).toBeLessThanOrEqual(80);
-  const nav = page.getByRole('navigation', { name: 'Principal' });
-  await expect(nav.getByRole('link', { name: 'Entrar' })).toBeVisible();
-  await expect(nav.getByRole('link', { name: 'Seja professor' })).toBeHidden();
-  await nav.getByText('Menu').click();
-  await expect(nav.getByRole('link', { name: 'Buscar professor' })).toBeVisible();
-  await expect(nav.getByRole('link', { name: 'Seja professor' })).toBeVisible();
-  await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Para professores' })).toHaveAttribute('href', '/professores');
+  const header = page.getByRole('banner');
+  expect((await header.boundingBox())!.height).toBeLessThanOrEqual(80);
+  await expect(header.getByRole('link', { name: 'Buscar professor' })).toBeVisible(); // a ação principal fica na barra
+  await expect(header.getByRole('link', { name: 'Professores' })).toBeHidden();
+  await page.locator('html[data-ready]').waitFor({ state: 'attached' }); // o script do kit, que abre a folha, já rodou
+  await header.getByRole('button', { name: 'Menu' }).click();
+  await expect(header.getByRole('button', { name: 'Menu' })).toHaveAttribute('aria-expanded', 'true');
+  for (const name of ['Busca', 'Etapas', 'Professores']) await expect(header.getByRole('link', { name, exact: true })).toBeVisible();
+  await expect(header.getByRole('link', { name: 'Entrar', exact: true })).toBeVisible();
+  await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Professores' })).toHaveAttribute('href', '/professores');
+  await header.getByRole('button', { name: 'Menu' }).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-  // ao escolher um link, o menu fecha na página seguinte
-  await nav.getByRole('link', { name: 'Seja professor' }).click();
-  await page.waitForURL('**/professores');
-  await expect(nav.getByRole('link', { name: 'Seja professor' })).toBeHidden();
   await page.setViewportSize({ width: 1280, height: 800 });
-  for (const name of ['Buscar professor', 'Entrar', 'Seja professor']) await expect(nav.getByRole('link', { name })).toBeVisible();
+  for (const name of ['Busca', 'Etapas', 'Professores', 'Entrar', 'Buscar professor']) await expect(header.getByRole('link', { name, exact: true })).toBeVisible();
+  await header.getByRole('link', { name: 'Professores', exact: true }).click();
+  await page.waitForURL('**/professores');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Agenda e cobrança para professores');
 });

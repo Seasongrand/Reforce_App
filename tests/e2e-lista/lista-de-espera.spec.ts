@@ -1,6 +1,6 @@
 /**
  * Site em modo lista de espera, no navegador: a página de recrutamento de
- * professores (direção C), o formulário em duas etapas e o que fica aberto
+ * professores (visual da skill de design), o formulário em duas etapas e o que fica aberto
  * ou fechado neste modo.
  */
 import { expect, test } from '@playwright/test';
@@ -11,23 +11,21 @@ import { LISTA_BASE, LISTA_DATABASE_URL, LISTA_PASSWORD } from './env';
 test('página da lista de espera: seções, perguntas e celular', async ({ page, request }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Você ensina. A gente cuida do resto.');
-  await expect(page.getByText('Mais tempo para ensinar. Mais confiança para aprender.')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Agenda e cobrança para professores');
+  await expect(page.getByText('Agenda, cobrança e sala de aula para professores particulares.')).toBeAttached();
   for (const h of [
-    'Quatro passos até a primeira aula paga',
-    'Você cuida da aula. O resto é automático.',
-    'Perguntas frequentes',
-    'Garanta seu lugar entre os primeiros',
+    'Da inscrição à primeira aula paga em 3 passos',
+    'Cobrança, lembretes e sala de aula. Tudo dentro da Reforce.',
+    'Perguntas dos professores',
+    'Lista de espera dos primeiros professores',
   ]) {
-    await expect(page.getByRole('heading', { name: h })).toBeVisible();
+    await expect(page.getByRole('heading', { name: h })).toBeAttached();
   }
-  await expect(page.locator('details')).toHaveCount(10);
-  await page.getByText('Quanto custa para o professor?').click();
-  await expect(page.getByText('a Reforce fica com 15% de cada aula paga por alunos que chegam pela busca')).toBeVisible();
-  await page.getByText('Preciso ter CNPJ?').click();
-  await expect(page.getByText('no seu nome, com o seu CPF (ou CNPJ, se tiver)')).toBeVisible();
-  await page.getByText('E se o aluno faltar?').click();
-  await expect(page.getByText('Se o aluno justificar a falta, você pode devolver o valor a ele pelo seu painel')).toBeVisible();
+  // as perguntas ficam todas abertas, sem acordeão
+  await expect(page.locator('#perguntas details[open]')).toHaveCount(8);
+  await expect(page.getByText('a Reforce fica com 15% das aulas de alunos que chegam pela busca')).toBeVisible();
+  await expect(page.getByText('com o seu CPF (ou CNPJ, se tiver)')).toBeVisible();
+  await expect(page.getByText('Se o aluno justificar, você pode devolver o valor pelo painel')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 
   await page.goto('/privacidade');
@@ -51,10 +49,10 @@ test('formulário em duas etapas: Enter avança, Voltar mantém, erro do servido
   await expect(page.getByLabel('Nome completo')).toHaveValue('Bruna Lima');
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByLabel('Ensino médio').check();
-  await page.getByLabel('Online').check();
+  await page.getByLabel('Online', { exact: true }).check();
   await expect(page.getByLabel('Inglês')).toBeVisible();
   await expect(page.getByLabel('Educação Física')).toBeVisible();
-  await page.getByLabel('Formação').selectOption('doutorado');
+  await page.getByLabel('Formação', { exact: true }).selectOption('doutorado');
   await page.getByLabel(/Currículo/).setInputFiles(path.resolve('tests/e2e/fixtures/documento.pdf'));
   await page.getByLabel(/Autorizo o contato/).check();
   expect((await page.locator('input[name=consent]').boundingBox())!.width).toBeGreaterThanOrEqual(20); // caixa grande o bastante para o dedo
@@ -83,7 +81,10 @@ test('formulário em duas etapas: Enter avança, Voltar mantém, erro do servido
 test('botão Entrar: o aluno pede aviso da abertura; planilha dos alunos com senha', async ({ page, browser }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Entrar' }).click();
+  // no celular, "Entrar" fica na folha do menu, que o script do kit abre (data-ready: os scripts já rodaram)
+  await page.locator('html[data-ready]').waitFor({ state: 'attached' });
+  await page.getByRole('banner').getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('banner').getByRole('link', { name: 'Entrar', exact: true }).click();
   await expect(page).toHaveURL(/\/entrar$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('A Reforce abre em breve para alunos');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
@@ -163,7 +164,7 @@ test('prévia do link e ícone abrem no modo lista de espera', async ({ page, re
 
 test('a página dos professores também fica em /professores; a vitrine está fechada', async ({ page, request }) => {
   await page.goto('/professores');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Você ensina. A gente cuida do resto.');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Agenda e cobrança para professores');
   expect((await request.get('/buscar')).status()).toBe(404);
   expect((await request.get('/buscar?disciplina=1&serie=9')).status()).toBe(404);
   expect((await request.get('/conta')).status()).toBe(404);

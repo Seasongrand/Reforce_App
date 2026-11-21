@@ -14,7 +14,8 @@ const base = {
 };
 
 describe('rotas abertas no modo lista de espera', () => {
-  it.each(['/', '/privacidade', '/api/saude', '/api/lista-de-espera.csv', '/_next/static/chunks/a.js', '/favicon.ico', '/opengraph-image', '/opengraph-image-12o0cb', '/icon.svg', '/professores', '/entrar', '/api/lista-de-espera/alunos.csv', '/equipe', '/api/lista-de-espera/curriculo/6f1c2c1e-0000-4000-8000-000000000001'])(
+  it.each(['/', '/privacidade', '/api/saude', '/api/lista-de-espera.csv', '/_next/static/chunks/a.js', '/favicon.ico', '/opengraph-image', '/opengraph-image-12o0cb', '/icon.svg', '/professores', '/entrar', '/api/lista-de-espera/alunos.csv', '/equipe', '/api/lista-de-espera/curriculo/6f1c2c1e-0000-4000-8000-000000000001',
+    '/assets/system.css', '/assets/moments/pinned-chapters/moment.js', '/assets/img/aula-1200.webp'])(
     'abre %s',
     (p) => expect(isPathOpenInWaitlistMode(p)).toBe(true),
   );
@@ -24,6 +25,7 @@ describe('rotas abertas no modo lista de espera', () => {
     '/privacidade/../professor', '/opengraph-image/x', '/opengraph-image-12o0cb/../professor',
     '/buscar',
     '/api/lista-de-espera/curriculo/x', '/entrar/x', '/api/lista-de-espera/alunos', '/equipe/x', '/api/lista-de-espera/curriculo/6f1c2c1e-0000-4000-8000-000000000001/y',
+    '/assets', '/assets/../professor', '/assetsx/a.css',
   ])('fecha %s', (p) => expect(isPathOpenInWaitlistMode(p)).toBe(false));
 });
 

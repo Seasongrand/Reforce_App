@@ -12,3 +12,6 @@ next-env.d.ts
 var/test-private/
 .next/
 var/e2e-private/
+
+# estado e capturas da skill de design (gate, sorteios, perfis do Chrome)
+.taste-skill/
