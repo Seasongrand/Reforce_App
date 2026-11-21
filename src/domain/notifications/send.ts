@@ -12,6 +12,7 @@ import { loadMessageContext, render } from './templates';
 
 const NEEDS_CONFIRMED = new Set<Template>([
   'confirmacao_responsavel', 'lembrete_24h_responsavel', 'lembrete_1h_responsavel', 'confirmacao_professor',
+  'remarcada_professor', 'remarcada_responsavel',
 ]);
 
 export async function sendDueNotifications(

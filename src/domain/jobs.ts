@@ -44,6 +44,18 @@ export async function createCalendarEvent(deps: Deps, bookingId: string, _now: T
     .execute(deps.db);
 }
 
+/** Tira do calendário do professor o evento de uma aula cancelada ou remarcada. */
+export async function deleteCalendarEvent(deps: Deps, bookingId: string, _now: Temporal.Instant): Promise<void> {
+  const b = await deps.db.selectFrom('bookings').select(['teacher_id', 'external_event_id', 'status'])
+    .where('id', '=', bookingId).executeTakeFirst();
+  if (!b?.external_event_id || b.status === 'confirmed') return;
+  const conn = await deps.db.selectFrom('calendar_connections').select('id')
+    .where('teacher_id', '=', b.teacher_id).where('status', '=', 'active').executeTakeFirst();
+  if (!conn) return;
+  await deps.providers.calendar.deleteEvent({ teacherId: b.teacher_id, connectionId: conn.id }, b.external_event_id);
+  await sql`UPDATE bookings SET external_event_id = NULL WHERE id = ${bookingId}`.execute(deps.db);
+}
+
 /** Retrato do próximo horário e índice de busca do professor (§2.5). */
 export async function refreshTeacher(deps: Deps, teacherId: string, now: Temporal.Instant): Promise<void> {
   await sql`SELECT refresh_next_slot(${teacherId}, ${now.toString()}::timestamptz)`.execute(deps.db);

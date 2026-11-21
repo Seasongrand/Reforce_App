@@ -68,6 +68,22 @@ export async function scheduleForConfirmedBooking(trx: Transaction<DB>, bookingI
   }
 }
 
+/** Aula remarcada (a nova): avisa os dois agora e agenda os lembretes da nova data. */
+export async function scheduleForRescheduledBooking(trx: Transaction<DB>, bookingId: string, now: Temporal.Instant) {
+  const c = await contacts(trx, bookingId);
+  const starts = instantFromDb(c.starts_at);
+  const plan: Array<[Template, Temporal.Instant]> = [
+    ['remarcada_responsavel', now],
+    ['remarcada_professor', now],
+    ['lembrete_24h_responsavel', starts.subtract({ hours: 24 })],
+    ['lembrete_1h_responsavel', starts.subtract({ hours: 1 })],
+  ];
+  for (const [template, sendAt] of plan) {
+    if (template.startsWith('lembrete') && sendAt.epochMilliseconds <= now.epochMilliseconds) continue;
+    await insert(trx, bookingId, template, channelsFor(c, template), sendAt);
+  }
+}
+
 /** Aviso avulso ligado a uma aula (devolução, falta do professor), enviado agora. */
 export async function scheduleNotice(trx: Transaction<DB>, bookingId: string, template: Template, now: Temporal.Instant) {
   const c = await contacts(trx, bookingId);
