@@ -15,13 +15,13 @@ export default async function TeacherMessages() {
   return (
     <div className="space-y-6">
       <div className="space-y-1.5">
-        <h1 className="font-display text-3xl font-bold">Mensagens</h1>
+        <h1 className="font-display tracking-tight text-3xl font-normal">Mensagens</h1>
         <p className="text-site-muted">As famílias escrevem pelo seu perfil, antes ou depois de reservar. Telefone, e-mail e redes sociais ficam ocultos.</p>
       </div>
       {list.length === 0 ? (
-        <div className="space-y-3 rounded-3xl border border-site-line bg-white p-5">
+        <div className="space-y-3 rounded-[20px] border border-site-line bg-white p-5">
           <p className="text-site-muted">Nenhuma conversa ainda. Quando uma família escrever, a mensagem aparece aqui e avisamos você por e-mail.</p>
-          <Link href="/professor" className="inline-flex min-h-11 items-center rounded-xl border border-site-field px-4 text-sm font-semibold">Divulgar minha página</Link>
+          <Link href="/professor" className="inline-flex min-h-11 items-center rounded-lg border border-site-field px-4 text-sm font-medium">Divulgar minha página</Link>
         </div>
       ) : (
         <ConversationList items={list} hrefFor={(c) => `/professor/mensagens/${c.guardianId}`} tz={t.timezone} />

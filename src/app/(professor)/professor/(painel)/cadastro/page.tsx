@@ -28,7 +28,7 @@ export default async function TeacherProfilePage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="font-display text-3xl font-bold tracking-tight">Meu perfil</h1>
+        <h1 className="font-display text-3xl font-normal tracking-tight">Meu perfil</h1>
         <p className="text-[15px] text-site-muted">O que você preencher aqui aparece na sua página. A prévia ao lado mostra como os alunos vão ver.</p>
       </div>
       <section className="card space-y-3" data-testid="foto">
@@ -59,7 +59,7 @@ export default async function TeacherProfilePage() {
         )}
         <ActionForm action={uploadPhotoAction} submitLabel="Enviar foto" successMessage="Foto enviada para análise." className="space-y-2">
           <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required aria-label="Foto"
-            className="block w-full min-h-11 rounded-xl border border-dashed border-site-field px-3 py-2 text-sm file:mr-3 file:min-h-9 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3.5 file:font-semibold file:text-indigo-950" />
+            className="block w-full min-h-11 rounded-xl border border-dashed border-site-field px-3 py-2 text-sm file:mr-3 file:min-h-9 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3.5 file:font-medium file:text-indigo-950" />
           <p className="text-xs text-slate-500">JPG, PNG ou WEBP, até 5 MB.</p>
         </ActionForm>
       </section>

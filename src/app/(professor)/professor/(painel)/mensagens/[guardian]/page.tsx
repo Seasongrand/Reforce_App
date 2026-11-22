@@ -21,8 +21,8 @@ export default async function TeacherThread({ params }: { params: Promise<{ guar
   const name = shortName(g.name);
   return (
     <div className="space-y-5">
-      <Link href="/professor/mensagens" className="inline-flex min-h-11 items-center text-sm font-semibold text-indigo-600">← Mensagens</Link>
-      <h1 className="font-display text-3xl font-bold">{name}</h1>
+      <Link href="/professor/mensagens" className="inline-flex min-h-11 items-center text-sm font-medium text-indigo-600">← Mensagens</Link>
+      <h1 className="font-display tracking-tight text-3xl font-normal">{name}</h1>
       <MessageThread
         messages={messages.map((m) => ({ id: m.id, mine: m.sender === 'teacher', body: m.body, at: m.at.toString(), hidden: m.hidden }))}
         otherName={name} tz={t.timezone} hiddenFields={{ guardianId: guardian }} action={sendToGuardianAction}

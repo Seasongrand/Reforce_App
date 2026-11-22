@@ -9,7 +9,7 @@ import { openAccountAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-const CARD = 'rounded-3xl border border-site-line bg-white p-5';
+const CARD = 'rounded-[20px] border border-site-line bg-white p-5';
 
 const field = (name: string, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
   <div>
@@ -42,9 +42,9 @@ function payoutState(i: EarningItem, tz: string, at: Temporal.Instant): { label:
 
 function Total({ label, cents, note, testId, className = '' }: { label: string; cents: number; note?: string; testId: string; className?: string }) {
   return (
-    <div className={`rounded-3xl border border-site-line bg-white p-4 sm:p-5 ${className}`} data-testid={testId}>
-      <p className="text-sm font-semibold text-site-muted">{label}</p>
-      <p className="mt-1 font-display text-2xl font-bold">{formatBRL(cents)}</p>
+    <div className={`rounded-[20px] border border-site-line bg-white p-4 sm:p-5 ${className}`} data-testid={testId}>
+      <p className="text-sm font-medium text-site-muted">{label}</p>
+      <p className="mt-1 font-display tracking-tight text-2xl font-normal">{formatBRL(cents)}</p>
       {note && <p className="mt-1 text-sm text-site-muted">{note}</p>}
     </div>
   );
@@ -65,7 +65,7 @@ export default async function PayoutAccountPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1.5">
-        <h1 className="font-display text-3xl font-bold">Recebimento</h1>
+        <h1 className="font-display tracking-tight text-3xl font-normal">Recebimento</h1>
         <p className="text-site-muted">
           O aluno paga na plataforma. Sua parte fica retida no provedor de pagamento e é liberada na sua conta
           24 horas depois da aula, se ninguém contestar; no cartão, quando a operadora repassa o valor, em cerca de 30 dias.
@@ -74,7 +74,7 @@ export default async function PayoutAccountPage() {
 
       {showEarnings && (
         <section className="space-y-4" aria-labelledby="meus-ganhos">
-          <h2 id="meus-ganhos" className="font-display text-xl font-bold">Meus ganhos</h2>
+          <h2 id="meus-ganhos" className="font-display tracking-tight text-xl font-normal">Meus ganhos</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Total label="A receber" cents={e.pendingCents} testId="ganho-a-receber" className="col-span-2 sm:col-span-1"
               note={e.pendingCount === 0 ? 'Nada aguardando liberação.' : `${e.pendingCount} ${e.pendingCount === 1 ? 'aula aguardando' : 'aulas aguardando'} liberação.`} />
@@ -83,7 +83,7 @@ export default async function PayoutAccountPage() {
           </div>
 
           <div className={CARD}>
-            <h3 className="mb-3 font-display text-lg font-bold">Por aula</h3>
+            <h3 className="mb-3 font-display tracking-tight text-lg font-normal">Por aula</h3>
             {e.items.length === 0 ? (
               <p className="text-sm text-site-muted">Quando você der a primeira aula, o valor dela aparece aqui.</p>
             ) : (
@@ -93,13 +93,13 @@ export default async function PayoutAccountPage() {
                   return (
                     <li key={i.bookingId} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-3 first:pt-0 last:pb-0" data-testid={`repasse-${i.bookingId}`}>
                       <div className="min-w-0">
-                        <p className="font-semibold">{day(i.startsAt, tz)}, {formatTime(i.startsAt, tz)} · {i.subject} · {i.studentFirstName}</p>
+                        <p className="font-medium">{day(i.startsAt, tz)}, {formatTime(i.startsAt, tz)} · {i.subject} · {i.studentFirstName}</p>
                         <p className="text-sm text-site-muted">
                           Aula {formatBRL(i.grossCents)} · Reforce {pct(i.commissionBps)} · você recebe{' '}
                           <strong className={`whitespace-nowrap ${i.status === 'refunded' ? 'line-through' : 'text-slate-900'}`}>{formatBRL(i.teacherCents)}</strong>
                         </p>
                       </div>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${state.tone}`}>{state.label}</span>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${state.tone}`}>{state.label}</span>
                     </li>
                   );
                 })}
@@ -111,7 +111,7 @@ export default async function PayoutAccountPage() {
 
       {hasAccount ? (
         acc.status === 'active' ? (
-          <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm font-semibold text-emerald-900" data-testid="conta-status">
+          <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm font-medium text-emerald-900" data-testid="conta-status">
             <span aria-hidden="true">✓ </span>Conta de recebimento ativa. Os repasses caem nela.
           </p>
         ) : (
@@ -119,7 +119,7 @@ export default async function PayoutAccountPage() {
         )
       ) : (
         <section className={CARD} aria-labelledby="abrir-conta">
-          <h2 id="abrir-conta" className="mb-1 font-display text-xl font-bold">Abrir conta de recebimento</h2>
+          <h2 id="abrir-conta" className="mb-1 font-display tracking-tight text-xl font-normal">Abrir conta de recebimento</h2>
           <p className="mb-4 text-sm text-site-muted">Seus dados vão direto ao provedor de pagamento; a Reforce não guarda seu CPF.</p>
           <ActionForm action={openAccountAction} submitLabel="Abrir conta" successMessage="Conta aberta.">
             {field('name', 'Nome completo do titular')}

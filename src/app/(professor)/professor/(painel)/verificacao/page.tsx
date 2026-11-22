@@ -20,7 +20,7 @@ export default async function VerificationPage() {
   const all = await listVerifications(appDeps(), teacherId);
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Documentos de verificação</h1>
+      <h1 className="text-2xl font-medium">Documentos de verificação</h1>
       <p className="text-sm text-slate-700">
         Os arquivos ficam guardados cifrados e só a equipe de análise os abre, por link temporário.
       </p>
@@ -29,7 +29,7 @@ export default async function VerificationPage() {
         const canSend = !latest || latest.status === 'rejected' || latest.status === 'expired';
         return (
           <section key={kind} className="card space-y-3" data-testid={`verificacao-${kind}`}>
-            <h2 className="font-semibold">{KIND_LABEL[kind].charAt(0).toUpperCase() + KIND_LABEL[kind].slice(1)}</h2>
+            <h2 className="font-medium">{KIND_LABEL[kind].charAt(0).toUpperCase() + KIND_LABEL[kind].slice(1)}</h2>
             <p className="text-sm text-slate-600">{HELP[kind]}</p>
             {latest && (
               <p className="text-sm">
@@ -44,7 +44,7 @@ export default async function VerificationPage() {
                 <input type="hidden" name="kind" value={kind} />
                 <input type="file" name="files" multiple={kind === 'identity'} required
                   accept="application/pdf,image/jpeg,image/png,image/webp" aria-label={`Arquivos de ${KIND_LABEL[kind]}`}
-                  className="block w-full min-h-11 rounded-xl border border-dashed border-site-field px-3 py-2 text-sm file:mr-3 file:min-h-9 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3.5 file:font-semibold file:text-indigo-950" />
+                  className="block w-full min-h-11 rounded-xl border border-dashed border-site-field px-3 py-2 text-sm file:mr-3 file:min-h-9 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3.5 file:font-medium file:text-indigo-950" />
                 {kind === 'identity' && <p className="text-sm text-slate-500">Selecione os dois arquivos juntos.</p>}
               </ActionForm>
             )}

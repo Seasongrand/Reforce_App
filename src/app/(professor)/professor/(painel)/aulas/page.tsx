@@ -15,7 +15,7 @@ const MODALITY: Record<string, string> = { online: 'Online', at_teacher: 'No seu
 const STATUS: Record<string, string> = {
   confirmed: 'Confirmada', completed: 'Concluída', no_show: 'Aluno faltou', cancelled: 'Cancelada',
 };
-const CARD = 'rounded-3xl border border-site-line bg-white p-5';
+const CARD = 'rounded-[20px] border border-site-line bg-white p-5';
 
 /** Aulas em duas abas: Próximas (a mais perto primeiro) e Anteriores (a mais recente primeiro). */
 export default async function TeacherLessonsPage({ searchParams }: { searchParams: Promise<{ aba?: string }> }) {
@@ -34,13 +34,13 @@ export default async function TeacherLessonsPage({ searchParams }: { searchParam
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-3xl font-bold">Aulas</h1>
+      <h1 className="font-display tracking-tight text-3xl font-normal">Aulas</h1>
       <nav aria-label="Aulas" className="flex gap-2 border-b border-site-line">
         {tabs.map((t) => (
           <Link key={t.key} href={t.href} aria-current={tab === t.key ? 'page' : undefined}
-            className={`-mb-px flex min-h-11 items-center gap-2 border-b-2 px-3 font-semibold ${tab === t.key ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-site-muted hover:text-slate-900'}`}>
+            className={`-mb-px flex min-h-11 items-center gap-2 border-b-2 px-3 font-medium ${tab === t.key ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-site-muted hover:text-slate-900'}`}>
             {t.label}
-            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${tab === t.key ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-700'}`}>{t.count}</span>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${tab === t.key ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-700'}`}>{t.count}</span>
           </Link>
         ))}
       </nav>
@@ -55,8 +55,8 @@ export default async function TeacherLessonsPage({ searchParams }: { searchParam
       <ul className="space-y-3">
         {lessons.map((l) => (
           <li key={l.bookingId} className={`${CARD} space-y-2`} data-testid={`aula-${l.bookingId}`}>
-            <p className="font-display text-lg font-bold">{formatPtBr(l.startsAt, tz)}</p>
-            <p className="font-semibold">{l.subject} · {l.studentFirstName}{l.studentGrade && ` (${l.studentGrade})`}</p>
+            <p className="font-display tracking-tight text-lg font-normal">{formatPtBr(l.startsAt, tz)}</p>
+            <p className="font-medium">{l.subject} · {l.studentFirstName}{l.studentGrade && ` (${l.studentGrade})`}</p>
             <p className="text-sm text-site-muted">{MODALITY[l.modality]} · <span data-testid="situacao">{STATUS[l.status] ?? l.status}</span>
               {l.checkedIn && ' · presença registrada'}</p>
             {l.address && <p className="text-sm">Endereço: {l.address}</p>}
@@ -86,7 +86,7 @@ export default async function TeacherLessonsPage({ searchParams }: { searchParam
             )}
             {tab === 'upcoming' && l.startsAt.epochMilliseconds > at.epochMilliseconds && (
               <details className="text-sm">
-                <summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-site-muted">Não vai poder dar esta aula?</summary>
+                <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-site-muted">Não vai poder dar esta aula?</summary>
                 <div className="mt-2 space-y-2">
                   <p>Se cancelar, a família recebe o valor integral de volta e é avisada na hora. Cancelamentos repetidos podem tirar seu perfil da busca.</p>
                   <ActionForm action={cancelLessonByTeacherAction} submitLabel="Cancelar a aula" successMessage="Aula cancelada. A família foi avisada." className="space-y-2" buttonClassName="btn-secondary">

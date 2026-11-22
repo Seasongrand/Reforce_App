@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PanelHeader } from '@/components/panel/PanelHeader';
 import { PanelNav, type PanelNavItem } from '@/components/professor/PanelNav';
 import { unreadTotal } from '@/domain/messages';
 import { appDeps } from '@/server/app';
@@ -24,22 +24,7 @@ export default async function GuardianPanelLayout({ children }: { children: Reac
   const items = ITEMS.map((i) => (i.href === '/conta/mensagens' ? { ...i, badge: unread } : i));
   return (
     <>
-      <header className="bg-indigo-950 text-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
-          <Link href="/" className="flex items-baseline gap-2.5">
-            <span className="font-display text-2xl font-bold">Reforce</span>
-            <span className="hidden text-sm font-medium text-site-on-dark sm:inline">Minha conta</span>
-          </Link>
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="hidden truncate text-sm font-semibold text-site-on-dark sm:inline">{g.name}</span>
-            <form action={logoutAction}>
-              <button className="inline-flex min-h-11 items-center rounded-xl border border-indigo-400 px-4 text-sm font-semibold text-white hover:bg-indigo-900">
-                Sair
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
+      <PanelHeader home="/" area="Minha conta" name={g.name} logout={logoutAction} />
       <div className="mx-auto grid max-w-6xl gap-6 px-5 pb-28 pt-6 md:grid-cols-[15rem_minmax(0,1fr)] md:gap-10 md:py-10">
         <aside className="min-w-0 max-md:contents md:sticky md:top-6 md:self-start">
           <PanelNav items={items} label="Minha conta" primary={PRIMARY} />

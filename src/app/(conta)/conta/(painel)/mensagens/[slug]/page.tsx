@@ -22,10 +22,10 @@ export default async function GuardianThread({ params }: { params: Promise<{ slu
   const g = await db.selectFrom('guardians').select('timezone').where('id', '=', guardianId).executeTakeFirstOrThrow();
   return (
     <div className="space-y-5">
-      <Link href="/conta/mensagens" className="inline-flex min-h-11 items-center text-sm font-semibold text-indigo-600">← Mensagens</Link>
+      <Link href="/conta/mensagens" className="inline-flex min-h-11 items-center text-sm font-medium text-indigo-600">← Mensagens</Link>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="font-display text-3xl font-bold">{t.display_name}</h1>
-        <Link href={`/p/${slug}`} className="text-sm font-semibold text-indigo-600 underline">Ver perfil e horários</Link>
+        <h1 className="font-display tracking-tight text-3xl font-normal">{t.display_name}</h1>
+        <Link href={`/p/${slug}`} className="text-sm font-medium text-indigo-600 underline">Ver perfil e horários</Link>
       </div>
       <MessageThread
         messages={messages.map((m) => ({ id: m.id, mine: m.sender === 'guardian', body: m.body, at: m.at.toString(), hidden: m.hidden }))}

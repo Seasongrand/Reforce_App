@@ -12,7 +12,7 @@ const TEACHER_STATUS: Record<string, string> = {
   draft: 'cadastro incompleto', in_review: 'em análise', approved: 'aprovado', paused: 'pausado', suspended: 'suspenso',
 };
 const ACCOUNT: Record<string, string> = { pending: 'em análise no provedor', active: 'ativa', rejected: 'recusada' };
-const CARD = 'rounded-3xl border border-site-line bg-white p-5';
+const CARD = 'rounded-[20px] border border-site-line bg-white p-5';
 
 export default async function VerificationQueue() {
   await requireStaff();
@@ -23,12 +23,12 @@ export default async function VerificationQueue() {
   for (const t of queue) for (const v of t.verifications) links.set(v.id, await verificationFileLinks(deps, v.id, at));
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-3xl font-bold">Verificações</h1>
+      <h1 className="font-display tracking-tight text-3xl font-normal">Verificações</h1>
       {queue.length === 0 && <p className={`${CARD} text-site-muted`}>Nada aguardando análise.</p>}
       {queue.map((t) => (
         <section key={t.teacherId} className={`${CARD} space-y-4`} data-testid={`fila-${t.slug}`}>
           <div>
-            <h2 className="font-display text-xl font-bold">{t.name}</h2>
+            <h2 className="font-display tracking-tight text-xl font-normal">{t.name}</h2>
             <p className="text-sm text-site-muted [overflow-wrap:anywhere]">
               {t.email} · /p/{t.slug} · situação: {TEACHER_STATUS[t.status] ?? t.status} · conta de recebimento: {ACCOUNT[t.paymentAccount ?? ''] ?? 'não aberta'}
             </p>

@@ -53,25 +53,25 @@ export function ExceptionsEditor({ items, today, add, remove, restore }: {
     setToast({ text: `${what(removed)} de ${dayLabel(removed.date)} removido.`, undo: () => start(async () => { await restore(removed); }) });
   });
 
-  const option = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-site-field px-4 font-semibold has-checked:border-indigo-600 has-checked:bg-indigo-50';
+  const option = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-[20px] border border-site-field px-4 font-medium has-checked:border-indigo-600 has-checked:bg-indigo-50';
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-xl font-bold">Folgas e horários extras</h2>
+          <h2 className="font-display tracking-tight text-xl font-normal">Folgas e horários extras</h2>
           <p className="text-sm text-site-muted">Vai viajar ou tem um compromisso? Bloqueie um dia ou um período. Também dá para abrir um horário só num dia.</p>
         </div>
         <button type="button" className="btn-secondary" onClick={() => { setOpen(true); setError(null); }}>+ Folga ou horário extra</button>
       </div>
 
       {open && (
-        <form className="space-y-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50/40 p-4" onSubmit={(e) => { e.preventDefault(); submit(e.currentTarget); }}>
-          <h3 className="font-display text-lg font-bold">Folga ou horário extra</h3>
-          <label className="grid gap-1.5 text-sm font-bold">Dia
+        <form className="space-y-4 rounded-[20px] border-2 border-indigo-600 bg-indigo-50/40 p-4" onSubmit={(e) => { e.preventDefault(); submit(e.currentTarget); }}>
+          <h3 className="font-display tracking-tight text-lg font-normal">Folga ou horário extra</h3>
+          <label className="grid gap-1.5 text-sm font-medium">Dia
             <input type="date" name="date" required min={today} className="input" />
           </label>
           <fieldset className="grid gap-2">
-            <legend className="mb-1.5 text-sm font-bold">O que fazer</legend>
+            <legend className="mb-1.5 text-sm font-medium">O que fazer</legend>
             <label className={option}><input type="radio" name="what" value="day" checked={kind === 'day'} onChange={() => setKind('day')} className="size-5 accent-indigo-600" /> Bloquear o dia todo</label>
             <label className={option}><input type="radio" name="what" value="block" checked={kind === 'block'} onChange={() => setKind('block')} className="size-5 accent-indigo-600" /> Bloquear um período</label>
             <label className={option}><input type="radio" name="what" value="extra" checked={kind === 'extra'} onChange={() => setKind('extra')} className="size-5 accent-indigo-600" /> Abrir um horário extra</label>
@@ -96,9 +96,9 @@ export function ExceptionsEditor({ items, today, add, remove, restore }: {
       <ul className="space-y-2" data-testid="folgas">
         {items.length === 0 && <li className="text-sm text-site-muted">Nenhuma folga marcada.</li>}
         {items.map((x) => (
-          <li key={x.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-site-line py-1.5 pl-4 pr-1.5">
+          <li key={x.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-[20px] border border-site-line py-1.5 pl-4 pr-1.5">
             <span className="text-[15px]">
-              <span className={`mr-2 inline-block rounded-full px-2 py-0.5 text-xs font-bold ${x.kind === 'extra' ? 'bg-green-100 text-green-800' : 'bg-red-50 text-red-800'}`}>
+              <span className={`mr-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${x.kind === 'extra' ? 'bg-green-100 text-green-800' : 'bg-red-50 text-red-800'}`}>
                 {x.kind === 'extra' ? 'Horário extra' : 'Bloqueado'}
               </span>
               <strong>{dayLabel(x.date)}</strong> · {x.start ? `${x.start} às ${x.end}` : 'dia todo'}

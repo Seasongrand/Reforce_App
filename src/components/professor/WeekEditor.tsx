@@ -63,32 +63,32 @@ export function WeekEditor({ rules, addRules, removeRule, restoreRule }: {
 
   const n = panel?.size ?? 0;
   const chip = (on: boolean) =>
-    `min-h-11 min-w-13 rounded-xl border px-3 font-semibold ${on ? 'border-indigo-950 bg-indigo-950 text-white' : 'border-site-field bg-white'}`;
+    `min-h-11 min-w-13 rounded-xl border px-3 font-medium ${on ? 'border-indigo-950 bg-indigo-950 text-white' : 'border-site-field bg-white'}`;
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-xl font-bold">Sua semana</h2>
+          <h2 className="font-display tracking-tight text-xl font-normal">Sua semana</h2>
           <p className="text-sm text-site-muted">Os horários em que você aceita aulas, toda semana.</p>
         </div>
         <button type="button" className="btn" onClick={() => openPanel([1, 2, 3, 4, 5])}>+ Adicionar horários</button>
       </div>
 
       {panel && (
-        <form className="space-y-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50/40 p-4"
+        <form className="space-y-4 rounded-[20px] border-2 border-indigo-600 bg-indigo-50/40 p-4"
           onSubmit={(e) => { e.preventDefault(); submit(e.currentTarget); }}>
-          <h3 className="font-display text-lg font-bold">Adicionar horários</h3>
+          <h3 className="font-display tracking-tight text-lg font-normal">Adicionar horários</h3>
           <div className="space-y-2">
-            <p className="text-sm font-bold" id="dias-label">Em quais dias?</p>
+            <p className="text-sm font-medium" id="dias-label">Em quais dias?</p>
             <div className="flex flex-wrap gap-2" role="group" aria-labelledby="dias-label">
               {DAYS.map((d, i) => (
                 <button key={d} type="button" aria-pressed={panel.has(i + 1)} onClick={() => toggle(i + 1)} className={chip(panel.has(i + 1))}>{d}</button>
               ))}
             </div>
             <div className="flex flex-wrap gap-x-4">
-              <button type="button" className="min-h-11 font-semibold text-indigo-600" onClick={() => setPanel(new Set([1, 2, 3, 4, 5]))}>Seg a Sex</button>
-              <button type="button" className="min-h-11 font-semibold text-indigo-600" onClick={() => setPanel(new Set([1, 2, 3, 4, 5, 6, 7]))}>Todos os dias</button>
-              <button type="button" className="min-h-11 font-semibold text-indigo-600" onClick={() => setPanel(new Set())}>Limpar</button>
+              <button type="button" className="min-h-11 font-medium text-indigo-600" onClick={() => setPanel(new Set([1, 2, 3, 4, 5]))}>Seg a Sex</button>
+              <button type="button" className="min-h-11 font-medium text-indigo-600" onClick={() => setPanel(new Set([1, 2, 3, 4, 5, 6, 7]))}>Todos os dias</button>
+              <button type="button" className="min-h-11 font-medium text-indigo-600" onClick={() => setPanel(new Set())}>Limpar</button>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -111,11 +111,11 @@ export function WeekEditor({ rules, addRules, removeRule, restoreRule }: {
           const list = rules.filter((r) => r.weekday === i + 1).sort((a, b) => a.start.localeCompare(b.start));
           return (
             <li key={d} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 py-2.5 sm:grid-cols-[3.5rem_minmax(0,1fr)_auto]">
-              <span className="font-display font-bold">{d}</span>
+              <span className="font-display tracking-tight font-normal">{d}</span>
               <span className="col-span-2 row-start-2 flex min-w-0 flex-wrap gap-1.5 sm:col-span-1 sm:col-start-2 sm:row-start-1">
                 {list.length === 0 && <span className="text-sm text-site-muted">Folga</span>}
                 {list.map((r) => (
-                  <span key={r.id} className="inline-flex min-h-9 items-center rounded-xl bg-indigo-50 pl-3 text-sm font-semibold tabular-nums">
+                  <span key={r.id} className="inline-flex min-h-9 items-center rounded-xl bg-indigo-50 pl-3 text-sm font-medium tabular-nums">
                     {r.start} – {r.end}
                     {(r.validFrom || r.validUntil) && (
                       <span className="ml-1.5 font-normal text-site-muted">({r.validFrom ? `de ${br(r.validFrom)}` : ''}{r.validUntil ? ` até ${br(r.validUntil)}` : ''})</span>

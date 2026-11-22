@@ -13,10 +13,10 @@ export const dynamic = 'force-dynamic';
 type Tab = 'professores' | 'alunos';
 type Search = { aba?: string; q?: string; uf?: string; disciplina?: string };
 
-const CARD = 'rounded-2xl border border-site-line bg-white p-4 sm:p-5';
+const CARD = 'rounded-[20px] border border-site-line bg-white p-4 sm:p-5';
 const FIELD =
   'block min-h-11 w-full rounded-xl border border-site-field bg-white px-3 text-[15px] font-normal focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/30';
-const ACTION = 'inline-flex min-h-10 items-center rounded-xl border border-site-field px-3 text-sm font-semibold hover:bg-violet-50';
+const ACTION = 'inline-flex min-h-10 items-center rounded-xl border border-site-field px-3 text-sm font-medium hover:bg-violet-50';
 const CITY_ROWS = 10;
 
 const when = (iso: string) =>
@@ -26,7 +26,7 @@ function Count({ label, n }: { label: string; n: number }) {
   return (
     <div className={CARD}>
       <p className="text-sm text-site-muted">{label}</p>
-      <p className="mt-1 font-display text-3xl font-bold" data-testid={`total-${label}`}>{n}</p>
+      <p className="mt-1 font-display tracking-tight text-3xl font-normal" data-testid={`total-${label}`}>{n}</p>
     </div>
   );
 }
@@ -34,7 +34,7 @@ function Count({ label, n }: { label: string; n: number }) {
 function Breakdown({ title, first, rows }: { title: string; first: string; rows: { name: string; teachers: number; students: number }[] }) {
   return (
     <section className={CARD}>
-      <h2 className="font-display text-lg font-bold">{title}</h2>
+      <h2 className="font-display tracking-tight text-lg font-normal">{title}</h2>
       {rows.length === 0 ? (
         <p className="mt-2 text-sm text-site-muted">Ainda não há inscrições.</p>
       ) : (
@@ -50,7 +50,7 @@ function Breakdown({ title, first, rows }: { title: string; first: string; rows:
             {rows.map((r) => (
               <tr key={r.name} className="border-t border-site-line">
                 <td className="py-1.5">{r.name}</td>
-                <td className="py-1.5 text-right font-semibold tabular-nums">{r.teachers}</td>
+                <td className="py-1.5 text-right font-medium tabular-nums">{r.teachers}</td>
                 <td className="py-1.5 text-right tabular-nums">{r.students}</td>
               </tr>
             ))}
@@ -81,7 +81,7 @@ const SHORTCUTS = [
 function TeamAccess() {
   return (
     <section aria-labelledby="acessos" className={CARD}>
-      <h2 id="acessos" className="font-display text-lg font-bold">Acessos da equipe</h2>
+      <h2 id="acessos" className="font-display tracking-tight text-lg font-normal">Acessos da equipe</h2>
       {marketplaceReady(config()) ? (
         <>
           <p className="mt-1 text-sm text-site-muted">
@@ -92,7 +92,7 @@ function TeamAccess() {
             {SHORTCUTS.map((s) => (
               <li key={s.label} className="rounded-xl border border-site-line p-3">
                 <form action={s.action}>
-                  <button type="submit" className="min-h-11 w-full rounded-xl bg-indigo-600 px-4 font-semibold text-white hover:bg-indigo-700">
+                  <button type="submit" className="min-h-11 w-full rounded-xl bg-indigo-600 px-4 font-medium text-white hover:bg-indigo-700">
                     {s.label}
                   </button>
                 </form>
@@ -102,7 +102,7 @@ function TeamAccess() {
           </ul>
           <p className="mt-3 text-sm text-site-muted">
             A busca e as páginas dos professores também abrem para você:{' '}
-            <a className="font-semibold text-indigo-600 underline" href="/buscar">busca de professores</a>.
+            <a className="font-medium text-indigo-600 underline" href="/buscar">busca de professores</a>.
           </p>
         </>
       ) : (
@@ -120,7 +120,7 @@ function Teachers({ list }: { list: TeamOverview['teachers'] }) {
       {list.map((t) => (
         <li key={t.id} className={`${CARD} space-y-2.5`} data-testid="professor">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <p className="text-[17px] font-semibold">{t.name}</p>
+            <p className="text-[17px] font-medium">{t.name}</p>
             <p className="text-[13px] text-site-muted">{t.city}/{t.state} · {when(t.createdAt)}</p>
           </div>
           <Chips items={t.subjects} />
@@ -143,7 +143,7 @@ function Students({ list }: { list: TeamOverview['students'] }) {
       {list.map((s) => (
         <li key={s.email} className={`${CARD} space-y-2`} data-testid="aluno">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <a className="text-[17px] font-semibold text-indigo-600 underline" href={`mailto:${encodeURIComponent(s.email)}`}>{s.email}</a>
+            <a className="text-[17px] font-medium text-indigo-600 underline" href={`mailto:${encodeURIComponent(s.email)}`}>{s.email}</a>
             <p className="text-[13px] text-site-muted">{s.city}/{s.state} · {when(s.createdAt)}</p>
           </div>
           <Chips items={s.subjects} />
@@ -177,13 +177,13 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
     return `/equipe?${p}`;
   };
   const tabClass = (on: boolean) =>
-    `inline-flex min-h-11 items-center rounded-xl px-4 text-[15px] font-semibold ${on ? 'bg-indigo-950 text-white' : 'border border-site-field bg-white hover:bg-violet-50'}`;
+    `inline-flex min-h-11 items-center rounded-xl px-4 text-[15px] font-medium ${on ? 'bg-indigo-950 text-white' : 'border border-site-field bg-white hover:bg-violet-50'}`;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
-          <h1 className="font-display text-3xl font-bold">Listas de espera</h1>
+          <h1 className="font-display tracking-tight text-3xl font-normal">Listas de espera</h1>
           <p className="text-site-muted">Professores inscritos e alunos que pediram aviso da abertura.</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -216,18 +216,18 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
 
       <form method="get" action="/equipe" className={`${CARD} grid gap-3 sm:grid-cols-[2fr_1fr_1.5fr_auto] sm:items-end`}>
         <input type="hidden" name="aba" value={tab} />
-        <label className="space-y-1.5 text-sm font-semibold">
+        <label className="space-y-1.5 text-sm font-medium">
           Buscar
           <input className={FIELD} name="q" defaultValue={filters.q} placeholder="Nome, e-mail ou cidade" />
         </label>
-        <label className="space-y-1.5 text-sm font-semibold">
+        <label className="space-y-1.5 text-sm font-medium">
           UF
           <select className={FIELD} name="uf" defaultValue={filters.uf ?? ''}>
             <option value="">Todas</option>
             {v.states.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </label>
-        <label className="space-y-1.5 text-sm font-semibold">
+        <label className="space-y-1.5 text-sm font-medium">
           Disciplina
           <select className={FIELD} name="disciplina" defaultValue={filters.subjectId ? String(filters.subjectId) : ''}>
             <option value="">Todas</option>
@@ -235,7 +235,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
           </select>
         </label>
         <div className="flex gap-2">
-          <button type="submit" className="min-h-11 rounded-xl bg-indigo-600 px-5 font-semibold text-white hover:bg-indigo-700">Filtrar</button>
+          <button type="submit" className="min-h-11 rounded-xl bg-indigo-600 px-5 font-medium text-white hover:bg-indigo-700">Filtrar</button>
           {filtering && <Link className={ACTION} href={`/equipe?aba=${tab}`}>Limpar</Link>}
         </div>
       </form>

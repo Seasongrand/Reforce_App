@@ -15,7 +15,7 @@ import { cancelLessonAction, rescheduleAction } from '../../actions';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Remarcar ou cancelar · Minha conta · Reforce' };
 
-const CARD = 'space-y-4 rounded-3xl border border-site-line bg-white p-5';
+const CARD = 'space-y-4 rounded-[20px] border border-site-line bg-white p-5';
 
 /** Remarcar ou cancelar uma aula paga (24 horas ou mais: cancela com devolução; menos: só remarca). */
 export default async function ChangeLesson({ params }: { params: Promise<{ booking: string }> }) {
@@ -31,10 +31,10 @@ export default async function ChangeLesson({ params }: { params: Promise<{ booki
   const slots = (await rescheduleSlots(deps, guardianId, booking, at)).map(String);
   return (
     <div className="space-y-6">
-      <Link href="/conta/aulas" className="inline-flex min-h-11 items-center text-sm font-semibold text-indigo-600">← Aulas</Link>
-      <h1 className="font-display text-3xl font-bold">Remarcar ou cancelar</h1>
+      <Link href="/conta/aulas" className="inline-flex min-h-11 items-center text-sm font-medium text-indigo-600">← Aulas</Link>
+      <h1 className="font-display tracking-tight text-3xl font-normal">Remarcar ou cancelar</h1>
       <ul><AccountLessonCard l={l} tz={v.timezone} /></ul>
-      <p className="rounded-2xl bg-violet-50 px-4 py-3 text-sm">
+      <p className="rounded-[20px] bg-violet-50 px-4 py-3 text-sm">
         {options.canCancel
           ? <>Cancelamento com devolução integral até <strong>{formatPtBr(options.freeCancelUntil, v.timezone)}</strong> (24 horas antes da aula). Depois disso, dá para remarcar.</>
           : <>Faltam menos de 24 horas para a aula: dá para remarcar, sem devolução.</>}
@@ -42,7 +42,7 @@ export default async function ChangeLesson({ params }: { params: Promise<{ booki
 
       <section className={CARD} aria-labelledby="remarcar">
         <div className="space-y-1">
-          <h2 id="remarcar" className="font-display text-xl font-bold">Remarcar</h2>
+          <h2 id="remarcar" className="font-display tracking-tight text-xl font-normal">Remarcar</h2>
           <p className="text-sm text-site-muted">
             {options.canReschedule
               ? `Escolha outro horário de ${l.teacherName}, sem pagar de novo. ${options.reschedulesLeft === 1 ? 'Esta aula ainda pode ser remarcada 1 vez.' : `Esta aula pode ser remarcada até ${options.reschedulesLeft} vezes.`}`
@@ -55,11 +55,11 @@ export default async function ChangeLesson({ params }: { params: Promise<{ booki
       {options.canCancel && (
         <section className={CARD} aria-labelledby="cancelar">
           <div className="space-y-1">
-            <h2 id="cancelar" className="font-display text-xl font-bold">Cancelar</h2>
+            <h2 id="cancelar" className="font-display tracking-tight text-xl font-normal">Cancelar</h2>
             <p className="text-sm text-site-muted">Devolvemos {formatBRL(options.refundCents)} pelo mesmo meio de pagamento e avisamos {l.teacherName} na hora.</p>
           </div>
           <ActionForm action={cancelLessonAction} submitLabel={`Cancelar a aula e receber ${formatBRL(options.refundCents)}`} className="space-y-3"
-            buttonClassName="inline-flex min-h-12 items-center rounded-2xl border border-red-300 bg-white px-5 font-semibold text-red-800 hover:bg-red-50 disabled:opacity-50">
+            buttonClassName="inline-flex min-h-12 items-center rounded-[20px] border border-red-300 bg-white px-5 font-medium text-red-800 hover:bg-red-50 disabled:opacity-50">
             <input type="hidden" name="bookingId" value={booking} />
             <label className="flex min-h-11 items-start gap-2.5 text-sm">
               <input type="checkbox" name="confirm" required className="mt-0.5 size-5 flex-none accent-indigo-600" />
