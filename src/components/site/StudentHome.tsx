@@ -35,14 +35,14 @@ export function StudentHome({ signedIn }: { signedIn: boolean }) {
           {/* stand-in do Wikimedia Commons até a Reforce ter fotos das próprias aulas */}
           <img
             className="hero__bg"
-            src="/assets/img/photo-f112411192-1920.webp"
-            srcSet="/assets/img/photo-f112411192-960.webp 960w, /assets/img/photo-f112411192-1280.webp 1280w, /assets/img/photo-f112411192-1920.webp 1920w"
+            src="/assets/img/photo-f106878796-1920.webp"
+            srcSet="/assets/img/photo-f106878796-960.webp 960w, /assets/img/photo-f106878796-1280.webp 1280w, /assets/img/photo-f106878796-1920.webp 1920w"
             sizes="(max-width: 639px) 160vw, 100vw"
-            alt="Professor e aluno resolvem um exercício de física numa mesa de madeira"
-            style={{ ['--ly-pos' as string]: '70% 50%', ['--ly-pos-phone' as string]: '60% 50%' }}
+            alt="Caderno aberto em branco com um lápis, sobre uma mesa de madeira"
+            style={{ ['--ly-pos' as string]: '75% 50%', ['--ly-pos-phone' as string]: '70% 50%' }}
             fetchPriority="high"
             data-source="stand-in"
-            data-subject="aula particular de física"
+            data-subject="caderno e lápis"
           />
           <div className="wrap">
             <div className="hero-text">
@@ -71,13 +71,13 @@ export function StudentHome({ signedIn }: { signedIn: boolean }) {
                 <div className="frame frame--photo lista__photo lista__photo--short">
                   <img
                     className="frame__img"
-                    src="/assets/img/photo-f112411196-960.webp"
-                    srcSet="/assets/img/photo-f112411196-500.webp 500w, /assets/img/photo-f112411196-960.webp 960w, /assets/img/photo-f112411196-1280.webp 1280w"
+                    src="/assets/img/photo-f117883894-960.webp"
+                    srcSet="/assets/img/photo-f117883894-500.webp 500w, /assets/img/photo-f117883894-960.webp 960w, /assets/img/photo-f117883894-1280.webp 1280w"
                     sizes="(min-width: 1024px) 40vw, 100vw"
-                    alt="Professor aponta uma fórmula de química no papel enquanto o aluno escreve"
+                    alt="Mão com caneta escreve num caderno de capa laranja"
                     loading="lazy"
                     data-source="stand-in"
-                    data-subject="aula particular de química"
+                    data-subject="estudo com caderno"
                   />
                 </div>
               </div>
