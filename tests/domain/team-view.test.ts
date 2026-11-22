@@ -4,7 +4,7 @@
  */
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { joinStudentWaitlist } from '@/domain/student-waitlist';
-import { teamOverview } from '@/domain/team-view';
+import { deleteWaitlistEntry, teamOverview } from '@/domain/team-view';
 import { joinTeacherWaitlist, type WaitlistInput } from '@/domain/waitlist';
 import { closeAppDb } from '../helpers/app';
 import { closeTestPool, truncateAll } from '../helpers/db';
@@ -89,5 +89,27 @@ describe('resumo da equipe', () => {
   it('sem inscrições, tudo zerado', async () => {
     const v = await teamOverview(deps(), {});
     expect(v).toMatchObject({ totals: { teachers: 0, students: 0, withCv: 0 }, byCity: [], bySubject: [], states: [], teachers: [], students: [] });
+  });
+});
+
+describe('excluir inscrição', () => {
+  it('apaga a inscrição do professor (e o currículo junto) ou a do aluno, e só ela', async () => {
+    await seed();
+    const before = await teamOverview(deps(), {});
+    const ana = before.teachers.find((t) => t.name === 'Ana Souza')!;
+    expect(await deleteWaitlistEntry(deps(), { kind: 'teacher', id: ana.id })).toBe(true);
+    expect(await deleteWaitlistEntry(deps(), { kind: 'student', email: 'MAE@exemplo.com' })).toBe(true);
+    const after = await teamOverview(deps(), {});
+    expect(after.teachers.map((t) => t.name).sort()).toEqual(['Bruno Lima', 'Carla Dias']);
+    expect(after.students.map((s) => s.email)).toEqual(['pai@exemplo.com']);
+    expect(after.totals.withCv).toBe(0);
+  });
+
+  it('inscrição que não existe (ou id inválido) não apaga nada', async () => {
+    await seed();
+    expect(await deleteWaitlistEntry(deps(), { kind: 'teacher', id: '6f1c2c1e-0000-4000-8000-000000000001' })).toBe(false);
+    expect(await deleteWaitlistEntry(deps(), { kind: 'teacher', id: 'nao-e-uuid' })).toBe(false);
+    expect(await deleteWaitlistEntry(deps(), { kind: 'student', email: 'ninguem@exemplo.com' })).toBe(false);
+    expect((await teamOverview(deps(), {})).totals).toEqual({ teachers: 3, students: 2, withCv: 1 });
   });
 });
