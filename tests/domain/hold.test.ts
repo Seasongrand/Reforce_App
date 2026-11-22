@@ -34,6 +34,13 @@ async function request(
 }
 
 describe('holdSlots', () => {
+  it('aula presencial sem certidão de antecedentes em dia não é reservada', async () => {
+    const t = await listedTeacher({ service: { modality: 'at_teacher' } });
+    await testPool().query(`UPDATE teacher_verifications SET status = 'expired' WHERE teacher_id = $1 AND kind = 'criminal_record'`, [t.teacherId]);
+    const r = await holdSlots(deps(), await request(t), NOW);
+    expect(r.ok).toBe(false);
+  });
+
   it('prende o horário por 10 minutos e grava pedido com comissão do link (5%)', async () => {
     const t = await listedTeacher();
     const r = await holdSlots(deps(), await request(t), NOW);
@@ -92,8 +99,16 @@ describe('holdSlots', () => {
     expect(r).toMatchObject({ ok: false, reason: 'limite_diario' });
   });
 
-  it('professor com certidão vencida não vende pelo link', async () => {
-    const t = await listedTeacher({ criminalRecordExpired: true });
+  it('na aula online, a certidão vencida não impede a venda', async () => {
+    const t = await listedTeacher();
+    await testPool().query(`UPDATE teacher_verifications SET status = 'expired' WHERE teacher_id = $1 AND kind = 'criminal_record'`, [t.teacherId]);
+    const r = await holdSlots(deps(), await request(t), NOW);
+    expect(r.ok).toBe(true);
+  });
+
+  it('professor com identidade vencida não vende pelo link', async () => {
+    const t = await listedTeacher();
+    await testPool().query(`UPDATE teacher_verifications SET status = 'expired' WHERE teacher_id = $1 AND kind = 'identity'`, [t.teacherId]);
     const r = await holdSlots(deps(), await request(t), NOW);
     expect(r).toMatchObject({ ok: false, reason: 'professor_indisponivel' });
   });

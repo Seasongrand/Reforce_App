@@ -1,13 +1,14 @@
 /**
  * Envio do cadastro para a análise da equipe (§1, professor, passo 3): exige
- * perfil completo, os três documentos enviados e a conta de recebimento.
+ * perfil completo, os documentos enviados (a certidão só para aula presencial)
+ * e a conta de recebimento.
  */
 import { sql } from 'kysely';
 import type { Temporal } from 'temporal-polyfill';
 import type { Deps } from '../deps';
 import { DomainError } from '../errors';
 import { DEFAULT_SLUG_PREFIX } from './profile';
-import { KIND_LABEL, VERIFICATION_KINDS } from './verification';
+import { KIND_LABEL, requiredKinds } from './verification';
 
 export async function missingForReview(deps: Deps, teacherId: string, now: Temporal.Instant): Promise<string[]> {
   const t = await deps.db.selectFrom('teachers').select(['slug', 'display_name']).where('id', '=', teacherId)
@@ -23,7 +24,7 @@ export async function missingForReview(deps: Deps, teacherId: string, now: Tempo
   if (t.slug.startsWith(DEFAULT_SLUG_PREFIX) || subjects.rows[0]!.n === 0) {
     missing.push('perfil (nome, endereço da página e disciplinas)');
   }
-  for (const kind of VERIFICATION_KINDS) {
+  for (const kind of await requiredKinds(deps, teacherId)) {
     const ok = live.some((v) => v.kind === kind && (v.status === 'pending' || !v.valid_until || v.valid_until >= today));
     if (!ok) missing.push(`documento de ${KIND_LABEL[kind]}`);
   }
