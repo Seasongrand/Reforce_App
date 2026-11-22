@@ -318,7 +318,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(card).toContainText('Perfil verificado');
   await expect(card).toContainText('Novo na Reforce');
   await card.click();
-  await fam1.waitForURL(`**/p/${SLUG}?serie=9ano`); // o perfil guarda a série buscada
+  await fam1.waitForURL(`**/p/${SLUG}?serie=9ano&origem=busca`); // o perfil guarda a série buscada e a origem
   await expect(fam1.getByText('Perfil verificado')).toBeVisible();
   // rótulos do resumo do perfil legíveis (antes, 12 px)
   expect(await fam1.getByText('A partir de', { exact: true }).first().evaluate((e) => parseFloat(getComputedStyle(e).fontSize)))
@@ -448,7 +448,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   expect(await q(`SELECT status FROM bookings WHERE id = $1`, [booking!.id])).toEqual([{ status: 'completed' }]);
   expect(await q(
     `SELECT gross_cents, commission_bps, platform_cents, teacher_cents, status FROM payouts WHERE booking_id = $1`, [booking!.id],
-  )).toEqual([{ gross_cents: 12100, commission_bps: 500, platform_cents: 605, teacher_cents: 11495, status: 'held' }]);
+  )).toEqual([{ gross_cents: 12100, commission_bps: 1500, platform_cents: 1815, teacher_cents: 10285, status: 'held' }]); // veio da busca: 15%
   // concluída, a aula sai de "Próximas" e vai para "Anteriores"
   await teacher.goto('/professor/aulas');
   await expect(teacher.getByTestId(`aula-${booking!.id}`)).toHaveCount(0);
@@ -458,7 +458,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(teacher.getByTestId(`aula-${booking!.id}`).getByTestId('situacao')).toHaveText('Concluída');
   // "Meus ganhos": a parte da professora fica a receber até a liberação
   await teacher.goto('/professor/recebimento');
-  await expect(teacher.getByTestId('ganho-a-receber')).toContainText('R$ 114,95');
+  await expect(teacher.getByTestId('ganho-a-receber')).toContainText('R$ 102,85');
   await expect(teacher.getByTestId(`repasse-${booking!.id}`)).toContainText('A receber');
 
   // 7b. Em "Minha conta" (entrada por código, sem senha), a responsável avalia a aula concluída;
@@ -596,7 +596,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   // em "Meus ganhos", o valor passa de "a receber" para "liberado"
   await teacher.goto('/professor/recebimento');
   await expect(teacher.getByTestId('ganho-a-receber')).toContainText('R$ 0,00');
-  await expect(teacher.getByTestId('ganho-total')).toContainText('R$ 114,95');
+  await expect(teacher.getByTestId('ganho-total')).toContainText('R$ 102,85');
   await expect(teacher.getByTestId(`repasse-${booking!.id}`)).toContainText('Liberado');
   // o painel interno mostra a situação em português
   await staff.goto('/interno/aulas');
@@ -632,6 +632,52 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   expect(await q(
     `SELECT s.first_name FROM students s JOIN guardians g ON g.id = s.guardian_id WHERE g.email = 'carla.e2e@exemplo.com'`,
   )).toEqual([{ first_name: 'Lucas' }]);
+  // ela abriu o perfil direto (o link do professor), sem passar pela busca: 5%
+  expect(await q(
+    `SELECT o.commission_bps FROM orders o JOIN guardians g ON g.id = o.guardian_id WHERE g.email = 'carla.e2e@exemplo.com'`,
+  )).toEqual([{ commission_bps: 500 }]);
+  // 8c. Ela paga, remarca para o mês seguinte e depois cancela com devolução; a professora é avisada das duas coisas
+  await novaFam.getByRole('button', { name: 'Pagar com PIX' }).click();
+  await novaFam.click('button:has-text("Simular pagamento")');
+  await novaFam.waitForURL('**/confirmado');
+  await novaFam.goto('/conta/aulas');
+  await novaFam.locator('[data-testid^="aula-"]').first().getByRole('link', { name: 'Remarcar ou cancelar' }).click();
+  await novaFam.waitForURL(/\/conta\/aulas\/[0-9a-f-]{36}$/);
+  // o horário que ela pegou é o mais próximo: faltam menos de 24 horas, então só dá para remarcar
+  await expect(novaFam.getByText('Faltam menos de 24 horas para a aula: dá para remarcar, sem devolução.')).toBeVisible();
+  await expect(novaFam.getByRole('button', { name: /Cancelar a aula/ })).toHaveCount(0);
+  await novaFam.getByRole('button', { name: 'Próximo mês' }).click();
+  await novaFam.getByRole('group', { name: 'Dias do mês' }).getByRole('button', { name: /horários? livres?$/ }).first().click();
+  const newSlot = novaFam.locator('button[data-slot]').first();
+  const newStart = (await newSlot.getAttribute('data-slot'))!;
+  await newSlot.click();
+  await novaFam.getByRole('button', { name: 'Remarcar para este horário' }).click();
+  await novaFam.waitForURL('**/conta/aulas?remarcada=1');
+  await expect(novaFam.getByText('Aula remarcada.')).toBeVisible();
+  const carlaLessons = () => q(
+    `SELECT b.status, b.starts_at FROM bookings b JOIN orders o ON o.id = b.order_id JOIN guardians g ON g.id = o.guardian_id
+      WHERE g.email = 'carla.e2e@exemplo.com' ORDER BY b.created_at`,
+  );
+  expect((await carlaLessons()).map((r) => [r.status, (r.starts_at as Date).toISOString()]))
+    .toEqual([['rescheduled', expect.any(String)], ['confirmed', new Date(newStart).toISOString()]]);
+  // no mês seguinte, faltam mais de 24 horas: cancela com devolução integral
+  await novaFam.locator('[data-testid^="aula-"]').first().getByRole('link', { name: 'Remarcar ou cancelar' }).click();
+  await expect(novaFam.getByText(/Cancelamento com devolução integral até/)).toBeVisible();
+  await novaFam.getByLabel(/Confirmo o cancelamento/).check();
+  await novaFam.getByRole('button', { name: /Cancelar a aula/ }).click();
+  await novaFam.waitForURL('**/conta/aulas?cancelada=1');
+  await expect(novaFam.getByText(/Aula cancelada/)).toBeVisible();
+  expect((await carlaLessons()).map((r) => r.status)).toEqual(['rescheduled', 'cancelled']);
+  await runSweeps(browser);
+  const teacherNotices = await q(
+    `SELECT subject FROM dev_outbox WHERE recipient = $1 AND (subject LIKE 'Aula remarcada%' OR subject LIKE 'Aula cancelada%') ORDER BY id`,
+    [TEACHER_EMAIL],
+  );
+  expect(teacherNotices.map((m) => (m.subject as string).split(':')[0])).toEqual(['Aula remarcada', 'Aula cancelada']);
+  expect(await q(
+    `SELECT p.refunded_cents FROM payments p JOIN orders o ON o.id = p.order_id JOIN guardians g ON g.id = o.guardian_id
+      WHERE g.email = 'carla.e2e@exemplo.com' AND p.status IN ('paid', 'refunded')`,
+  )).toEqual([{ refunded_cents: 12100 }]);
 
   // 9. Nenhum par de aulas ativas do mesmo professor se sobrepõe.
   expect(await q(

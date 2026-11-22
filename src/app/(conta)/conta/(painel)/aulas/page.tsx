@@ -13,10 +13,10 @@ const BTN = 'inline-flex min-h-11 items-center rounded-xl px-4 text-sm font-semi
 const EMPTY = 'rounded-3xl border border-site-line bg-white p-5 text-site-muted';
 
 /** Aulas em duas abas: Próximas (a mais perto primeiro) e Anteriores (a mais recente primeiro). */
-export default async function GuardianLessons({ searchParams }: { searchParams: Promise<{ aba?: string; avaliada?: string }> }) {
+export default async function GuardianLessons({ searchParams }: { searchParams: Promise<{ aba?: string; avaliada?: string; remarcada?: string; cancelada?: string }> }) {
   const guardianId = await requireGuardian();
   const v = await accountView(appDeps(), guardianId, await now());
-  const { aba, avaliada } = await searchParams;
+  const { aba, avaliada, remarcada, cancelada } = await searchParams;
   const tab = aba === 'anteriores' ? 'past' : 'upcoming';
   const tabs = [
     { key: 'upcoming', label: 'Próximas', href: '/conta/aulas', count: v.upcoming.length },
@@ -26,6 +26,8 @@ export default async function GuardianLessons({ searchParams }: { searchParams: 
     <div className="space-y-6">
       <h1 className="font-display text-3xl font-bold">Aulas</h1>
       {avaliada && <p className="rounded-2xl bg-green-100 px-4 py-3 text-sm font-semibold text-green-800" role="status">Obrigado pela avaliação!</p>}
+      {remarcada && <p className="rounded-2xl bg-green-100 px-4 py-3 text-sm font-semibold text-green-800" role="status">Aula remarcada. O professor já foi avisado.</p>}
+      {cancelada && <p className="rounded-2xl bg-green-100 px-4 py-3 text-sm font-semibold text-green-800" role="status">Aula cancelada. A devolução sai pelo mesmo meio de pagamento, e o professor já foi avisado.</p>}
       <nav aria-label="Aulas" className="flex gap-2 border-b border-site-line">
         {tabs.map((t) => (
           <Link key={t.key} href={t.href} aria-current={tab === t.key ? 'page' : undefined}
@@ -46,6 +48,7 @@ export default async function GuardianLessons({ searchParams }: { searchParams: 
                 <div className="flex flex-wrap gap-2">
                   {l.lessonUrl && <a href={l.lessonUrl} className={`${BTN} bg-indigo-600 text-white`}>Página da aula</a>}
                   <a href={`/pedido/${l.orderId}/agenda.ics`} download="aula-reforce.ics" className={`${BTN} border border-site-field`}>Adicionar à agenda</a>
+                  <Link href={`/conta/aulas/${l.bookingId}`} className={`${BTN} border border-site-field`}>Remarcar ou cancelar</Link>
                 </div>
               </AccountLessonCard>
             ))}
