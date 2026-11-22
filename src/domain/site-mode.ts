@@ -23,6 +23,8 @@ const OG_IMAGE = /^\/opengraph-image(-[a-z0-9]+)?$/;
 export function isPathOpenInWaitlistMode(pathname: string): boolean {
   if (pathname.includes('..')) return false;
   if (pathname.startsWith('/_next/')) return true;
+  // kit da skill de design (CSS, scripts e fotos do site público), em public/assets
+  if (/^\/assets\/[\w./-]+$/.test(pathname)) return true;
   const clean = pathname.replace(/\/+$/, '') || '/';
   return OPEN.has(clean) || OG_IMAGE.test(clean) || WAITLIST_CV.test(clean);
 }

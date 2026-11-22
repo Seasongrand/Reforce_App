@@ -7,9 +7,8 @@
  * uma recusa do servidor apagaria o que a pessoa preencheu.
  */
 import { startTransition, useActionState } from 'react';
-import Link from 'next/link';
 import type { ActionState } from '@/server/action-result';
-import { Chips, FormAlert, Honeypot, INPUT, LABEL, SuccessMark, WhatsAppInvite, type Option } from './form-ui';
+import { Chips, FormAlert, Honeypot, WhatsAppInvite, type Option } from './form-ui';
 
 type Result = ActionState<{ created: boolean }>;
 
@@ -28,14 +27,13 @@ export function StudentWaitlistForm({
 
   if (state?.ok) {
     return (
-      <div role="status" data-testid="aviso-ok" className="flex flex-col items-start gap-3.5">
-        <SuccessMark />
-        <h2 className="font-display text-3xl font-bold">Pronto!</h2>
-        <p className="leading-relaxed text-site-muted">
+      <div role="status" data-testid="aviso-ok" className="form-done stack-4">
+        <h2 className="t-h3">Pronto!</h2>
+        <p>
           {state.data.created ? 'Avisamos você' : 'Atualizamos seus dados e avisamos você'} por e-mail quando a Reforce abrir
           na sua cidade.
         </p>
-        <p className="mt-2 font-semibold">Conhece um bom professor?</p>
+        <p className="form-done__ask">Conhece um bom professor?</p>
         <WhatsAppInvite text={INVITE_TEXT + teachersUrl} label="Indicar a Reforce pelo WhatsApp" />
       </div>
     );
@@ -43,55 +41,48 @@ export function StudentWaitlistForm({
 
   return (
     <form
-      className="flex flex-col gap-5"
+      className="rf-form rf-form__step"
       onSubmit={(e) => {
         e.preventDefault();
         const data = new FormData(e.currentTarget);
         startTransition(() => run(data));
       }}
     >
-      <div className="space-y-1">
-        <h2 className="font-display text-2xl font-bold">Avise-me quando abrir</h2>
-        <p className="text-sm text-site-muted">Leva menos de um minuto. Sem custo e sem compromisso.</p>
+      <div className="stack-2">
+        <h2 className="t-h3">Avise-me quando abrir</h2>
+        <p className="t-small muted">Leva menos de um minuto. Sem custo e sem compromisso.</p>
       </div>
       {state && !state.ok && <FormAlert message={state.error} />}
-      <label className={LABEL}>
-        E-mail
-        <input className={INPUT} name="email" type="email" required autoComplete="email" />
-      </label>
-      <div className="grid grid-cols-[1fr_5rem] gap-3">
-        <label className={LABEL}>
-          Cidade
-          <input className={INPUT} name="city" required autoComplete="address-level2" />
-        </label>
-        <label className={LABEL}>
-          UF
-          <input className={INPUT} name="state" required maxLength={2} autoComplete="address-level1" />
-        </label>
+      <div className="rf-form__grid">
+        <div className="field field--email">
+          <label htmlFor="aviso-email">E-mail</label>
+          <input id="aviso-email" name="email" type="email" required autoComplete="email" />
+        </div>
+        <div className="field field--city">
+          <label htmlFor="aviso-city">Cidade</label>
+          <input id="aviso-city" name="city" required autoComplete="address-level2" />
+        </div>
+        <div className="field field--state">
+          <label htmlFor="aviso-state">UF</label>
+          <input id="aviso-state" name="state" required maxLength={2} autoComplete="address-level1" />
+        </div>
       </div>
       <Chips name="subject" legend="Disciplinas" options={subjects} />
       <Chips name="stage" legend="Etapa" options={stages} />
       <Honeypot />
-      <div className="space-y-1.5">
-        <label className="flex items-start gap-3 rounded-2xl border border-site-field p-3.5 text-sm leading-normal text-site-muted has-checked:border-indigo-600 has-checked:bg-indigo-50">
-          <input type="checkbox" name="adult" required className="mt-0.5 size-5 flex-none accent-indigo-600" />
+      <div className="stack-2">
+        <label className="consent">
+          <input type="checkbox" name="adult" required />
           <span>
             Tenho 18 anos ou mais e autorizo o aviso por e-mail sobre a abertura da Reforce, conforme a{' '}
-            <Link className="text-indigo-600 underline" href="/privacidade">
-              política de privacidade
-            </Link>
-            .
+            <a className="link" href="/privacidade">política de privacidade</a>.
           </span>
         </label>
-        <p className="pl-6.5 text-[13px] text-site-muted">Menor de 18 anos? Peça para seu responsável se inscrever.</p>
+        <p className="t-small muted">Menor de 18 anos? Peça para seu responsável se inscrever.</p>
       </div>
-      <button
-        type="submit"
-        disabled={pending}
-        className="min-h-14 rounded-2xl bg-indigo-600 text-[17px] font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
-      >
-        {pending ? 'Enviando…' : 'Quero ser avisado'}
-      </button>
+      <div className="btn-row">
+        <button type="submit" disabled={pending} className="btn btn--primary">{pending ? 'Enviando…' : 'Quero ser avisado'}</button>
+      </div>
     </form>
   );
 }

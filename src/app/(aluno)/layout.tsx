@@ -1,5 +1,10 @@
+import type { Metadata } from 'next';
+import { AppHtml, appMetadata } from '@/components/root/AppHtml';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
+
+export const metadata: Metadata = appMetadata();
+
 
 /**
  * Telas do aluno (perfil do professor, reserva, pagamento, confirmação e aula),
@@ -9,10 +14,12 @@ import { SiteHeader } from '@/components/site/SiteHeader';
  */
 export default function AlunoLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-white font-site text-indigo-950">
-      <SiteHeader cta={false} />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-5 pb-28 pt-6 lg:has-[[data-wide]]:max-w-6xl lg:has-[[data-wide]]:pb-16">{children}</main>
-      <SiteFooter />
-    </div>
+    <AppHtml>
+      <div className="flex min-h-screen flex-col bg-white font-site text-indigo-950">
+        <SiteHeader cta={false} />
+        <main className="mx-auto w-full max-w-2xl flex-1 px-5 pb-28 pt-6 lg:has-[[data-wide]]:max-w-6xl lg:has-[[data-wide]]:pb-16">{children}</main>
+        <SiteFooter />
+      </div>
+    </AppHtml>
   );
 }
