@@ -12,6 +12,7 @@ export type TaskName =
   | 'payment.refund'
   | 'video.create_room'
   | 'calendar.create_event'
+  | 'calendar.delete_event'
   | 'search.refresh_teacher'
   | 'message.notify';
 

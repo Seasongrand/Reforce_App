@@ -4,7 +4,7 @@
  */
 import { Logger, runOnce, type TaskList } from 'graphile-worker';
 import type { Deps } from '@/domain/deps';
-import { createCalendarEvent, createVideoRoom, refreshAllListed, refreshTeacher } from '@/domain/jobs';
+import { createCalendarEvent, createVideoRoom, deleteCalendarEvent, refreshAllListed, refreshTeacher } from '@/domain/jobs';
 import { notifyNewMessages } from '@/domain/messages';
 import { refundPayment } from '@/domain/payment/refund';
 import { runMinuteSweeps } from '@/domain/sweeps';
@@ -29,6 +29,7 @@ export function buildTaskList(makeDeps: () => Deps, clock: ClockSource): TaskLis
     },
     'video.create_room': async (p) => { await withNow((d, n) => createVideoRoom(d, str(p, 'bookingId'), n)); },
     'calendar.create_event': async (p) => { await withNow((d, n) => createCalendarEvent(d, str(p, 'bookingId'), n)); },
+    'calendar.delete_event': async (p) => { await withNow((d, n) => deleteCalendarEvent(d, str(p, 'bookingId'), n)); },
     'search.refresh_teacher': async (p) => { await withNow((d, n) => refreshTeacher(d, str(p, 'teacherId'), n)); },
     'message.notify': async (p) => {
       const to = str(p, 'to');

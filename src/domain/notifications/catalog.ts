@@ -7,6 +7,12 @@ export const TEMPLATES = {
   falta_professor_reembolso: 'guardian',
   falta_aluno_devolvida: 'guardian',
   confirmacao_professor: 'teacher',
+  // cancelar e remarcar (regra do dono, 21/11)
+  cancelada_pela_familia: 'teacher',
+  cancelamento_confirmado: 'guardian',
+  remarcada_professor: 'teacher',
+  remarcada_responsavel: 'guardian',
+  cancelada_pelo_professor: 'guardian',
 } as const;
 
 export type Template = keyof typeof TEMPLATES;
