@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { finishEmailChange, startEmailChange, updateGuardianProfile } from '@/domain/guardians/profile';
 import { sendMessage } from '@/domain/messages';
+import { acquisitionFor, originCookieName } from '@/domain/family-origin';
+import { cookies } from 'next/headers';
 import { addStudent, removeStudent, updateStudent } from '@/domain/guardians/students';
 import { submitReview } from '@/domain/reviews';
 import { appDeps, now } from '@/server/app';
@@ -101,7 +103,10 @@ export async function sendToTeacherAction(_: unknown, form: FormData): Promise<A
   const teacherId = field(form, 'teacherId');
   if (!UUID.test(teacherId)) return { ok: false, error: 'professor não encontrado' };
   try {
-    const r = await sendMessage(appDeps(), { teacherId, guardianId, from: 'guardian', body: field(form, 'body') }, await now());
+    const deps = appDeps();
+    const t = await deps.db.selectFrom('teachers').select('slug').where('id', '=', teacherId).executeTakeFirst();
+    const acquisition = acquisitionFor(t ? (await cookies()).get(originCookieName(t.slug))?.value : undefined);
+    const r = await sendMessage(deps, { teacherId, guardianId, from: 'guardian', body: field(form, 'body'), acquisition }, await now());
     revalidatePath('/conta', 'layout');
     return { ok: true, data: r };
   } catch (err) {
