@@ -7,7 +7,7 @@ import { TeacherPhoto } from './TeacherPhoto';
 /** Cartão de professor na vitrine: o cartão inteiro leva ao perfil. */
 export function TeacherCard({ item, viewerTzFallback, gradeSlug }: { item: SearchItem; viewerTzFallback: string; gradeSlug?: string }) {
   return (
-    <Link href={`/p/${item.slug}${gradeSlug ? `?serie=${gradeSlug}` : ''}`}
+    <Link href={`/p/${item.slug}?${gradeSlug ? `serie=${gradeSlug}&` : ''}origem=busca`}
       className="flex gap-4 rounded-2xl border border-site-line bg-white p-4 text-indigo-950 transition hover:border-indigo-600 hover:shadow-sm">
       <TeacherPhoto photoUrl={item.photoUrl} name={item.name} size={72} />
       <div className="min-w-0 flex-1 space-y-1.5">
