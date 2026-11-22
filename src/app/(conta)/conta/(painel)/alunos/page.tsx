@@ -10,9 +10,9 @@ import { addStudentAction, removeStudentAction, updateStudentAction } from '../a
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Alunos · Minha conta · Reforce' };
 
-const CARD = 'rounded-3xl border border-site-line bg-white p-5';
-const SAVE = 'inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60';
-const QUIET = 'inline-flex min-h-11 items-center rounded-xl border border-site-field px-4 text-sm font-semibold text-indigo-950 hover:bg-violet-50 disabled:opacity-60';
+const CARD = 'rounded-[20px] border border-site-line bg-white p-5';
+const SAVE = 'inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60';
+const QUIET = 'inline-flex min-h-11 items-center rounded-xl border border-site-field px-4 text-sm font-medium text-indigo-950 hover:bg-violet-50 disabled:opacity-60';
 
 function StudentFields({ firstName, grade }: { firstName?: string; grade?: string }) {
   return (
@@ -35,7 +35,7 @@ export default async function GuardianStudents() {
   return (
     <div className="space-y-6">
       <div className="space-y-1.5">
-        <h1 className="font-display text-3xl font-bold">Alunos</h1>
+        <h1 className="font-display tracking-tight text-3xl font-normal">Alunos</h1>
         <p className="text-site-muted">Guardamos só o primeiro nome e a série. O aluno não tem login: a conta é sua.</p>
       </div>
 
@@ -45,9 +45,9 @@ export default async function GuardianStudents() {
         <ul className="space-y-3">
           {students.map((s) => (
             <li key={s.id} className={`${CARD} space-y-3`} data-testid={`aluno-${s.firstName}`}>
-              <p><strong className="font-display text-lg">{s.firstName}</strong> <span className="text-site-muted">· {s.gradeName}</span></p>
+              <p><strong className="font-display tracking-tight text-lg">{s.firstName}</strong> <span className="text-site-muted">· {s.gradeName}</span></p>
               <details className="group">
-                <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-indigo-600">Editar</summary>
+                <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-medium text-indigo-600">Editar</summary>
                 <ActionForm action={updateStudentAction} submitLabel="Salvar" successMessage="Aluno atualizado." className="mt-2 space-y-3" buttonClassName={SAVE}>
                   <input type="hidden" name="studentId" value={s.id} />
                   <StudentFields firstName={s.firstName} grade={s.grade} />
@@ -66,7 +66,7 @@ export default async function GuardianStudents() {
       )}
 
       <section className={CARD} aria-labelledby="novo-aluno">
-        <h2 id="novo-aluno" className="mb-4 font-display text-xl font-bold">Cadastrar aluno</h2>
+        <h2 id="novo-aluno" className="mb-4 font-display tracking-tight text-xl font-normal">Cadastrar aluno</h2>
         <ActionForm action={addStudentAction} submitLabel="Cadastrar aluno" className="space-y-4" buttonClassName={SAVE}>
           <StudentFields />
         </ActionForm>

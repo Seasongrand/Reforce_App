@@ -8,8 +8,8 @@ import { requireGuardian } from '@/server/session';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Minha conta · Reforce' };
 
-const CARD = 'flex flex-col gap-3 rounded-3xl border border-site-line bg-white p-5';
-const BTN = 'inline-flex min-h-11 items-center self-start rounded-xl px-4 text-sm font-semibold';
+const CARD = 'flex flex-col gap-3 rounded-[20px] border border-site-line bg-white p-5';
+const BTN = 'inline-flex min-h-11 items-center self-start rounded-xl px-4 text-sm font-medium';
 
 /** Início de Minha conta: próxima aula, alunos e aulas esperando avaliação, cada um com o que fazer a seguir. */
 export default async function GuardianHome() {
@@ -21,7 +21,7 @@ export default async function GuardianHome() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
-          <h1 className="font-display text-3xl font-bold">Olá, {v.name.split(/\s+/)[0]}</h1>
+          <h1 className="font-display tracking-tight text-3xl font-normal">Olá, {v.name.split(/\s+/)[0]}</h1>
           <p className="text-site-muted">Suas aulas e as dos alunos que você cadastrou.</p>
         </div>
         {/* sem aula marcada, o cartão abaixo já leva à busca */}
@@ -30,11 +30,11 @@ export default async function GuardianHome() {
 
       <div className="grid gap-3 lg:grid-cols-2">
         <section className={CARD} data-testid="cartao-proxima" aria-labelledby="proxima">
-          <h2 id="proxima" className="text-sm font-semibold text-site-muted">Próxima aula</h2>
+          <h2 id="proxima" className="text-sm font-medium text-site-muted">Próxima aula</h2>
           {next ? (
             <>
               <div>
-                <p className="font-display text-xl font-bold">{next.subject} com {next.teacherName}</p>
+                <p className="font-display tracking-tight text-xl font-normal">{next.subject} com {next.teacherName}</p>
                 <p className="text-sm text-site-muted"><LocalWhen iso={next.startsAt} teacherTz={v.timezone} /> · {next.studentFirstName}</p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -44,7 +44,7 @@ export default async function GuardianHome() {
             </>
           ) : (
             <>
-              <p className="font-display text-xl font-bold">Nenhuma aula marcada</p>
+              <p className="font-display tracking-tight text-xl font-normal">Nenhuma aula marcada</p>
               <p className="text-sm text-site-muted">Escolha um professor, um horário e pague na hora, por PIX ou cartão.</p>
               <Link href="/buscar" className={`${BTN} border border-site-field`}>Buscar professor</Link>
             </>
@@ -52,7 +52,7 @@ export default async function GuardianHome() {
         </section>
 
         <section className={CARD} data-testid="cartao-alunos" aria-labelledby="alunos">
-          <h2 id="alunos" className="text-sm font-semibold text-site-muted">Alunos</h2>
+          <h2 id="alunos" className="text-sm font-medium text-site-muted">Alunos</h2>
           {v.students.length > 0 ? (
             <ul className="flex flex-wrap gap-2">
               {v.students.map((s, i) => (
@@ -66,17 +66,17 @@ export default async function GuardianHome() {
         </section>
 
         <section className={`${CARD} lg:col-span-2`} data-testid="cartao-avaliar" aria-labelledby="avaliar">
-          <h2 id="avaliar" className="text-sm font-semibold text-site-muted">Avaliações</h2>
+          <h2 id="avaliar" className="text-sm font-medium text-site-muted">Avaliações</h2>
           {toReview.length === 0 ? (
             <p className="text-sm text-site-muted">Nenhuma aula esperando avaliação.</p>
           ) : (
             <>
-              <p className="font-display text-xl font-bold">
+              <p className="font-display tracking-tight text-xl font-normal">
                 {toReview.length === 1 ? '1 aula esperando sua avaliação' : `${toReview.length} aulas esperando sua avaliação`}
               </p>
               <p className="text-sm text-site-muted">Sua nota ajuda outras famílias a escolher.</p>
               <Link href={toReview.length === 1 ? `/conta/avaliar/${toReview[0]!.bookingId}` : '/conta/aulas?aba=anteriores'}
-                className={`${BTN} bg-yellow-400 text-indigo-950`}>
+                className={`${BTN} bg-indigo-600 text-white hover:bg-indigo-700`}>
                 {toReview.length === 1 ? 'Avaliar a aula' : 'Ver as aulas'}
               </Link>
             </>

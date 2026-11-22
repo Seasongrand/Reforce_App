@@ -1,14 +1,9 @@
 import type { Metadata } from 'next';
-import { Schibsted_Grotesk } from 'next/font/google';
 import { AppHtml, appMetadata } from '@/components/root/AppHtml';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 
 export const metadata: Metadata = appMetadata();
-
-// a fonte do site público (skill de design), só nas telas do aluno
-const schibsted = Schibsted_Grotesk({ subsets: ['latin'], display: 'swap', variable: '--font-schibsted' });
-const FONT = { '--app-text': 'var(--font-schibsted)', '--app-display': 'var(--font-schibsted)' } as React.CSSProperties;
 
 
 /**
@@ -20,7 +15,7 @@ const FONT = { '--app-text': 'var(--font-schibsted)', '--app-display': 'var(--fo
 export default function AlunoLayout({ children }: { children: React.ReactNode }) {
   return (
     <AppHtml>
-      <div className={`${schibsted.variable} flex min-h-screen flex-col bg-[#fbfaff] font-site text-indigo-950`} style={FONT}>
+      <div className="flex min-h-screen flex-col bg-[#fbfaff] font-site text-indigo-950">
         <SiteHeader />
         <main className="mx-auto w-full max-w-2xl flex-1 px-5 pb-28 pt-6 lg:has-[[data-wide]]:max-w-6xl lg:has-[[data-wide]]:pb-16">{children}</main>
         <SiteFooter />

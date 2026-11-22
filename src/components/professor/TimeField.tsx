@@ -36,7 +36,7 @@ export function TimeField({ name, label, defaultValue }: { name: string; label: 
 
   return (
     <span className="grid gap-1.5">
-      <label htmlFor={id} className="text-sm font-bold">{label}</label>
+      <label htmlFor={id} className="text-sm font-medium">{label}</label>
       <span ref={box} className="relative grid grid-cols-[minmax(0,1fr)_3rem]">
         <input id={id} name={name} value={value} inputMode="numeric" autoComplete="off" placeholder="08:00" aria-invalid={invalid}
           onChange={(e) => { setValue(e.target.value); setInvalid(false); }}
@@ -45,7 +45,7 @@ export function TimeField({ name, label, defaultValue }: { name: string; label: 
             setInvalid(v === null);
             if (v) setValue(v);
           }}
-          className={`min-h-12 w-full rounded-l-xl border px-3 text-lg font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600/30 ${
+          className={`min-h-12 w-full rounded-l-xl border px-3 text-lg font-medium tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600/30 ${
             invalid ? 'border-red-700 bg-red-50' : 'border-site-field bg-white'}`} />
         <button type="button" aria-label={`Escolher ${label.toLowerCase()} na lista`} aria-expanded={open} aria-controls={`${id}-lista`}
           onClick={() => setOpen((o) => !o)}
@@ -56,12 +56,12 @@ export function TimeField({ name, label, defaultValue }: { name: string; label: 
         </button>
         {open && (
           <ul ref={list} id={`${id}-lista`} role="listbox" aria-label={`Horários para ${label.toLowerCase()}`}
-            className="absolute inset-x-0 top-[calc(100%+4px)] z-20 max-h-60 overflow-y-auto rounded-xl border border-site-field bg-white p-1 shadow-lg">
+            className="absolute inset-x-0 top-[calc(100%+4px)] z-20 max-h-60 overflow-y-auto rounded-xl border border-site-field bg-white p-1">
             {OPTIONS.map((o) => (
               <li key={o} role="option" aria-selected={o === parseTimeBR(value)} data-value={o}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => { setValue(o); setInvalid(false); setOpen(false); }}
-                className="flex min-h-11 cursor-pointer items-center rounded-lg px-3 font-semibold tabular-nums hover:bg-indigo-50 aria-selected:bg-indigo-50">
+                className="flex min-h-11 cursor-pointer items-center rounded-lg px-3 font-medium tabular-nums hover:bg-indigo-50 aria-selected:bg-indigo-50">
                 {o}
               </li>
             ))}

@@ -15,7 +15,7 @@ export default async function FakeCardCheckout({ params }: { params: Promise<{ c
   if (!p) notFound();
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Cartão (simulado)</h1>
+      <h1 className="text-2xl font-medium">Cartão (simulado)</h1>
       <p>Valor: {formatBRL(p.amount_cents)} · situação: {p.status}</p>
       <form action="/api/dev/pagar" method="post">
         <input type="hidden" name="chargeId" value={charge} />

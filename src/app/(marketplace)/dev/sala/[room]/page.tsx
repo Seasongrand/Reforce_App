@@ -25,7 +25,7 @@ export default async function FakeRoom({
   const back = `/dev/sala/${encodeURIComponent(room)}?${new URLSearchParams(q as Record<string, string>)}`;
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Sala de aula (simulada)</h1>
+      <h1 className="text-2xl font-medium">Sala de aula (simulada)</h1>
       <p className="text-sm">Você: <strong>{q.name}</strong> ({role === 'teacher' ? 'professor' : 'aluno'})</p>
       <p className="text-sm" data-testid="presenca">{here ? 'Presença registrada na sala.' : 'Ainda fora da sala.'}</p>
       <div className="flex gap-2">

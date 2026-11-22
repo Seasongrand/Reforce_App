@@ -6,11 +6,14 @@
  * nunca vaza para o outro.
  */
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import { Inter, Schibsted_Grotesk, Space_Grotesk } from 'next/font/google';
 import '@/app/globals.css';
 
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], display: 'swap', variable: '--font-space-grotesk' });
+// a fonte do site público (skill de design): todas as áreas do app a usam pelas variáveis --app-text e --app-display
+const schibsted = Schibsted_Grotesk({ subsets: ['latin'], display: 'swap', variable: '--font-schibsted' });
+const FONT = { '--app-text': 'var(--font-schibsted)', '--app-display': 'var(--font-schibsted)' } as React.CSSProperties;
 
 /** `config()` exige DATABASE_URL e o layout também roda no build: aqui basta o endereço público. */
 export function appMetadata(): Metadata {
@@ -23,8 +26,8 @@ export function appMetadata(): Metadata {
 
 export function AppHtml({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body>{children}</body>
+    <html lang="pt-BR" className={`${inter.variable} ${spaceGrotesk.variable} ${schibsted.variable}`} style={FONT}>
+      <body className="bg-[#fbfaff] font-site text-indigo-950">{children}</body>
     </html>
   );
 }

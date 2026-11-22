@@ -17,8 +17,8 @@ const STATUS: Record<string, string> = {
   suspended: 'Suspenso',
 };
 const MODALITY: Record<string, string> = { online: 'online', at_teacher: 'no seu endereço', at_student: 'na casa do aluno' };
-const CARD = 'rounded-2xl border border-site-line bg-white p-5 sm:p-6';
-const SHARE = 'inline-flex min-h-11 items-center rounded-xl border border-site-field px-4 text-sm font-semibold hover:bg-violet-50';
+const CARD = 'rounded-[20px] border border-site-line bg-white p-5 sm:p-6';
+const SHARE = 'inline-flex min-h-11 items-center rounded-xl border border-site-field px-4 text-sm font-medium hover:bg-violet-50';
 
 function Check({ done }: { done: boolean }) {
   return (
@@ -44,7 +44,7 @@ function StepList({ steps }: { steps: Step[] }) {
           <>
             <Check done={s.done} />
             <div className="min-w-0 flex-1">
-              <p className="font-semibold">{s.label}<span className="sr-only">{s.done ? ' (feito)' : ' (falta)'}</span></p>
+              <p className="font-medium">{s.label}<span className="sr-only">{s.done ? ' (feito)' : ' (falta)'}</span></p>
               <p className="text-[13px] text-site-muted">{s.detail}</p>
             </div>
           </>
@@ -54,7 +54,7 @@ function StepList({ steps }: { steps: Step[] }) {
             {s.href !== '/professor' ? (
               <Link href={s.href} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-3 hover:bg-violet-50">
                 {body}
-                <span className="flex-none text-sm font-semibold text-indigo-600">{s.done ? 'Ver' : 'Fazer'} ›</span>
+                <span className="flex-none text-sm font-medium text-indigo-600">{s.done ? 'Ver' : 'Fazer'} ›</span>
               </Link>
             ) : (
               <div className="flex items-center gap-3 py-3">{body}</div>
@@ -79,28 +79,28 @@ export default async function TeacherHome() {
   const complete = d.done === d.total && Boolean(d.pageUrl);
   const upcoming = (
     <section className={`${CARD} space-y-3`} aria-labelledby="proximas">
-      <h2 id="proximas" className="font-display text-xl font-bold">Próximas aulas</h2>
+      <h2 id="proximas" className="font-display tracking-tight text-xl font-normal">Próximas aulas</h2>
       {d.upcoming.length === 0 ? (
         <p className="text-[15px] text-site-muted">Nenhuma aula marcada ainda. Divulgue sua página para seus alunos.</p>
       ) : (
         <ul className="space-y-2">
           {d.upcoming.map((l) => (
             <li key={l.bookingId} className="rounded-xl bg-violet-50 px-3.5 py-2.5 text-sm">
-              <p className="font-semibold">{formatPtBr(l.startsAt, d.timezone)}</p>
+              <p className="font-medium">{formatPtBr(l.startsAt, d.timezone)}</p>
               <p className="text-site-muted">{l.subject} com {l.studentFirstName} · {MODALITY[l.modality]}</p>
             </li>
           ))}
         </ul>
       )}
-      <Link href="/professor/aulas" className="inline-block text-sm font-semibold text-indigo-600 underline">Ver todas as aulas</Link>
+      <Link href="/professor/aulas" className="inline-block text-sm font-medium text-indigo-600 underline">Ver todas as aulas</Link>
     </section>
   );
   const pageCard = (
     <section className={`${CARD} space-y-3`} aria-labelledby="pagina">
-      <h2 id="pagina" className="font-display text-xl font-bold">Sua página</h2>
+      <h2 id="pagina" className="font-display tracking-tight text-xl font-normal">Sua página</h2>
       {d.pageUrl && share ? (
         <>
-          <a href={d.pageUrl} id="pagina-endereco" className="block break-all text-[15px] font-semibold text-indigo-600 underline" data-testid="pagina-link">
+          <a href={d.pageUrl} id="pagina-endereco" className="block break-all text-[15px] font-medium text-indigo-600 underline" data-testid="pagina-link">
             {d.pageUrl}
           </a>
           <p className="text-sm text-site-muted">Mande para seus alunos: quem chega pelo seu link paga a comissão menor.</p>
@@ -114,7 +114,7 @@ export default async function TeacherHome() {
       ) : (
         <p className="text-[15px] text-site-muted" data-testid="pagina-aviso">
           Sua página entra no ar depois da aprovação da equipe. Enquanto isso, monte o perfil em{' '}
-          <Link href="/professor/cadastro" className="font-semibold text-indigo-600 underline">Meu perfil</Link>.
+          <Link href="/professor/cadastro" className="font-medium text-indigo-600 underline">Meu perfil</Link>.
         </p>
       )}
     </section>
@@ -122,7 +122,7 @@ export default async function TeacherHome() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="font-display text-3xl font-bold tracking-tight">Olá, {d.firstName}</h1>
+        <h1 className="font-display text-3xl font-normal tracking-tight">Olá, {d.firstName}</h1>
         <p className="text-[15px] text-site-muted">
           Situação: <strong className="text-indigo-950" data-testid="teacher-status">{STATUS[d.status] ?? d.status}</strong>
         </p>
@@ -131,20 +131,20 @@ export default async function TeacherHome() {
       {complete ? (
         <>
           {/* com os 7 passos feitos, o que importa vem primeiro: as aulas e o link para divulgar */}
-          <section className="flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4">
+          <section className="flex items-center gap-3 rounded-[20px] border border-green-200 bg-green-50 p-4">
             <Check done />
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-green-900">Tudo pronto: sua página está no ar.</p>
+              <p className="font-medium text-green-900">Tudo pronto: sua página está no ar.</p>
               <p className="text-sm text-green-900/80">Agora é divulgar o link para os seus alunos.</p>
             </div>
-            <span className="flex-none whitespace-nowrap text-sm font-semibold text-green-900" data-testid="progresso">{d.done} de {d.total}</span>
+            <span className="flex-none whitespace-nowrap text-sm font-medium text-green-900" data-testid="progresso">{d.done} de {d.total}</span>
           </section>
           <div className="grid gap-6 lg:grid-cols-2">
             {upcoming}
             {pageCard}
           </div>
           <details className={CARD}>
-            <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Ver os passos</summary>
+            <summary className="flex min-h-11 cursor-pointer items-center font-medium">Ver os passos</summary>
             <StepList steps={d.steps} />
           </details>
         </>
@@ -153,8 +153,8 @@ export default async function TeacherHome() {
         <section className={`${CARD} space-y-4`} aria-labelledby="passos">
           <div className="space-y-2">
             <div className="flex items-baseline justify-between gap-3">
-              <h2 id="passos" className="font-display text-xl font-bold">Seus passos até a primeira aula</h2>
-              <span className="flex-none whitespace-nowrap text-sm font-semibold text-site-muted" data-testid="progresso">{d.done} de {d.total}</span>
+              <h2 id="passos" className="font-display tracking-tight text-xl font-normal">Seus passos até a primeira aula</h2>
+              <span className="flex-none whitespace-nowrap text-sm font-medium text-site-muted" data-testid="progresso">{d.done} de {d.total}</span>
             </div>
             <div className="h-2 rounded-full bg-site-line" aria-hidden="true">
               <div className="h-2 rounded-full bg-indigo-600" style={{ width: `${pct}%` }} />

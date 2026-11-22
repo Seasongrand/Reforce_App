@@ -30,7 +30,7 @@ export function ServiceForm({ subjects, linkBps, searchBps, action }: {
   useEffect(() => { if (state?.ok) setPrice(''); }, [state]);
   const cents = parsePriceBR(price);
   const take = (bps: number) => formatBRL(splitCommission(cents!, bps).teacher);
-  const label = 'grid gap-1.5 text-sm font-bold';
+  const label = 'grid gap-1.5 text-sm font-medium';
 
   return (
     <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); startTransition(() => run(f)); }}>
@@ -38,10 +38,10 @@ export function ServiceForm({ subjects, linkBps, searchBps, action }: {
         <select name="subjectId" className="input">{subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
       </label>
       <fieldset className="space-y-2">
-        <legend className="text-sm font-bold">Onde</legend>
+        <legend className="text-sm font-medium">Onde</legend>
         <div className="flex flex-wrap gap-2">
           {WHERE.map((w) => (
-            <label key={w.value} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-site-field px-3.5 font-semibold has-checked:border-indigo-600 has-checked:bg-indigo-50">
+            <label key={w.value} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-site-field px-3.5 font-medium has-checked:border-indigo-600 has-checked:bg-indigo-50">
               <input type="radio" name="modality" value={w.value} checked={where === w.value} onChange={() => setWhere(w.value)} className="size-5 accent-indigo-600" />
               {w.label}
             </label>

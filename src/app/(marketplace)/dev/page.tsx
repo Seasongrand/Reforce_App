@@ -17,7 +17,7 @@ export default async function DevPage() {
     .execute(deps.db);
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Ferramentas de desenvolvimento</h1>
+      <h1 className="text-2xl font-medium">Ferramentas de desenvolvimento</h1>
       <p className="notice">Só existe com DEV_TOOLS=1 e adaptadores falsos. Nada aqui chega a pessoas reais.</p>
 
       <section className="card space-y-3">

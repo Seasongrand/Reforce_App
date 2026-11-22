@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 const WHERE: Record<string, string> = {
   online: 'Online', at_teacher: 'No meu endereço', at_student: 'Na casa do aluno',
 };
-const CARD = 'rounded-3xl border border-site-line bg-white p-5';
+const CARD = 'rounded-[20px] border border-site-line bg-white p-5';
 const duration = (m: number) => (m < 60 ? `${m} min` : m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`);
 
 /** Serviços e preços: um cartão por aula, com quanto o professor recebe, e o formulário de nova aula. */
@@ -31,7 +31,7 @@ export default async function ServicesPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1.5">
-        <h1 className="font-display text-3xl font-bold">Serviços e preços</h1>
+        <h1 className="font-display tracking-tight text-3xl font-normal">Serviços e preços</h1>
         <p className="text-site-muted">
           Você define o preço{floor > 0 ? ` (mínimo da plataforma: ${formatBRL(floor)})` : ''}. A Reforce fica com {pct(link)} quando o aluno chega pelo
           seu link e {pct(search)} quando chega pela busca. Mudanças valem para as próximas reservas.
@@ -44,14 +44,14 @@ export default async function ServicesPage() {
           <li key={s.id} className={`${CARD} space-y-3 ${s.active ? '' : 'bg-violet-50/60'}`}>
             <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
               <div className="min-w-0">
-                <p className="font-display text-lg font-bold">{subjectName(s.subject)} · {WHERE[s.modality]}</p>
+                <p className="font-display tracking-tight text-lg font-normal">{subjectName(s.subject)} · {WHERE[s.modality]}</p>
                 <p className="text-sm text-site-muted">
                   {duration(s.duration_min)}
                   {s.modality !== 'online' && (s.buffer_before_min > 0 || s.buffer_after_min > 0)
                     && ` · Deslocamento: ${s.buffer_before_min === s.buffer_after_min ? `${s.buffer_before_min} min antes e depois` : `${s.buffer_before_min} min antes e ${s.buffer_after_min} min depois`}`}
                 </p>
               </div>
-              <p className="font-display text-xl font-bold">{formatBRL(s.price_cents)}</p>
+              <p className="font-display tracking-tight text-xl font-normal">{formatBRL(s.price_cents)}</p>
             </div>
             <p className="text-sm">
               Você recebe <strong>{formatBRL(splitCommission(s.price_cents, link).teacher)}</strong> pelo seu link e{' '}
@@ -59,7 +59,7 @@ export default async function ServicesPage() {
             </p>
             <div className="flex flex-wrap items-center gap-3">
               {!s.active && (
-                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900">Pausado · não aparece para os alunos</span>
+                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900">Pausado · não aparece para os alunos</span>
               )}
               <ActionForm action={updateServiceAction} submitLabel={s.active ? 'Pausar' : 'Reativar'} className="" buttonClassName="btn-secondary">
                 <input type="hidden" name="id" value={s.id} />
@@ -71,10 +71,10 @@ export default async function ServicesPage() {
       </ul>
 
       <section className={CARD} aria-labelledby="nova-aula">
-        <h2 id="nova-aula" className="mb-4 font-display text-xl font-bold">Nova aula</h2>
+        <h2 id="nova-aula" className="mb-4 font-display tracking-tight text-xl font-normal">Nova aula</h2>
         {subjects.length === 0 ? (
           <p className="text-sm text-site-muted">
-            Escolha suas disciplinas em <Link className="font-semibold text-indigo-600 underline" href="/professor/cadastro">Meu perfil</Link>.
+            Escolha suas disciplinas em <Link className="font-medium text-indigo-600 underline" href="/professor/cadastro">Meu perfil</Link>.
           </p>
         ) : (
           <ServiceForm subjects={subjects} linkBps={link} searchBps={search} action={createServiceAction} />

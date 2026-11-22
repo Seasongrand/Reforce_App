@@ -6,7 +6,7 @@ import { requireStaff } from '@/server/session';
 
 export const dynamic = 'force-dynamic';
 
-const CARD = 'block rounded-3xl border border-site-line bg-white p-5 hover:border-indigo-300';
+const CARD = 'block rounded-[20px] border border-site-line bg-white p-5 hover:border-indigo-300';
 
 /** Início do painel da equipe: o que pede ação agora, com atalho para cada fila. */
 export default async function StaffHome() {
@@ -21,19 +21,19 @@ export default async function StaffHome() {
   const c = rows[0]!;
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-3xl font-bold">Painel interno</h1>
+      <h1 className="font-display tracking-tight text-3xl font-normal">Painel interno</h1>
       <div className="grid gap-3 sm:grid-cols-2">
         <Link href="/interno/verificacoes" className={CARD}>
-          <p className="text-sm font-semibold text-site-muted">Verificações</p>
-          <p className="mt-1 font-display text-xl font-bold">{c.pending_docs} documentos · {c.in_review} perfis em análise</p>
+          <p className="text-sm font-medium text-site-muted">Verificações</p>
+          <p className="mt-1 font-display tracking-tight text-xl font-normal">{c.pending_docs} documentos · {c.in_review} perfis em análise</p>
         </Link>
         <Link href="/interno/aulas" className={CARD}>
-          <p className="text-sm font-semibold text-site-muted">Aulas de hoje</p>
-          <p className="mt-1 font-display text-xl font-bold">{today.length === 0 ? 'Nenhuma aula hoje' : `${today.length} ${today.length === 1 ? 'aula' : 'aulas'}`}</p>
+          <p className="text-sm font-medium text-site-muted">Aulas de hoje</p>
+          <p className="mt-1 font-display tracking-tight text-xl font-normal">{today.length === 0 ? 'Nenhuma aula hoje' : `${today.length} ${today.length === 1 ? 'aula' : 'aulas'}`}</p>
         </Link>
         <Link href="/interno/aulas" className={CARD}>
-          <p className="text-sm font-semibold text-site-muted">Repasses</p>
-          <p className="mt-1 font-display text-xl font-bold">{c.releasing} repasses em liberação</p>
+          <p className="text-sm font-medium text-site-muted">Repasses</p>
+          <p className="mt-1 font-display tracking-tight text-xl font-normal">{c.releasing} repasses em liberação</p>
           <p className="mt-1 text-sm text-site-muted">{c.unprocessed} avisos de pagamento não processados</p>
         </Link>
       </div>

@@ -17,7 +17,7 @@ import {
 export const dynamic = 'force-dynamic';
 
 const hhmm = (t: string | null) => (t ? t.slice(0, 5) : null);
-const CARD = 'rounded-3xl border border-site-line bg-white p-5';
+const CARD = 'rounded-[20px] border border-site-line bg-white p-5';
 
 /** Opções das frases de "Regras de reserva", com o valor atual incluído se for diferente das sugestões. */
 function options(values: Array<[number | '', string]>, current: number | '', label: (v: number) => string) {
@@ -52,14 +52,14 @@ export default async function AgendaPage() {
     return n + (eh * 60 + em) - (sh * 60 + sm);
   }, 0);
   const openDays = new Set(rules.map((r) => r.weekday)).size;
-  const pill = 'inline-flex min-h-8 items-center rounded-full border border-site-line bg-white px-3 text-[13px] font-semibold';
-  const sentence = 'flex flex-wrap items-center gap-2 font-semibold';
-  const select = 'min-h-11 rounded-xl border border-site-field bg-white px-3 font-semibold';
+  const pill = 'inline-flex min-h-8 items-center rounded-full border border-site-line bg-white px-3 text-[13px] font-medium';
+  const sentence = 'flex flex-wrap items-center gap-2 font-medium';
+  const select = 'min-h-11 rounded-xl border border-site-field bg-white px-3 font-medium';
 
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start">
       <div className="space-y-1.5 xl:col-span-2">
-        <h1 className="font-display text-3xl font-bold">Agenda</h1>
+        <h1 className="font-display tracking-tight text-3xl font-normal">Agenda</h1>
         <p className="text-site-muted">Os alunos veem e reservam só os horários livres desta agenda. Horário de {zoneLabel(t.timezone)}.</p>
         <div className="flex flex-wrap gap-2 pt-1">
           <span className={pill}>{Math.round(weekMinutes / 60)} horas abertas por semana</span>
@@ -90,7 +90,7 @@ export default async function AgendaPage() {
         </section>
 
         <section className={CARD} aria-labelledby="regras">
-          <h2 id="regras" className="font-display text-xl font-bold">Regras de reserva</h2>
+          <h2 id="regras" className="font-display tracking-tight text-xl font-normal">Regras de reserva</h2>
           <p className="text-sm text-site-muted">Valem para todas as suas aulas.</p>
           <ActionForm action={saveSettingsAction} submitLabel="Salvar regras" successMessage="Regras salvas." className="mt-3 divide-y divide-site-line">
             <div className="space-y-1 pb-3">
@@ -125,7 +125,7 @@ export default async function AgendaPage() {
         </section>
 
         <section className={CARD} aria-labelledby="google">
-          <h2 id="google" className="font-display text-xl font-bold">Google Agenda</h2>
+          <h2 id="google" className="font-display tracking-tight text-xl font-normal">Google Agenda</h2>
           <p className="mt-1 text-sm text-site-muted">
             Conectada, seus compromissos pessoais bloqueiam os horários sozinhos. Usamos só o período ocupado, nunca o título.
             As aulas entram num calendário próprio, “Aulas”.
@@ -133,7 +133,7 @@ export default async function AgendaPage() {
           <div className="mt-3">
             {cal?.status === 'active' ? (
               <>
-                <p className="text-sm font-semibold text-green-800">Conectada{cal.last_error ? ` (último erro: ${cal.last_error})` : ''}.</p>
+                <p className="text-sm font-medium text-green-800">Conectada{cal.last_error ? ` (último erro: ${cal.last_error})` : ''}.</p>
                 <ActionForm action={disconnectCalendarAction} submitLabel="Desconectar" className="mt-2" buttonClassName="btn-secondary" />
               </>
             ) : (
@@ -154,12 +154,12 @@ function Preview({ id, slots, tz }: { id: string; slots: string[] | null; tz: st
   return (
     <div className="space-y-3">
       <div>
-        <h2 id={id} className="font-display text-xl font-bold">Como os alunos veem</h2>
+        <h2 id={id} className="font-display tracking-tight text-xl font-normal">Como os alunos veem</h2>
         <p className="text-sm text-site-muted">O mês todo, para a sua aula mais curta. O número em cada dia é quantos horários estão livres.</p>
       </div>
       {slots === null ? (
         <p className="text-sm text-site-muted">
-          Cadastre um <Link className="font-semibold text-indigo-600 underline" href="/professor/servicos">serviço</Link> para ver os horários.
+          Cadastre um <Link className="font-medium text-indigo-600 underline" href="/professor/servicos">serviço</Link> para ver os horários.
         </p>
       ) : (
         <MonthSlots slots={slots} tz={tz} empty="Nenhum horário livre: adicione horários na sua semana." />

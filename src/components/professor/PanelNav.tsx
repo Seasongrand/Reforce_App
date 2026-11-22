@@ -81,7 +81,7 @@ function Badge({ n, onIcon = false }: { n?: number; onIcon?: boolean }) {
   const text = n > 99 ? '99+' : String(n);
   return (
     <>
-      <span aria-hidden="true" className={`min-w-5 rounded-full bg-rose-600 px-1.5 text-center text-[11px] font-bold leading-5 text-white ${onIcon ? 'absolute -right-1 -top-1' : 'ml-auto'}`}>{text}</span>
+      <span aria-hidden="true" className={`min-w-5 rounded-full bg-rose-600 px-1.5 text-center text-[11px] font-medium leading-5 text-white ${onIcon ? 'absolute -right-1 -top-1' : 'ml-auto'}`}>{text}</span>
       <span className="sr-only"> ({n === 1 ? '1 não lida' : `${n} não lidas`})</span>
     </>
   );
@@ -112,7 +112,7 @@ export function PanelNav({ items, label, primary: primaryHrefs }: { items: Panel
   const primary = primaryHrefs.map((h) => items.find((i) => i.href === h)).filter((i): i is PanelNavItem => Boolean(i));
   const rest = items.filter((i) => !primaryHrefs.includes(i.href));
   const inRest = rest.some((i) => isCurrent(pathname, i.href, root));
-  const tab = 'flex min-h-14 w-full flex-col items-center justify-center gap-0.5 text-xs font-semibold';
+  const tab = 'flex min-h-14 w-full flex-col items-center justify-center gap-0.5 text-xs font-medium';
   return (
     <>
       {/* computador: menu lateral */}
@@ -123,7 +123,7 @@ export function PanelNav({ items, label, primary: primaryHrefs }: { items: Panel
             return (
               <li key={item.href}>
                 <Link href={item.href} aria-current={current ? 'page' : undefined}
-                  className={`flex min-h-11 items-center gap-3 whitespace-nowrap rounded-xl px-3 text-[15px] font-semibold ${
+                  className={`flex min-h-11 items-center gap-3 whitespace-nowrap rounded-xl px-3 text-[15px] font-medium ${
                     current ? 'bg-indigo-100 text-indigo-950' : 'text-indigo-700 hover:bg-white'}`}>
                   <Icon name={item.icon} />
                   {item.label}
@@ -139,13 +139,13 @@ export function PanelNav({ items, label, primary: primaryHrefs }: { items: Panel
       <nav aria-label={label} ref={sheet}
         className="fixed inset-x-0 bottom-0 z-30 border-t border-site-line bg-white pb-[env(safe-area-inset-bottom,0px)] md:hidden">
         {more && (
-          <ul className="absolute inset-x-3 bottom-[calc(100%+8px)] space-y-1 rounded-2xl border border-site-line bg-white p-2 shadow-xl">
+          <ul className="absolute inset-x-3 bottom-[calc(100%+8px)] space-y-1 rounded-[20px] border border-site-line bg-white p-2">
             {rest.map((item) => {
               const current = isCurrent(pathname, item.href, root);
               return (
                 <li key={item.href}>
                   <Link href={item.href} aria-current={current ? 'page' : undefined}
-                    className={`flex min-h-12 items-center gap-3 rounded-xl px-3 text-[15px] font-semibold ${current ? 'bg-indigo-100 text-indigo-950' : 'text-indigo-700'}`}>
+                    className={`flex min-h-12 items-center gap-3 rounded-xl px-3 text-[15px] font-medium ${current ? 'bg-indigo-100 text-indigo-950' : 'text-indigo-700'}`}>
                     <Icon name={item.icon} />
                     {item.label}
                     <Badge n={item.badge} />

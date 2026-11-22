@@ -7,7 +7,7 @@ export const metadata: Metadata = appMetadata();
 export default function ContaGroupLayout({ children }: { children: React.ReactNode }) {
   return (
     <AppHtml>
-      <div className="min-h-screen bg-violet-50/60 font-site text-indigo-950">{children}</div>
+      <div className="min-h-screen bg-[#fbfaff] font-site text-indigo-950">{children}</div>
     </AppHtml>
   );
 }

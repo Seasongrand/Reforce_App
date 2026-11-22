@@ -21,7 +21,7 @@ function useCooldown(key: string): number {
   return left;
 }
 
-const LINK = 'inline-flex min-h-11 items-center font-semibold text-indigo-600 disabled:font-medium disabled:text-site-muted';
+const LINK = 'inline-flex min-h-11 items-center font-medium text-indigo-600 disabled:font-medium disabled:text-site-muted';
 
 export function ResendCode({ codeId, sending, onResend, onOtherEmail }: {
   codeId: string; sending: boolean; onResend: () => void; onOtherEmail: () => void;

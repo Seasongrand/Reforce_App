@@ -19,7 +19,7 @@ const OUTCOMES = [
 const PAYOUT_STATUS: Record<string, string> = {
   held: 'Retido', releasing: 'Em liberação', released: 'Liberado', refunded: 'Devolvido',
 };
-const CARD = 'rounded-3xl border border-site-line bg-white p-5';
+const CARD = 'rounded-[20px] border border-site-line bg-white p-5';
 const LESSON_STATUS: Record<string, string> = {
   confirmed: 'Confirmada', completed: 'Concluída', no_show: 'Aluno faltou', cancelled: 'Cancelada',
 };
@@ -39,26 +39,26 @@ export default async function StaffLessons() {
       FROM payouts GROUP BY status ORDER BY status`.execute(deps.db);
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-3xl font-bold">Aulas e repasses</h1>
+      <h1 className="font-display tracking-tight text-3xl font-normal">Aulas e repasses</h1>
       <section className={`${CARD} space-y-3`} aria-labelledby="hoje">
-        <h2 id="hoje" className="font-display text-xl font-bold">Aulas de hoje <span className="text-base font-semibold text-site-muted">· {today.length}</span></h2>
+        <h2 id="hoje" className="font-display tracking-tight text-xl font-normal">Aulas de hoje <span className="text-base font-normal text-site-muted">· {today.length}</span></h2>
         {today.length === 0 ? <p className="text-sm text-site-muted">Nenhuma aula hoje.</p> : (
           <ul className="divide-y divide-site-line">
             {today.map((l) => (
               <li key={l.bookingId} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-2.5" data-testid={`hoje-${l.bookingId}`}>
-                <span className="font-display text-lg font-bold">{formatTime(l.startsAt, SP)}</span>
+                <span className="font-display tracking-tight text-lg font-normal">{formatTime(l.startsAt, SP)}</span>
                 <span className="min-w-0 flex-1">
                   <strong>{l.teacherName}</strong> com {l.studentFirstName} · {l.subject} {MODALITY[l.modality] ?? l.modality}
                   {l.checkedIn && <span className="text-site-muted"> · presença registrada</span>}
                 </span>
-                <span className="text-sm font-semibold text-site-muted">{LESSON_STATUS[l.status] ?? l.status}</span>
+                <span className="text-sm font-medium text-site-muted">{LESSON_STATUS[l.status] ?? l.status}</span>
               </li>
             ))}
           </ul>
         )}
       </section>
       <section className={`${CARD} space-y-3`}>
-        <h2 className="font-display text-xl font-bold">Aulas sem evidência</h2>
+        <h2 className="font-display tracking-tight text-xl font-normal">Aulas sem evidência</h2>
         {pending.length === 0 && <p className="text-sm text-site-muted">Nenhuma aula aguardando decisão.</p>}
         {pending.map((p) => (
           <div key={p.bookingId} className="space-y-2 border-t border-site-line pt-3">
@@ -78,10 +78,10 @@ export default async function StaffLessons() {
         ))}
       </section>
       <section className={CARD}>
-        <h2 className="mb-3 font-display text-xl font-bold">Repasses</h2>
+        <h2 className="mb-3 font-display tracking-tight text-xl font-normal">Repasses</h2>
         {payouts.rows.length === 0 ? <p className="text-sm text-site-muted">Nenhum repasse ainda.</p> : (
           <table className="w-full text-sm">
-            <thead><tr className="text-left text-site-muted"><th className="pb-2 font-semibold">Situação</th><th className="pb-2 font-semibold">Quantidade</th><th className="pb-2 font-semibold">Parte dos professores</th></tr></thead>
+            <thead><tr className="text-left text-site-muted"><th className="pb-2 font-medium">Situação</th><th className="pb-2 font-medium">Quantidade</th><th className="pb-2 font-medium">Parte dos professores</th></tr></thead>
             <tbody>
               {payouts.rows.map((r) => (
                 <tr key={r.status} className="border-t border-site-line"><td className="py-2">{PAYOUT_STATUS[r.status] ?? r.status}</td><td className="py-2">{r.n}</td><td className="py-2">{formatBRL(r.teacher_cents)}</td></tr>
