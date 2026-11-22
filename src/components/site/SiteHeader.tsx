@@ -3,43 +3,52 @@ import { config } from '@/config';
 import { currentSubject } from '@/server/session';
 import { MobileMenu } from './MobileMenu';
 
-const ENTER = 'inline-flex min-h-11 items-center rounded-xl border border-indigo-400 px-4 text-white hover:bg-indigo-900';
-const CTA = 'inline-flex min-h-11 items-center rounded-xl bg-yellow-400 px-4 text-indigo-950 hover:bg-yellow-300';
-// no celular, "Buscar professor" e "Seja professor" vão para o menu: o topo cabe em uma linha
-const WIDE_LINK = 'hidden min-h-11 items-center rounded-xl px-3 hover:bg-indigo-900 sm:inline-flex';
-const WIDE_CTA = 'hidden min-h-11 items-center rounded-xl bg-yellow-400 px-4 text-indigo-950 hover:bg-yellow-300 sm:inline-flex';
+/** A marca da Reforce (o arco sorteado pela skill de design), a mesma do site público. */
+export function ArcMark({ className = 'size-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path fill="currentColor" d="M2.5 21.5V12a9.5 9.5 0 0 1 19 0v9.5h-6V12a3.5 3.5 0 0 0-7 0v9.5z" />
+    </svg>
+  );
+}
+
+const WORD = 'relative inline-flex h-full items-center px-3 text-[15px] font-medium text-indigo-950 after:absolute after:inset-x-3 after:-bottom-px after:h-0.5 after:origin-left after:scale-x-0 after:bg-current after:transition-transform hover:after:scale-x-100';
+export const BUTTON_PRIMARY =
+  'inline-flex h-11 items-center justify-center whitespace-nowrap rounded-lg bg-indigo-600 px-3.5 text-[15px] sm:px-5 font-medium text-white transition hover:-translate-y-px hover:bg-indigo-700 active:translate-y-0';
 
 /**
- * Topo do site, sempre com o botão "Entrar" do aluno. No modo lista de espera,
- * ele leva ao pedido de aviso da abertura (/entrar), ao lado de "Quero dar
- * aula" (nas páginas para professores). Com o marketplace aberto: "Buscar
- * professor", "Entrar" (ou "Minha conta", com o responsável já conectado) e
- * "Seja professor".
+ * Topo das telas do aluno (perfil, reserva, pagamento, busca), no visual do
+ * site público (skill de design, etapa 2): barra branca fixa com a marca, as
+ * palavras no meio, "Entrar" (ou "Minha conta") e o botão "Buscar professor".
+ * No celular e no tablet, as palavras e "Entrar" vão para o Menu. No modo
+ * lista de espera (só a equipe chega aqui), "Entrar" leva ao pedido de aviso.
  */
-export async function SiteHeader({ cta = true }: { cta?: boolean }) {
+export async function SiteHeader() {
   const open = config().siteMode === 'completo';
   const signedIn = open && (await currentSubject('guardian')) !== null;
+  const words = [
+    { href: '/buscar', label: 'Busca' },
+    { href: '/#como', label: 'Etapas' },
+    { href: '/professores', label: 'Professores' },
+  ];
+  const account = open
+    ? { href: signedIn ? '/conta' : '/conta/entrar', label: signedIn ? 'Minha conta' : 'Entrar' }
+    : { href: '/entrar', label: 'Entrar' };
   return (
-    <header className="bg-indigo-950 text-white">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-4">
-        <Link href="/" className="font-display text-2xl font-bold text-white">
+    <header className="sticky top-0 z-20 border-b border-indigo-950/10 bg-[#fbfaff]">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-5 sm:gap-3 lg:h-[72px] lg:px-8">
+        <a href="/" className="inline-flex items-center gap-2 font-display text-xl tracking-tight text-indigo-950">
+          <ArcMark className="size-5 text-indigo-600" />
           Reforce
-        </Link>
-        <nav aria-label="Principal" className="flex flex-wrap items-center gap-2 text-[15px] font-semibold">
-          {open ? (
-            <>
-              <Link href="/buscar" className={WIDE_LINK}>Buscar professor</Link>
-              <Link href={signedIn ? '/conta' : '/conta/entrar'} className={ENTER}>{signedIn ? 'Minha conta' : 'Entrar'}</Link>
-              <Link href="/professores" className={WIDE_CTA}>Seja professor</Link>
-              <MobileMenu />
-            </>
-          ) : (
-            <>
-              <Link href="/entrar" className={ENTER}>Entrar</Link>
-              {cta && <Link href="/#lista" className={CTA}>Quero dar aula</Link>}
-            </>
-          )}
+        </a>
+        <nav aria-label="Principal" className="hidden h-full flex-1 items-center justify-center lg:flex">
+          {words.map((w) => <a key={w.href} href={w.href} className={WORD}>{w.label}</a>)}
         </nav>
+        <div className="ml-auto flex items-center gap-2 lg:ml-0">
+          <a href={account.href} className={`${WORD.replace('inline-flex ', '')} hidden h-11 lg:inline-flex`}>{account.label}</a>
+          <a href="/buscar" className={BUTTON_PRIMARY}>Buscar professor</a>
+          <MobileMenu links={[...words, account]} />
+        </div>
       </div>
     </header>
   );

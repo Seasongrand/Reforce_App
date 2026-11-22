@@ -42,11 +42,11 @@ function Alternatives({ state, slug, serviceId }: { state: BookingState; slug: s
       <p>{state.error}</p>
       {state.alternatives && state.alternatives.length > 0 && (
         <>
-          <p className="font-semibold">Horários livres mais próximos:</p>
+          <p className="font-medium">Horários livres mais próximos:</p>
           <ul className="flex flex-wrap gap-2">
             {state.alternatives.map((a) => (
               <li key={a}>
-                <Link className="inline-flex min-h-11 items-center rounded-xl border border-site-field bg-white px-3 font-semibold text-indigo-950"
+                <Link className="inline-flex min-h-11 items-center rounded-lg border border-site-field bg-white px-3 font-medium text-indigo-950"
                   href={`/p/${slug}/reservar?servico=${serviceId}&inicio=${encodeURIComponent(a)}`}>
                   {formatPtBr(Temporal.Instant.from(a), tz)}
                 </Link>
@@ -62,7 +62,7 @@ function Alternatives({ state, slug, serviceId }: { state: BookingState; slug: s
 function AddressFields() {
   return (
     <fieldset className="space-y-2.5">
-      <legend className="mb-2 text-sm font-semibold">Endereço da aula</legend>
+      <legend className="mb-2 text-sm font-medium">Endereço da aula</legend>
       <p className="text-[13px] text-site-muted">O professor só vê o endereço depois do pagamento.</p>
       <div className="grid grid-cols-[8rem_1fr] gap-2.5">
         <input className={INPUT} name="cep" placeholder="CEP" required aria-label="CEP" inputMode="numeric" autoComplete="postal-code" />
@@ -116,11 +116,11 @@ export function BookingForm(p: Props) {
         <fieldset className="space-y-2.5">
           <legend className="sr-only">Aluno</legend>
           {p.students.map((s, i) => (
-            <label key={s.id} className="flex min-h-12 items-center gap-3 rounded-2xl border border-site-field px-4 has-checked:border-indigo-600 has-checked:bg-indigo-50">
+            <label key={s.id} className="flex min-h-12 items-center gap-3 rounded-lg border border-site-field px-4 has-checked:border-indigo-600 has-checked:bg-indigo-50">
               <input type="radio" name="studentId" value={s.id} defaultChecked={i === 0} className="size-4 accent-indigo-600" /> {s.firstName}
             </label>
           ))}
-          <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-site-field px-4 has-checked:border-indigo-600 has-checked:bg-indigo-50">
+          <label className="flex min-h-12 items-center gap-3 rounded-lg border border-site-field px-4 has-checked:border-indigo-600 has-checked:bg-indigo-50">
             <input type="radio" name="studentId" value="" defaultChecked={p.students.length === 0} className="size-4 accent-indigo-600" />
             {p.students.length === 0 ? 'Novo aluno' : 'Outro aluno'}
           </label>
@@ -205,15 +205,15 @@ export function BookingForm(p: Props) {
       </div>
       <label className={LABEL}>Código
         <input id="code" name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} required placeholder="000000"
-          className="min-h-16 rounded-2xl border-2 border-indigo-600 px-4 text-center font-display text-3xl font-semibold tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-indigo-600/30" />
+          className="min-h-16 rounded-[20px] border-2 border-indigo-600 px-4 text-center font-display tracking-tight text-3xl font-normal tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-indigo-600/30" />
       </label>
       <Alternatives state={holdState} slug={p.slug} serviceId={p.serviceId} />
       <button className={PRIMARY} disabled={holding}>{holding ? 'Reservando…' : 'Confirmar e reservar o horário'}</button>
       <p className="text-sm text-site-muted">{holdNote(p.holdMinutes)}</p>
       <div className="flex flex-wrap gap-x-5">
         <button type="button" onClick={resend} disabled={identifying}
-          className="min-h-11 font-semibold text-indigo-600 disabled:opacity-60">{identifying ? 'Reenviando…' : 'Reenviar código'}</button>
-        <button type="button" onClick={() => window.location.reload()} className="min-h-11 font-semibold text-indigo-600">Trocar e-mail</button>
+          className="min-h-11 font-medium text-indigo-600 disabled:opacity-60">{identifying ? 'Reenviando…' : 'Reenviar código'}</button>
+        <button type="button" onClick={() => window.location.reload()} className="min-h-11 font-medium text-indigo-600">Trocar e-mail</button>
       </div>
     </form>
   );

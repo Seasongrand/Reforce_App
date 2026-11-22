@@ -58,8 +58,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         <h1 className={TITLE}>{subject} · {grade}</h1>
         <p className="text-site-muted">Aulas {PLACE[values.modality]}{values.q ? ` · “${values.q}”` : ''}</p>
       </div>
-      <details className="rounded-2xl border border-site-line px-4 py-1" open={!result.ok}>
-        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">Mudar a busca</summary>
+      <details className="rounded-[20px] border border-site-line px-4 py-1" open={!result.ok}>
+        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">Mudar a busca</summary>
         <div className="pb-4 pt-2">{form}</div>
       </details>
 
@@ -68,17 +68,17 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           Não encontramos esse CEP. Confira os números ou procure aulas online.
         </p>
       ) : result.items.length === 0 ? (
-        <div className="space-y-3 rounded-2xl bg-violet-50 p-5">
-          <p className="font-semibold">Nenhum professor com horário livre para essa busca.</p>
+        <div className="space-y-3 rounded-[20px] bg-violet-50 p-5">
+          <p className="font-medium">Nenhum professor com horário livre para essa busca.</p>
           <ul className="space-y-2 text-sm">
             {values.modality !== 'online' && (
-              <li><Link className="font-semibold text-indigo-600 underline" href={hrefFor(values, { modality: 'online', page: 1 })}>Ver professores de {subject} online</Link></li>
+              <li><Link className="font-medium text-indigo-600 underline" href={hrefFor(values, { modality: 'online', page: 1 })}>Ver professores de {subject} online</Link></li>
             )}
             {values.maxPriceCents && (
-              <li><Link className="font-semibold text-indigo-600 underline" href={hrefFor(values, { maxPriceCents: null, page: 1 })}>Buscar sem preço máximo</Link></li>
+              <li><Link className="font-medium text-indigo-600 underline" href={hrefFor(values, { maxPriceCents: null, page: 1 })}>Buscar sem preço máximo</Link></li>
             )}
             {values.q && (
-              <li><Link className="font-semibold text-indigo-600 underline" href={hrefFor(values, { q: '', page: 1 })}>Buscar sem o texto “{values.q}”</Link></li>
+              <li><Link className="font-medium text-indigo-600 underline" href={hrefFor(values, { q: '', page: 1 })}>Buscar sem o texto “{values.q}”</Link></li>
             )}
             <li className="text-site-muted">Novos professores entram toda semana. Tente outra série ou volte em alguns dias.</li>
           </ul>

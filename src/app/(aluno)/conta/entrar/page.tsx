@@ -23,7 +23,7 @@ export default async function GuardianLoginPage({ searchParams }: { searchParams
       </div>
       <AlunoCodeLogin start={startAction} finish={finishAction} next={next} />
       <p className="text-sm text-site-muted">
-        Ainda não tem conta? <Link href={next ? `/conta/criar?voltar=${encodeURIComponent(next)}` : '/conta/criar'} className="inline-flex min-h-11 items-center font-semibold text-indigo-600 underline">Criar conta</Link>
+        Ainda não tem conta? <Link href={next ? `/conta/criar?voltar=${encodeURIComponent(next)}` : '/conta/criar'} className="inline-flex min-h-11 items-center font-medium text-indigo-600 underline">Criar conta</Link>
       </p>
     </div>
   );

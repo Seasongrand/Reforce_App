@@ -3,7 +3,7 @@ const STEPS = ['Horário', 'Seus dados', 'Pagamento'] as const;
 /** Passos da reserva: os anteriores aparecem com ✓, o atual em destaque. */
 export function Stepper({ current }: { current: 1 | 2 | 3 }) {
   return (
-    <ol aria-label="Etapas da reserva" className="grid grid-cols-3 gap-1.5 text-[13px] font-semibold">
+    <ol aria-label="Etapas da reserva" className="grid grid-cols-3 gap-1.5 text-[13px] font-medium">
       {STEPS.map((label, i) => {
         const n = i + 1;
         return (

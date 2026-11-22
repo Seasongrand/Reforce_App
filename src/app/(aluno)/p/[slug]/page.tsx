@@ -56,8 +56,8 @@ export default async function TeacherPublicPage({
             value: page.nextSlot ? <LocalWhen iso={page.nextSlot} teacherTz={page.timezone} /> : 'Sem horários',
           }}
           afterStats={<>
-            {page.verified && <details className="rounded-2xl border border-site-line px-3.5 py-1">
-              <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">O que verificamos</summary>
+            {page.verified && <details className="rounded-[20px] border border-site-line px-3.5 py-1">
+              <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">O que verificamos</summary>
               <ul className="mb-3 space-y-2 text-sm text-site-muted">
                 <li>✓ Identidade conferida</li>
                 <li>✓ Certidão de antecedentes criminais{record?.validUntil ? `, válida até ${br(record.validUntil)}` : ''}</li>
@@ -65,7 +65,7 @@ export default async function TeacherPublicPage({
               </ul>
             </details>}
             <Link href={messageHref}
-              className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-site-field bg-white text-[15px] font-semibold text-indigo-950 hover:bg-violet-50">
+              className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-site-field bg-white text-[15px] font-medium text-indigo-950 hover:bg-violet-50">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
               </svg>
@@ -75,7 +75,7 @@ export default async function TeacherPublicPage({
         />
       </div>
       <aside aria-label="Reservar uma aula" className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-        <div data-testid="cartao-reserva" className="lg:sticky lg:top-6 lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto lg:rounded-3xl lg:border lg:border-site-line lg:bg-white lg:px-6 lg:pt-6 lg:shadow-sm">
+        <div data-testid="cartao-reserva" className="lg:sticky lg:top-24 lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto lg:rounded-[20px] lg:border lg:border-indigo-950/10 lg:bg-white lg:px-6 lg:pt-6">
           {page.sellable ? (
             <ProfileBooking slug={page.slug} teacherTz={page.timezone} services={page.services} gradeSlug={serie} />
           ) : (
@@ -86,14 +86,14 @@ export default async function TeacherPublicPage({
       <div className="min-w-0 lg:col-start-1 lg:row-start-2">
         {page.rating && (
           <section id="avaliacoes" className="space-y-3 pt-7">
-            <h2 className="font-display text-xl font-bold">
-              Avaliações <span className="text-base font-semibold text-site-muted">
+            <h2 className="font-display tracking-tight text-xl font-normal">
+              Avaliações <span className="text-base font-medium text-site-muted">
                 <span aria-hidden="true" className="text-yellow-500">★</span> {page.rating.average.toFixed(1).replace('.', ',')} · {page.rating.count}
               </span>
             </h2>
             <ul className="space-y-3">
               {page.reviews.map((r, i) => (
-                <li key={i} className="space-y-1.5 rounded-2xl border border-site-line p-4">
+                <li key={i} className="space-y-1.5 rounded-[20px] border border-site-line p-4">
                   <p className="text-sm">
                     <span aria-label={`${r.rating} de 5`} className="text-yellow-500">{'★'.repeat(r.rating)}<span className="text-site-line">{'★'.repeat(5 - r.rating)}</span></span>
                     <span className="text-site-muted"> · {r.author} · {r.date.split('-').reverse().join('/')}</span>
@@ -115,7 +115,7 @@ export default async function TeacherPublicPage({
 
         <section className="pt-6">
           <a href={share} target="_blank" rel="noreferrer"
-            className="flex min-h-12 items-center justify-center rounded-2xl border border-site-field text-[15px] font-semibold text-indigo-950">
+            className="flex min-h-12 items-center justify-center rounded-lg border border-site-field text-[15px] font-medium text-indigo-950">
             É aluno? Mande para seu responsável
           </a>
           <p className="mt-2 text-center text-[13px] text-site-muted">A reserva e o pagamento são feitos por um adulto.</p>

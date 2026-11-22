@@ -40,11 +40,11 @@ export function SearchForm({
         </label>
       </div>
       <fieldset>
-        <legend className="mb-2 text-sm font-semibold">Onde</legend>
+        <legend className="mb-2 text-sm font-medium">Onde</legend>
         <div className="flex flex-wrap gap-2">
           {MODALITIES.map((m) => (
             <label key={m.value}
-              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-site-field bg-white px-4 text-sm has-checked:border-indigo-600 has-checked:bg-indigo-50">
+              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-site-field bg-white px-4 text-sm has-checked:border-indigo-600 has-checked:bg-indigo-50">
               <input type="radio" name="modalidade" value={m.value} checked={modality === m.value}
                 onChange={() => setModality(m.value)} className="size-4 accent-indigo-600" />
               {m.label}

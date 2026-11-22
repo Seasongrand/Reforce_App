@@ -23,7 +23,7 @@ export function RescheduleForm({ bookingId, slots, tz, action }: {
       <MonthSlots slots={slots} tz={tz} selected={slot} onPick={setSlot} empty="Sem outros horários livres nas próximas semanas." />
       {state && !state.ok && <p className={ALERT} role="alert">{state.error}</p>}
       <button disabled={!slot || pending}
-        className="inline-flex min-h-12 items-center rounded-2xl bg-indigo-600 px-5 font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">
+        className="inline-flex min-h-12 items-center rounded-lg bg-indigo-600 px-5 font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
         {pending ? 'Remarcando…' : 'Remarcar para este horário'}
       </button>
     </form>

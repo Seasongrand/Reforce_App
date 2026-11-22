@@ -52,13 +52,13 @@ export function ProfileBooking({ slug, teacherTz, services, gradeSlug }: {
   return (
     <>
       <section className="space-y-3 pt-7 lg:pt-0">
-        <h2 className="font-display text-xl font-bold">Escolha a aula</h2>
+        <h2 className="font-display tracking-tight text-xl font-normal">Escolha a aula</h2>
         <div role="radiogroup" aria-label="Aula" className="space-y-2.5">
           {services.map((s) => {
             const on = s.id === serviceId;
             return (
               <button key={s.id} type="button" role="radio" aria-checked={on} onClick={() => pickService(s.id)}
-                className={`flex w-full items-center gap-3 rounded-2xl p-3.5 text-left ${on ? 'border-2 border-indigo-600 bg-indigo-50' : 'border border-site-field bg-white'}`}>
+                className={`flex w-full items-center gap-3 rounded-[20px] p-3.5 text-left ${on ? 'border-2 border-indigo-600 bg-indigo-50' : 'border border-site-field bg-white'}`}>
                 <span aria-hidden="true" className={`flex size-5 flex-none items-center justify-center rounded-full border-2 ${on ? 'border-indigo-600' : 'border-site-field'}`}>
                   {on && <span className="size-2.5 rounded-full bg-indigo-600" />}
                 </span>
@@ -75,7 +75,7 @@ export function ProfileBooking({ slug, teacherTz, services, gradeSlug }: {
 
       <section className="space-y-3 pt-7 lg:pt-6">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-display text-xl font-bold">Horários livres</h2>
+          <h2 className="font-display tracking-tight text-xl font-normal">Horários livres</h2>
           <span className="text-[13px] text-site-muted">
             {viewerTz === teacherTz ? 'no seu horário' : `no seu horário (${zoneLabel(viewerTz)})`}
           </span>
@@ -89,15 +89,15 @@ export function ProfileBooking({ slug, teacherTz, services, gradeSlug }: {
           <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 pb-5 pt-3 lg:max-w-none lg:p-0">
             <div className="min-w-0 flex-1">
               <p className="text-[13px] text-site-muted">{slot ? shortWhen(slot, viewerTz) : 'Escolha um horário'}</p>
-              <p className="text-[17px] font-bold">{formatBRL(service.priceCents)} · {service.durationMin} min</p>
+              <p className="text-[17px] font-medium">{formatBRL(service.priceCents)} · {service.durationMin} min</p>
             </div>
             {slot ? (
               <Link href={`/p/${slug}/reservar?servico=${service.id}&inicio=${encodeURIComponent(slot)}${gradeSlug && /^[a-z0-9]+$/.test(gradeSlug) ? `&serie=${gradeSlug}` : ''}`}
-                className="inline-flex min-h-13 items-center rounded-2xl bg-indigo-600 px-6 text-base font-semibold text-white hover:bg-indigo-700">
+                className="inline-flex min-h-12 items-center rounded-lg bg-indigo-600 px-6 text-base font-medium text-white hover:bg-indigo-700">
                 Reservar
               </Link>
             ) : (
-              <span aria-disabled="true" className="inline-flex min-h-13 items-center rounded-2xl bg-site-line px-6 text-base font-semibold text-site-muted">
+              <span aria-disabled="true" className="inline-flex min-h-13 items-center rounded-[20px] bg-site-line px-6 text-base font-medium text-site-muted">
                 Reservar
               </span>
             )}

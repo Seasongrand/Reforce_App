@@ -40,9 +40,9 @@ export interface TeacherProfileViewProps {
 
 function Stat({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl bg-violet-50 p-3">
+    <div className="rounded-[20px] bg-violet-50 p-3">
       <p className="text-[13px] text-site-muted">{label}</p>
-      <div className="mt-0.5 text-sm font-semibold">{children}</div>
+      <div className="mt-0.5 text-sm font-medium">{children}</div>
     </div>
   );
 }
@@ -59,9 +59,9 @@ export function TeacherProfileView(p: TeacherProfileViewProps) {
         <div className="flex items-center gap-4">
           <TeacherPhoto photoUrl={p.photoUrl} name={p.name || 'Professor'} size={96} />
           <div className="flex min-w-0 flex-col gap-1.5">
-            <Title className="font-display text-[28px] font-bold leading-tight [overflow-wrap:anywhere]">{p.name}</Title>
+            <Title className="font-display tracking-tight text-[28px] font-normal leading-tight [overflow-wrap:anywhere]">{p.name}</Title>
             {p.verified && (
-              <span className="inline-flex items-center gap-1.5 self-start rounded-[10px] bg-green-100 px-2.5 py-1.5 text-[13px] font-semibold text-green-800">
+              <span className="inline-flex items-center gap-1.5 self-start rounded-[10px] bg-green-100 px-2.5 py-1.5 text-[13px] font-medium text-green-800">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   <path d="m9 12 2 2 4-4" />
@@ -76,12 +76,12 @@ export function TeacherProfileView(p: TeacherProfileViewProps) {
 
         {(p.stats ?? true) && (
           p.minPriceCents === null ? (
-            <p className="rounded-2xl border border-dashed border-site-field p-3 text-sm text-site-muted">
+            <p className="rounded-[20px] border border-dashed border-site-field p-3 text-sm text-site-muted">
               Defina o preço em Serviços e preços
             </p>
           ) : (
             <div className={`grid grid-cols-2 gap-2 ${p.statExtra ? '@lg:grid-cols-4' : '@md:grid-cols-3'}`}>
-              <Stat label="A partir de"><span className="text-[17px] font-bold">{formatBRL(p.minPriceCents)}</span></Stat>
+              <Stat label="A partir de"><span className="text-[17px] font-medium">{formatBRL(p.minPriceCents)}</span></Stat>
               <Stat label="Duração">{durations ?? '—'}</Stat>
               <Stat label="Aulas">{modalities || '—'}</Stat>
               {p.statExtra && <Stat label={p.statExtra.label}>{p.statExtra.value}</Stat>}
@@ -93,7 +93,7 @@ export function TeacherProfileView(p: TeacherProfileViewProps) {
 
       {p.specialties.length > 0 && (
         <section className="space-y-2.5 pt-6">
-          <h2 className="font-display text-xl font-bold">Especialidades</h2>
+          <h2 className="font-display tracking-tight text-xl font-normal">Especialidades</h2>
           <ul className="flex flex-wrap gap-2">
             {p.specialties.map((s) => (
               <li key={s} className="rounded-full border border-site-field px-3.5 py-1.5 text-sm font-medium">{s}</li>
@@ -104,7 +104,7 @@ export function TeacherProfileView(p: TeacherProfileViewProps) {
 
       {p.subjects.length > 0 && (
         <section className="space-y-2.5 pt-6">
-          <h2 className="font-display text-xl font-bold">Dá aula de</h2>
+          <h2 className="font-display tracking-tight text-xl font-normal">Dá aula de</h2>
           <ul className="flex flex-wrap gap-2">
             {p.subjects.map((s) => (
               <li key={s.subject} className="rounded-xl border border-site-field px-3 py-2 text-sm">
@@ -117,7 +117,7 @@ export function TeacherProfileView(p: TeacherProfileViewProps) {
 
       {p.bio && (
         <section className="space-y-2.5 pt-6">
-          <h2 className="font-display text-xl font-bold">Sobre</h2>
+          <h2 className="font-display tracking-tight text-xl font-normal">Sobre</h2>
           <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#3b3870] [overflow-wrap:anywhere]">{p.bio}</p>
         </section>
       )}
