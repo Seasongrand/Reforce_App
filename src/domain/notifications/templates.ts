@@ -30,7 +30,7 @@ export interface MessageContext {
   teacher: { name: string; slug: string; timezone: string; phone: string | null; email: string | null; teachingAddress: string | null };
   familyAddress: string | null;
   checkinCode: string | null;
-  links: { lesson: string; teacherPage: string; teacherPanel: string };
+  links: { lesson: string; teacherPage: string; teacherPanel: string; review: string };
 }
 
 export interface RenderedMessage {
@@ -94,6 +94,7 @@ export async function loadMessageContext(deps: Deps, bookingId: string, db: Kyse
       lesson: `${base}/aula/${lessonToken(bookingId, 'student', endsAt.add({ hours: 24 }), secret)}`,
       teacherPage: `${base}/p/${r.t_slug}`,
       teacherPanel: `${base}/professor/aulas`,
+      review: `${base}/conta/avaliar/${bookingId}`,
     },
   };
 }
@@ -199,6 +200,25 @@ export function render(template: Template, c: MessageContext): RenderedMessage {
         email: { subject, text },
       };
     }
+    case 'lembrete_24h_professor':
+    case 'lembrete_1h_professor': {
+      const at = formatPtBr(c.startsAt, c.teacher.timezone);
+      const day = template === 'lembrete_24h_professor';
+      subject = day ? `Lembrete: aula com ${c.student.firstName} amanhã` : `A aula com ${c.student.firstName} começa em 1 hora`;
+      text = `Olá, ${c.teacher.name}.\n\n${day ? 'Lembrete: amanhã' : 'Daqui a 1 hora'} tem aula de ${c.subject} com ` +
+        `${c.student.firstName}${c.student.grade ? ` (${c.student.grade})` : ''}, ${at}, ${c.durationMin} minutos.\n\n` +
+        `${teacherModalityBlock(c)}\n\nVeja no painel: ${c.links.teacherPanel}`;
+      return {
+        whatsapp: { name: template, vars: { professor: c.teacher.name, aluno: c.student.firstName, horario: at }, preview: text },
+        email: { subject, text },
+      };
+    }
+    case 'pedido_avaliacao_responsavel':
+      subject = `Como foi a aula de ${c.subject} com ${c.teacher.name}?`;
+      text = `Olá, ${c.guardian.name}.\n\nConta para a gente como foi a aula de ${c.subject} de ${c.student.firstName} ` +
+        `com ${c.teacher.name}. Leva um minuto, e a sua nota ajuda outras famílias a escolher.\n\n` +
+        `Avaliar a aula: ${c.links.review}\n\nPara marcar a próxima aula: ${c.links.teacherPage}`;
+      return { whatsapp: { name: template, vars: { ...vars, link: c.links.review }, preview: text }, email: { subject, text } };
     case 'confirmacao_professor': {
       const at = formatPtBr(c.startsAt, c.teacher.timezone);
       subject = `Nova aula paga: ${c.student.firstName}, ${at}`;

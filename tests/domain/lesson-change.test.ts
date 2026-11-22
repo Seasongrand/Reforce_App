@@ -87,7 +87,9 @@ describe('remarcar', () => {
     const [nb] = await q(`SELECT order_id, status, rescheduled_from, starts_at FROM bookings WHERE id = $1`, [r.bookingId]);
     expect(nb).toEqual({ order_id: l.orderId, status: 'confirmed', rescheduled_from: l.bookingId, starts_at: new Date(NEXT_TUE.epochMilliseconds) });
     expect(await q(`SELECT count(*)::int AS n FROM lesson_sessions WHERE booking_id = $1`, [r.bookingId])).toEqual([{ n: 1 }]);
-    expect(await notices(r.bookingId)).toEqual(['lembrete_1h_responsavel', 'lembrete_24h_responsavel', 'remarcada_professor', 'remarcada_responsavel']);
+    expect(await notices(r.bookingId)).toEqual([
+      'lembrete_1h_professor', 'lembrete_1h_responsavel', 'lembrete_24h_professor', 'lembrete_24h_responsavel', 'remarcada_professor', 'remarcada_responsavel',
+    ]);
     expect((await rescheduleSlots(testDeps(), l.guardianId, r.bookingId, NOW)).map(String)).toContain(TUE_14.toString());
     // os lembretes da data antiga não saem
     await sendDueNotifications(testDeps(), TUE_14);

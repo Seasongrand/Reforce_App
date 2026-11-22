@@ -13,7 +13,8 @@ import { createSession, type SubjectType } from '@/domain/auth/sessions';
 import type { Deps } from '@/domain/deps';
 import { teamPasswordMatches } from '@/domain/team-auth';
 import { ensureTeamStaff, ensureTestGuardian, ensureTestTeacher } from '@/domain/team-shortcuts';
-import { appDeps, now } from '@/server/app';
+import { deleteWaitlistEntry } from '@/domain/team-view';
+import { appDeps, now, siteDeps } from '@/server/app';
 import { setSessionCookie } from '@/server/session';
 
 async function enter(type: SubjectType, ensure: (deps: Deps) => Promise<string>, to: string): Promise<void> {
@@ -36,4 +37,20 @@ export async function enterAsTeacherAction(): Promise<void> {
 
 export async function enterAsGuardianAction(): Promise<void> {
   await enter('guardian', ensureTestGuardian, '/conta');
+}
+
+/**
+ * Exclui uma inscrição das listas de espera (inscrições de teste ou pedido de
+ * exclusão de dados). Vale nos dois modos do site, sempre com a senha da
+ * equipe, conferida de novo aqui.
+ */
+export async function deleteWaitlistEntryAction(form: FormData): Promise<void> {
+  const authorization = (await headers()).get('authorization');
+  if (!teamPasswordMatches(config().waitlistExportPassword, authorization)) notFound();
+  const kind = String(form.get('kind'));
+  const value = String(form.get('value') ?? '');
+  const deleted = kind === 'teacher'
+    ? await deleteWaitlistEntry(siteDeps(), { kind: 'teacher', id: value })
+    : kind === 'student' ? await deleteWaitlistEntry(siteDeps(), { kind: 'student', email: value }) : false;
+  redirect(`/equipe?aba=${kind === 'student' ? 'alunos' : 'professores'}&${deleted ? 'excluida=1' : 'nao-encontrada=1'}`);
 }

@@ -134,6 +134,8 @@ async function applyOutcome(
 
   if (outcome === 'taught') {
     await createPayoutForBooking(deps, trx, bookingId, 100);
+    // pedido de avaliação à família, 1 hora depois do fechamento (sai só se ninguém avaliou até lá)
+    await scheduleNotice(trx, bookingId, 'pedido_avaliacao_responsavel', now.add({ hours: 1 }));
   } else if (outcome === 'student_no_show') {
     const pct = deps.config.studentNoShowTeacherPct;
     const p = await createPayoutForBooking(deps, trx, bookingId, pct);

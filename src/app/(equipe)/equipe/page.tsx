@@ -6,12 +6,12 @@ import { teamPasswordMatches } from '@/domain/team-auth';
 import { teamOverview, type TeamOverview } from '@/domain/team-view';
 import { WAITLIST_SUBJECTS } from '@/domain/waitlist';
 import { siteDeps } from '@/server/app';
-import { enterAsGuardianAction, enterAsStaffAction, enterAsTeacherAction } from './actions';
+import { deleteWaitlistEntryAction, enterAsGuardianAction, enterAsStaffAction, enterAsTeacherAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
 type Tab = 'professores' | 'alunos';
-type Search = { aba?: string; q?: string; uf?: string; disciplina?: string };
+type Search = { aba?: string; q?: string; uf?: string; disciplina?: string; excluida?: string; 'nao-encontrada'?: string };
 
 const CARD = 'rounded-[20px] border border-site-line bg-white p-4 sm:p-5';
 const FIELD =
@@ -114,6 +114,21 @@ function TeamAccess() {
   );
 }
 
+/** Excluir a inscrição: um passo de confirmação antes de apagar de vez. */
+function DeleteEntry({ kind, value, what }: { kind: 'teacher' | 'student'; value: string; what: string }) {
+  return (
+    <details className="text-sm">
+      <summary className="inline-flex min-h-11 cursor-pointer items-center text-red-700 underline">Excluir inscrição</summary>
+      <form action={deleteWaitlistEntryAction} className="mt-2 space-y-2 rounded-lg border border-red-200 bg-red-50 p-3">
+        <input type="hidden" name="kind" value={kind} />
+        <input type="hidden" name="value" value={value} />
+        <p className="text-red-900">Apaga {what} de vez. Não tem como desfazer.</p>
+        <button className="inline-flex min-h-11 items-center rounded-lg bg-red-700 px-4 font-medium text-white hover:bg-red-800">Excluir de vez</button>
+      </form>
+    </details>
+  );
+}
+
 function Teachers({ list }: { list: TeamOverview['teachers'] }) {
   return (
     <ul className="space-y-3">
@@ -131,6 +146,7 @@ function Teachers({ list }: { list: TeamOverview['teachers'] }) {
             <a className={ACTION} href={`mailto:${encodeURIComponent(t.email)}`}>{t.email}</a>
             {t.cvUrl && <a className={ACTION} href={t.cvUrl}>Currículo</a>}
           </div>
+          <DeleteEntry kind="teacher" value={t.id} what={`a inscrição de ${t.name}${t.cvUrl ? ' e o currículo' : ''}`} />
         </li>
       ))}
     </ul>
@@ -148,6 +164,7 @@ function Students({ list }: { list: TeamOverview['students'] }) {
           </div>
           <Chips items={s.subjects} />
           <p className="text-sm text-site-muted">{s.stages.join(', ')}</p>
+          <DeleteEntry kind="student" value={s.email} what={`o pedido de aviso de ${s.email}`} />
         </li>
       ))}
     </ul>
@@ -191,6 +208,9 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
           <a className={ACTION} href="/api/lista-de-espera/alunos.csv">Planilha dos alunos</a>
         </div>
       </div>
+
+      {sp.excluida && <p role="status" className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">Inscrição excluída.</p>}
+      {sp['nao-encontrada'] && <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Essa inscrição já não existia.</p>}
 
       {config().siteMode === 'lista_de_espera' && <TeamAccess />}
 

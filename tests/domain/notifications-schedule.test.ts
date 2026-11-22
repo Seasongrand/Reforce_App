@@ -37,26 +37,30 @@ const rows = async (bookingId: string) =>
   )).rows as Array<{ template: string; channel: string; send_at: Date }>;
 
 describe('agendamento na confirmação', () => {
-  it('com aceite dos dois lados: 3 modelos da família × 2 canais + 2 do professor = 8', async () => {
+  it('com aceite dos dois lados: 3 modelos da família × 2 canais + 3 do professor × 2 = 12', async () => {
     const id = await confirmedBooking('2026-11-19 14:00-03', { guardianOptIn: true, teacherOptIn: true });
     await appDb().transaction().execute((trx) => scheduleForConfirmedBooking(trx, id, NOW));
     const r = await rows(id);
     expect(r.map((x) => `${x.template}/${x.channel}`)).toEqual([
       'confirmacao_professor/email', 'confirmacao_professor/whatsapp',
       'confirmacao_responsavel/email', 'confirmacao_responsavel/whatsapp',
+      'lembrete_1h_professor/email', 'lembrete_1h_professor/whatsapp',
       'lembrete_1h_responsavel/email', 'lembrete_1h_responsavel/whatsapp',
+      'lembrete_24h_professor/email', 'lembrete_24h_professor/whatsapp',
       'lembrete_24h_responsavel/email', 'lembrete_24h_responsavel/whatsapp',
     ]);
     const at = (tpl: string) => r.find((x) => x.template === tpl)!.send_at.toISOString();
     expect(at('lembrete_24h_responsavel')).toBe('2026-11-18T17:00:00.000Z');
     expect(at('lembrete_1h_responsavel')).toBe('2026-11-19T16:00:00.000Z');
+    expect(at('lembrete_24h_professor')).toBe('2026-11-18T17:00:00.000Z');
+    expect(at('lembrete_1h_professor')).toBe('2026-11-19T16:00:00.000Z');
     expect(at('confirmacao_responsavel')).toBe(NOW.toString().replace('Z', '.000Z'));
   });
 
-  it('sem aceite de WhatsApp da família: só e-mail para ela (3 + 2 do professor = 5)', async () => {
+  it('sem aceite de WhatsApp da família: só e-mail para ela (3 + 6 do professor = 9)', async () => {
     const id = await confirmedBooking('2026-11-19 14:00-03', { guardianOptIn: false, teacherOptIn: true });
     await appDb().transaction().execute((trx) => scheduleForConfirmedBooking(trx, id, NOW));
-    expect(await rows(id)).toHaveLength(5);
+    expect(await rows(id)).toHaveLength(9);
   });
 
   it('aula daqui a 5 horas: o lembrete de 24 h não é criado', async () => {
@@ -64,13 +68,15 @@ describe('agendamento na confirmação', () => {
     await appDb().transaction().execute((trx) => scheduleForConfirmedBooking(trx, id, NOW));
     const templates = new Set((await rows(id)).map((x) => x.template));
     expect(templates.has('lembrete_24h_responsavel')).toBe(false);
+    expect(templates.has('lembrete_24h_professor')).toBe(false);
     expect(templates.has('lembrete_1h_responsavel')).toBe(true);
+    expect(templates.has('lembrete_1h_professor')).toBe(true);
   });
 
   it('agendar duas vezes não duplica', async () => {
     const id = await confirmedBooking('2026-11-19 14:00-03', { guardianOptIn: true, teacherOptIn: true });
     await appDb().transaction().execute((trx) => scheduleForConfirmedBooking(trx, id, NOW));
     await appDb().transaction().execute((trx) => scheduleForConfirmedBooking(trx, id, NOW));
-    expect(await rows(id)).toHaveLength(8);
+    expect(await rows(id)).toHaveLength(12);
   });
 });
