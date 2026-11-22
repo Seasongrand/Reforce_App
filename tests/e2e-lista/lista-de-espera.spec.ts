@@ -145,6 +145,18 @@ test('página da equipe: pede a senha, mostra o resumo, filtra e abre o currícu
   expect(cv.headers()['content-type']).toBe('application/pdf');
   await team.getByRole('link', { name: 'Alunos (1)' }).click();
   await expect(team.getByTestId('aluno')).toContainText('responsavel.equipe@exemplo.com');
+
+  // excluir inscrição (de teste, ou a pedido da pessoa): confirma e some da lista e da planilha
+  await team.getByTestId('aluno').getByText('Excluir inscrição').click();
+  await team.getByTestId('aluno').getByRole('button', { name: 'Excluir de vez' }).click();
+  await expect(team.getByRole('status')).toHaveText('Inscrição excluída.');
+  await expect(team.getByText('responsavel.equipe@exemplo.com')).toHaveCount(0);
+  await team.goto('/equipe?disciplina=9');
+  await team.getByTestId('professor').getByText('Excluir inscrição').click();
+  await team.getByTestId('professor').getByRole('button', { name: 'Excluir de vez' }).click();
+  await expect(team.getByRole('status')).toHaveText('Inscrição excluída.');
+  await expect(team.getByText('Carla Equipe')).toHaveCount(0);
+  expect(await (await ctx.request.get(`${LISTA_BASE}/api/lista-de-espera.csv`)).text()).not.toContain('carla.equipe@exemplo.com');
   await ctx.close();
 });
 

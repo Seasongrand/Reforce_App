@@ -135,3 +135,24 @@ export async function teamOverview(deps: { db: Db }, filters: TeamFilters): Prom
     })),
   };
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Apaga uma inscrição das listas de espera: a de um professor (o currículo vai
+ * junto, por ON DELETE CASCADE) ou a de um aluno (pelo e-mail, que é único).
+ * Serve para limpar inscrições de teste e para os pedidos de exclusão da
+ * política de privacidade. Diz se apagou alguma coisa.
+ */
+export async function deleteWaitlistEntry(
+  deps: { db: Db },
+  entry: { kind: 'teacher'; id: string } | { kind: 'student'; email: string },
+): Promise<boolean> {
+  if (entry.kind === 'teacher') {
+    if (!UUID.test(entry.id)) return false;
+    const r = await deps.db.deleteFrom('teacher_waitlist').where('id', '=', entry.id).executeTakeFirst();
+    return Number(r.numDeletedRows) > 0;
+  }
+  const r = await deps.db.deleteFrom('student_waitlist').where('email', '=', entry.email.trim().toLowerCase()).executeTakeFirst();
+  return Number(r.numDeletedRows) > 0;
+}
