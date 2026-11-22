@@ -93,6 +93,10 @@ describe('desfecho da aula online', () => {
     });
     expect((p!.release_after as Date).toISOString()).toBe('2026-11-18T18:00:00.000Z');
     expect((await q(`SELECT outcome FROM lesson_sessions WHERE booking_id = $1`, [l.bookingId]))[0]!.outcome).toBe('taught');
+    // aula dada: o pedido de avaliação à família sai 1 hora depois do fechamento
+    const ask = await q(`SELECT channel, send_at FROM notifications WHERE booking_id = $1 AND template = 'pedido_avaliacao_responsavel'`, [l.bookingId]);
+    expect(ask.length).toBeGreaterThan(0);
+    expect((ask[0]!.send_at as Date).toISOString()).toBe(AFTER.add({ hours: 1 }).toString().replace('Z', '.000Z'));
   });
 
   it('só o professor: falta do aluno; o professor recebe por inteiro (padrão)', async () => {
@@ -111,6 +115,14 @@ describe('desfecho da aula online', () => {
     expect((await queuedJobs()).filter((j) => j.task === 'payment.refund')).toEqual([
       { task: 'payment.refund', payload: { paymentId: l.paymentId, amountCents: 6050 } },
     ]);
+  });
+
+  it('aula que não foi dada não pede avaliação', async () => {
+    const l = await onlineLesson();
+    await presence(l.room, 'student', 'joined', TUE_14.add({ minutes: 1 }));
+    await closeLessons(deps(), AFTER);
+    expect(await q(`SELECT count(*)::int AS n FROM notifications WHERE booking_id = $1 AND template = 'pedido_avaliacao_responsavel'`, [l.bookingId]))
+      .toEqual([{ n: 0 }]);
   });
 
   it('só o aluno: falta do professor, reembolso integral, nenhum repasse e aviso à família', async () => {

@@ -12,6 +12,7 @@ import { loadMessageContext, render } from './templates';
 
 const NEEDS_CONFIRMED = new Set<Template>([
   'confirmacao_responsavel', 'lembrete_24h_responsavel', 'lembrete_1h_responsavel', 'confirmacao_professor',
+  'lembrete_24h_professor', 'lembrete_1h_professor',
 ]);
 // o aviso de remarcação sai mesmo se a aula nova for cancelada logo depois: o professor precisa saber da mudança de data
 
@@ -21,8 +22,9 @@ export async function sendDueNotifications(
   limit = 50,
 ): Promise<{ sent: number; cancelled: number; failed: number }> {
   return deps.db.transaction().execute(async (trx) => {
-    const { rows } = await sql<{ id: string; booking_id: string; channel: 'whatsapp' | 'email'; template: Template; booking_status: string }>`
-      SELECT n.id, n.booking_id, n.channel, n.template, b.status AS booking_status
+    const { rows } = await sql<{ id: string; booking_id: string; channel: 'whatsapp' | 'email'; template: Template; booking_status: string; reviewed: boolean }>`
+      SELECT n.id, n.booking_id, n.channel, n.template, b.status AS booking_status,
+             EXISTS (SELECT 1 FROM reviews r WHERE r.booking_id = n.booking_id) AS reviewed
         FROM notifications n JOIN bookings b ON b.id = n.booking_id
        WHERE n.status = 'scheduled' AND n.send_at <= ${now.toString()}::timestamptz
        ORDER BY n.send_at
@@ -30,7 +32,9 @@ export async function sendDueNotifications(
        FOR UPDATE OF n SKIP LOCKED`.execute(trx);
     const out = { sent: 0, cancelled: 0, failed: 0 };
     for (const n of rows) {
-      if (NEEDS_CONFIRMED.has(n.template) && n.booking_status !== 'confirmed') {
+      // o pedido de avaliação só sai para aula concluída e ainda não avaliada
+      const reviewAskStale = n.template === 'pedido_avaliacao_responsavel' && (n.booking_status !== 'completed' || n.reviewed);
+      if ((NEEDS_CONFIRMED.has(n.template) && n.booking_status !== 'confirmed') || reviewAskStale) {
         await sql`UPDATE notifications SET status = 'cancelled' WHERE id = ${n.id}`.execute(trx);
         out.cancelled += 1;
         continue;

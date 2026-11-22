@@ -65,7 +65,7 @@ describe('textos', () => {
 });
 
 describe('envio', () => {
-  it('na hora da confirmação envia as confirmações; na véspera, só o lembrete de 24 h, uma vez', async () => {
+  it('na hora da confirmação envia as confirmações; na véspera, só os lembretes de 24 h (família e professor), uma vez', async () => {
     const l = await paidLesson();
     await sendDueNotifications(deps(), NOW.add({ minutes: 1 }));
     const first = await outbox();
@@ -81,14 +81,14 @@ describe('envio', () => {
     const dayBefore = TUE_14.subtract({ hours: 24 });
     await Promise.all([sendDueNotifications(deps(), dayBefore), sendDueNotifications(deps(), dayBefore)]);
     const after = (await outbox()).slice(first.length);
-    expect(after.map((m) => m.channel).sort()).toEqual(['email', 'whatsapp']);
+    expect(after.map((m) => m.channel).sort()).toEqual(['email', 'email', 'whatsapp', 'whatsapp']);
     expect(after.every((m) => (m.template ?? m.subject ?? '').match(/lembrete_24h|amanhã/i))).toBe(true);
     const states = await testPool().query(
       `SELECT template, status FROM notifications WHERE booking_id = $1 ORDER BY template, channel`,
       [l.bookingId],
     );
     expect(states.rows.filter((r) => r.status === 'scheduled').map((r) => r.template)).toEqual([
-      'lembrete_1h_responsavel', 'lembrete_1h_responsavel',
+      'lembrete_1h_professor', 'lembrete_1h_professor', 'lembrete_1h_responsavel', 'lembrete_1h_responsavel',
     ]);
   });
 
@@ -101,6 +101,40 @@ describe('envio', () => {
     expect((await outbox()).length).toBe(before);
     const { rows } = await testPool().query(`SELECT DISTINCT status FROM notifications WHERE template LIKE 'lembrete%'`);
     expect(rows).toEqual([{ status: 'cancelled' }]);
+  });
+
+  it('pedido de avaliação: sai com o link para avaliar; não sai se a família já avaliou', async () => {
+    const l = await paidLesson();
+    await testPool().query(`UPDATE bookings SET status = 'completed' WHERE id = $1`, [l.bookingId]);
+    await testPool().query(
+      `INSERT INTO notifications (booking_id, channel, template, send_at) VALUES ($1, 'email', 'pedido_avaliacao_responsavel', $2)`,
+      [l.bookingId, TUE_14.add({ hours: 2 }).toString()],
+    );
+    const ask = render('pedido_avaliacao_responsavel', await loadMessageContext(deps(), l.bookingId));
+    expect(ask.email.subject).toBe('Como foi a aula de matemática com Ana Souza?');
+    expect(ask.email.text).toContain(`http://localhost:3000/conta/avaliar/${l.bookingId}`);
+
+    // já avaliou antes do envio: o pedido é cancelado
+    await testPool().query(
+      `INSERT INTO reviews (booking_id, teacher_id, guardian_id, rating, created_at)
+       SELECT b.id, b.teacher_id, o.guardian_id, 5, now() FROM bookings b JOIN orders o ON o.id = b.order_id WHERE b.id = $1`,
+      [l.bookingId],
+    );
+    const before = (await outbox()).length;
+    await sendDueNotifications(deps(), TUE_14.add({ hours: 3 }));
+    expect((await outbox()).length).toBe(before);
+    const { rows } = await testPool().query(`SELECT status FROM notifications WHERE template = 'pedido_avaliacao_responsavel'`);
+    expect(rows).toEqual([{ status: 'cancelled' }]);
+  });
+
+  it('lembrete do professor: aluno, série, horário e onde é a aula', async () => {
+    const l = await paidLesson();
+    const m = render('lembrete_24h_professor', await loadMessageContext(deps(), l.bookingId));
+    expect(m.email.subject).toBe('Lembrete: aula com Joana amanhã');
+    expect(m.email.text).toContain('Joana');
+    expect(m.email.text).toContain('terça-feira, 17 de novembro, 14:00');
+    expect(render('lembrete_1h_professor', await loadMessageContext(deps(), l.bookingId)).email.subject)
+      .toBe('A aula com Joana começa em 1 hora');
   });
 
   it('mensagem não vence antes da hora', async () => {

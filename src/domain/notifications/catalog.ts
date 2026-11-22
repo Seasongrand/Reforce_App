@@ -13,6 +13,10 @@ export const TEMPLATES = {
   remarcada_professor: 'teacher',
   remarcada_responsavel: 'guardian',
   cancelada_pelo_professor: 'guardian',
+  // lembretes ao professor e pedido de avaliação (22/11)
+  lembrete_24h_professor: 'teacher',
+  lembrete_1h_professor: 'teacher',
+  pedido_avaliacao_responsavel: 'guardian',
 } as const;
 
 export type Template = keyof typeof TEMPLATES;
