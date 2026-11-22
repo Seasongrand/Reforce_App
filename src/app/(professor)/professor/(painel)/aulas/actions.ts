@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { joinRoom } from '@/domain/lessons/room';
 import { submitCheckin } from '@/domain/lessons/checkin';
 import { refundNoShowByTeacher } from '@/domain/lessons/no-show-refund';
+import { cancelByTeacher } from '@/domain/lessons/change';
 import { appDeps, now } from '@/server/app';
 import { errorMessage, type ActionState } from '@/server/action-result';
 import { requireTeacher } from '@/server/session';
@@ -53,6 +54,19 @@ export async function refundNoShowAction(_: unknown, f: FormData): Promise<Actio
   if (f.get('confirm') !== 'on') return { ok: false, error: 'Marque a confirmação para devolver o valor.' };
   try {
     await refundNoShowByTeacher(appDeps(), { teacherId, bookingId: String(f.get('bookingId') ?? '') }, await now());
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+  revalidatePath('/professor/aulas');
+  return { ok: true, data: undefined };
+}
+
+/** O professor cancela uma aula paga: a família recebe tudo de volta e é avisada. */
+export async function cancelLessonByTeacherAction(_: unknown, f: FormData): Promise<ActionState> {
+  const teacherId = await requireTeacher();
+  if (f.get('confirm') !== 'on') return { ok: false, error: 'Marque a confirmação para cancelar.' };
+  try {
+    await cancelByTeacher(appDeps(), { teacherId, bookingId: String(f.get('bookingId') ?? '') }, await now());
   } catch (err) {
     return { ok: false, error: errorMessage(err) };
   }

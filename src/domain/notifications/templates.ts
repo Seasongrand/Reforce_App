@@ -20,6 +20,8 @@ export interface MessageContext {
   orderId: string;
   modality: 'online' | 'at_teacher' | 'at_student';
   startsAt: Temporal.Instant;
+  /** Na aula remarcada: quando era antes. */
+  previousStartsAt: Temporal.Instant | null;
   durationMin: number;
   totalCents: number;
   subject: string;
@@ -44,6 +46,7 @@ export async function loadMessageContext(deps: Deps, bookingId: string, db: Kyse
     s_name: string; s_grade: string | null;
     t_name: string; t_slug: string; t_tz: string; t_phone: string | null; t_email: string | null; t_address: string | null;
     a_street: string | null; a_number: string | null; a_district: string | null; a_city: string | null; a_state: string | null;
+    prev_starts_at: string | null;
   }>`
     SELECT b.order_id, b.modality, b.starts_at, b.ends_at, o.total_cents, o.lessons,
            sv.subject AS subject_slug, sj.name AS subject_name, sv.duration_min,
@@ -51,7 +54,8 @@ export async function loadMessageContext(deps: Deps, bookingId: string, db: Kyse
            st.first_name AS s_name, st.grade AS s_grade,
            t.display_name AS t_name, t.slug AS t_slug, t.timezone AS t_tz, t.phone_e164 AS t_phone,
            t.email AS t_email, t.teaching_address AS t_address,
-           a.street AS a_street, a.number AS a_number, a.district AS a_district, a.city AS a_city, a.state AS a_state
+           a.street AS a_street, a.number AS a_number, a.district AS a_district, a.city AS a_city, a.state AS a_state,
+           prev.starts_at AS prev_starts_at
       FROM bookings b
       JOIN orders o ON o.id = b.order_id
       JOIN services sv ON sv.id = b.service_id
@@ -60,6 +64,7 @@ export async function loadMessageContext(deps: Deps, bookingId: string, db: Kyse
       JOIN students st ON st.id = b.student_id
       JOIN teachers t ON t.id = b.teacher_id
       LEFT JOIN addresses a ON a.id = b.address_id
+      LEFT JOIN bookings prev ON prev.id = b.rescheduled_from
      WHERE b.id = ${bookingId}`.execute(db);
   const r = rows[0];
   if (!r) throw new Error(`aula ${bookingId} não encontrada`);
@@ -72,6 +77,7 @@ export async function loadMessageContext(deps: Deps, bookingId: string, db: Kyse
     orderId: r.order_id,
     modality,
     startsAt: instantFromDb(r.starts_at),
+    previousStartsAt: r.prev_starts_at ? instantFromDb(r.prev_starts_at) : null,
     durationMin: r.duration_min,
     totalCents: Math.round(r.total_cents / r.lessons),
     subject: (r.subject_name ?? subjectName(r.subject_slug)).toLowerCase(),
@@ -157,6 +163,42 @@ export function render(template: Template, c: MessageContext): RenderedMessage {
       text = `Olá, ${c.guardian.name}.\n\n${c.teacher.name} devolveu o valor da aula de ${c.subject} de ${when}, ` +
         `em que ${c.student.firstName} não pôde participar. A devolução é feita pelo mesmo meio de pagamento.`;
       break;
+    case 'cancelamento_confirmado':
+      subject = `Aula cancelada: ${c.subject} com ${c.teacher.name}`;
+      text = `Olá, ${c.guardian.name}.\n\nA aula de ${c.subject} de ${c.student.firstName} com ${c.teacher.name}, ${when}, ` +
+        `foi cancelada. Devolvemos ${formatBRL(c.totalCents)} pelo mesmo meio de pagamento.\n\n` +
+        `Para escolher outro horário: ${c.links.teacherPage}`;
+      break;
+    case 'remarcada_responsavel':
+      subject = `Aula remarcada: ${c.subject} com ${c.teacher.name}`;
+      text = `Olá, ${c.guardian.name}.\n\nA aula de ${c.subject} de ${c.student.firstName} com ${c.teacher.name} ` +
+        `foi remarcada para ${when}.\n\n${familyModalityBlock(c)}\n\nDetalhes da aula: ${c.links.lesson}`;
+      break;
+    case 'cancelada_pelo_professor':
+      subject = 'O professor cancelou a aula: valor devolvido';
+      text = `Olá, ${c.guardian.name}.\n\n${c.teacher.name} cancelou a aula de ${c.subject} de ${c.student.firstName}, ` +
+        `${when}. Devolvemos o valor integral de ${formatBRL(c.totalCents)} pelo mesmo meio de pagamento. ` +
+        `Pedimos desculpas.\n\nPara escolher outro horário: ${c.links.teacherPage}`;
+      break;
+    case 'cancelada_pela_familia':
+    case 'remarcada_professor': {
+      const at = formatPtBr(c.startsAt, c.teacher.timezone);
+      if (template === 'cancelada_pela_familia') {
+        subject = `Aula cancelada: ${c.student.firstName}, ${at}`;
+        text = `Olá, ${c.teacher.name}.\n\nA família de ${c.student.firstName} cancelou a aula de ${c.subject} de ${at}. ` +
+          `O horário voltou a ficar livre na sua agenda.\n\nVeja no painel: ${c.links.teacherPanel}`;
+      } else {
+        const before = c.previousStartsAt ? formatPtBr(c.previousStartsAt, c.teacher.timezone) : 'o horário anterior';
+        subject = `Aula remarcada: ${c.student.firstName}, ${at}`;
+        text = `Olá, ${c.teacher.name}.\n\nA família de ${c.student.firstName} remarcou a aula de ${c.subject} de ${before} ` +
+          `para ${at}. O horário antigo voltou a ficar livre na sua agenda.\n\n${teacherModalityBlock(c)}\n\n` +
+          `Veja no painel: ${c.links.teacherPanel}`;
+      }
+      return {
+        whatsapp: { name: template, vars: { professor: c.teacher.name, aluno: c.student.firstName, horario: at }, preview: text },
+        email: { subject, text },
+      };
+    }
     case 'confirmacao_professor': {
       const at = formatPtBr(c.startsAt, c.teacher.timezone);
       subject = `Nova aula paga: ${c.student.firstName}, ${at}`;
