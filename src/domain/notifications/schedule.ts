@@ -60,6 +60,8 @@ export async function scheduleForConfirmedBooking(trx: Transaction<DB>, bookingI
     ['lembrete_24h_responsavel', starts.subtract({ hours: 24 })],
     ['lembrete_1h_responsavel', starts.subtract({ hours: 1 })],
     ['confirmacao_professor', now],
+    ['lembrete_24h_professor', starts.subtract({ hours: 24 })],
+    ['lembrete_1h_professor', starts.subtract({ hours: 1 })],
   ];
   for (const [template, sendAt] of plan) {
     // lembrete cujo horário já passou não é criado
@@ -77,6 +79,8 @@ export async function scheduleForRescheduledBooking(trx: Transaction<DB>, bookin
     ['remarcada_professor', now],
     ['lembrete_24h_responsavel', starts.subtract({ hours: 24 })],
     ['lembrete_1h_responsavel', starts.subtract({ hours: 1 })],
+    ['lembrete_24h_professor', starts.subtract({ hours: 24 })],
+    ['lembrete_1h_professor', starts.subtract({ hours: 1 })],
   ];
   for (const [template, sendAt] of plan) {
     if (template.startsWith('lembrete') && sendAt.epochMilliseconds <= now.epochMilliseconds) continue;
