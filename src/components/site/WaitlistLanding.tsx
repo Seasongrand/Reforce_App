@@ -48,14 +48,14 @@ export function WaitlistLanding() {
               <div className="hero__media span-6 start-7">
                 {/* stand-in do Wikimedia Commons até a Reforce ter fotos das próprias aulas */}
                 <img
-                  src="/assets/img/photo-f112411194-1280.webp"
-                  srcSet="/assets/img/photo-f112411194-960.webp 960w, /assets/img/photo-f112411194-1280.webp 1280w, /assets/img/photo-f112411194-1920.webp 1920w"
+                  src="/assets/img/photo-f194440257-1280.webp"
+                  srcSet="/assets/img/photo-f194440257-960.webp 960w, /assets/img/photo-f194440257-1280.webp 1280w, /assets/img/photo-f194440257-1920.webp 1920w"
                   sizes="(min-width: 1024px) 70vw, 100vw"
-                  alt="Professor aponta uma conta no papel enquanto o aluno escreve a resolução"
-                  style={{ ['--ly-pos' as string]: '50% 50%' }}
+                  alt="Mão escreve com lápis num caderno aberto apoiado no colo"
+                  style={{ ['--ly-pos' as string]: '55% 60%' }}
                   fetchPriority="high"
                   data-source="stand-in"
-                  data-subject="aula particular de matemática"
+                  data-subject="estudo com caderno"
                 />
                 <div className="ly-float">
                   <div className="ly-float__row"><span className="ly-live">{HERO.float.day}</span><span>{HERO.float.time}</span></div>
@@ -121,13 +121,13 @@ export function WaitlistLanding() {
                 <div className="frame frame--photo lista__photo">
                   <img
                     className="frame__img"
-                    src="/assets/img/photo-f41430144-960.webp"
-                    srcSet="/assets/img/photo-f41430144-500.webp 500w, /assets/img/photo-f41430144-960.webp 960w, /assets/img/photo-f41430144-1280.webp 1280w"
+                    src="/assets/img/photo-f61802443-960.webp"
+                    srcSet="/assets/img/photo-f61802443-500.webp 500w, /assets/img/photo-f61802443-960.webp 960w, /assets/img/photo-f61802443-1280.webp 1280w"
                     sizes="(min-width: 1024px) 60vw, 100vw"
-                    alt="Mão escreve num caderno ao lado de um notebook"
+                    alt="Lápis apontado e aparas sobre um caderno pautado em branco"
                     loading="lazy"
                     data-source="stand-in"
-                    data-subject="anotações de estudo"
+                    data-subject="caderno e lápis"
                   />
                 </div>
               </div>

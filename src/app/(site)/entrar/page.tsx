@@ -47,13 +47,13 @@ export default function StudentEntryPage() {
               <div className="hero__media span-6 start-7">
                 {/* stand-in do Wikimedia Commons até a Reforce ter fotos das próprias aulas */}
                 <img
-                  src="/assets/img/photo-f112411196-1280.webp"
-                  srcSet="/assets/img/photo-f112411196-960.webp 960w, /assets/img/photo-f112411196-1280.webp 1280w"
+                  src="/assets/img/photo-f195684000-1280.webp"
+                  srcSet="/assets/img/photo-f195684000-960.webp 960w, /assets/img/photo-f195684000-1280.webp 1280w, /assets/img/photo-f195684000-1920.webp 1920w"
                   sizes="(min-width: 1024px) 70vw, 100vw"
-                  alt="Professor aponta uma fórmula de química no papel enquanto o aluno escreve"
+                  alt="Pessoa sentada escreve num caderno apoiado no colo"
                   fetchPriority="high"
                   data-source="stand-in"
-                  data-subject="aula particular de química"
+                  data-subject="estudo com caderno"
                 />
               </div>
             </div>
