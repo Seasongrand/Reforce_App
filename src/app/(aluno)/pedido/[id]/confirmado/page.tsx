@@ -43,21 +43,21 @@ export default async function ConfirmedPage({ params }: { params: Promise<{ id: 
             <path d="M20 6 9 17l-5-5" />
           </svg>
         </span>
-        <h1 className="font-display text-3xl font-bold" data-testid="aula-confirmada">Aula confirmada!</h1>
+        <h1 className="font-display tracking-tight text-3xl font-normal" data-testid="aula-confirmada">Aula confirmada!</h1>
         <p className="text-[15px] leading-normal text-site-muted">
           Mandamos tudo por e-mail{c.guardian.phone ? ' e WhatsApp' : ''}. Pagamento de {formatBRL(c.totalCents)} recebido.
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-site-line">
+      <div className="overflow-hidden rounded-[20px] border border-site-line">
         <div className="flex items-center gap-3.5 bg-indigo-950 p-4 text-white">
-          <div className="w-15 flex-none rounded-xl bg-yellow-400 py-2 text-center text-indigo-950">
-            <p className="text-xs font-semibold">{WEEKDAY[day.dayOfWeek - 1]}</p>
-            <p className="font-display text-2xl font-bold leading-tight">{day.day}</p>
-            <p className="text-xs font-semibold">{MONTH[day.month - 1]}</p>
+          <div className="w-15 flex-none rounded-xl bg-white py-2 text-center text-indigo-950">
+            <p className="text-xs font-medium">{WEEKDAY[day.dayOfWeek - 1]}</p>
+            <p className="font-display tracking-tight text-2xl font-normal leading-tight">{day.day}</p>
+            <p className="text-xs font-medium">{MONTH[day.month - 1]}</p>
           </div>
           <div>
-            <p className="font-display text-[22px] font-bold">{formatTime(c.startsAt, tz)} às {formatTime(ends, tz)}</p>
+            <p className="font-display tracking-tight text-[22px] font-normal">{formatTime(c.startsAt, tz)} às {formatTime(ends, tz)}</p>
             <p className="mt-0.5 text-sm text-site-on-dark">horário de {zoneLabel(tz)}</p>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default async function ConfirmedPage({ params }: { params: Promise<{ id: 
           <div className="flex items-center gap-3">
             <TeacherPhoto photoUrl={v.teacherPhotoUrl} name={c.teacher.name} size={44} />
             <div>
-              <p className="font-semibold">{v.subject} com {c.teacher.name}</p>
+              <p className="font-medium">{v.subject} com {c.teacher.name}</p>
               <p className="mt-0.5 text-[13px] text-site-muted">Aluno: {c.student.firstName}, {grade}</p>
             </div>
           </div>
@@ -79,7 +79,7 @@ export default async function ConfirmedPage({ params }: { params: Promise<{ id: 
           {c.modality !== 'online' && (
             <p className="text-sm">
               Código da aula, para dizer ao professor na chegada:{' '}
-              <strong className="font-display text-xl tracking-[0.3em]" data-testid="codigo">{c.checkinCode}</strong>
+              <strong className="font-display tracking-tight text-xl tracking-[0.3em]" data-testid="codigo">{c.checkinCode}</strong>
             </p>
           )}
         </div>
@@ -91,7 +91,7 @@ export default async function ConfirmedPage({ params }: { params: Promise<{ id: 
       </div>
 
       <section className="space-y-3">
-        <h2 className="font-display text-xl font-bold">No dia da aula</h2>
+        <h2 className="font-display tracking-tight text-xl font-normal">No dia da aula</h2>
         <ol className="list-decimal space-y-2 pl-5 text-[15px] leading-normal text-[#3b3870]">
           <li>Lembramos você 24 horas e 1 hora antes.</li>
           {c.modality === 'online' ? (
@@ -114,7 +114,7 @@ export default async function ConfirmedPage({ params }: { params: Promise<{ id: 
       </ProtectedNote>
 
       <Link href={`/p/${c.teacher.slug}`}
-        className="inline-flex min-h-13 w-full items-center justify-center rounded-2xl bg-yellow-400 px-6 text-base font-semibold text-indigo-950 hover:bg-yellow-300">
+        className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border border-indigo-950/20 bg-white px-6 text-base font-medium text-indigo-950 transition hover:-translate-y-px hover:bg-violet-50">
         Marcar a próxima aula com {firstName}
       </Link>
     </div>

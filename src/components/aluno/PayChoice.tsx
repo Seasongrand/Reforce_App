@@ -14,8 +14,8 @@ type Action = (prev: unknown, f: FormData) => Promise<ActionState<unknown>>;
 function MethodButton({ method, title, note, pending }: { method: 'pix' | 'card'; title: string; note: string; pending: boolean }) {
   return (
     <button name="method" value={method} disabled={pending} aria-label={method === 'pix' ? 'Pagar com PIX' : 'Pagar com cartão'}
-      className="flex min-h-20 w-full flex-col items-start justify-center gap-1 rounded-2xl border border-site-field bg-white px-5 text-left hover:border-indigo-600 hover:bg-indigo-50 disabled:opacity-60">
-      <span className="text-[17px] font-semibold">{title}</span>
+      className="flex min-h-20 w-full flex-col items-start justify-center gap-1 rounded-[20px] border border-site-field bg-white px-5 text-left hover:border-indigo-600 hover:bg-indigo-50 disabled:opacity-60">
+      <span className="text-[17px] font-medium">{title}</span>
       <span className="text-[13px] text-site-muted">{note}</span>
     </button>
   );

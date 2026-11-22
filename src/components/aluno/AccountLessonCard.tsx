@@ -15,11 +15,11 @@ export function Stars({ n }: { n: number }) {
 
 export function AccountLessonCard({ l, tz, children }: { l: AccountLesson; tz: string; children?: React.ReactNode }) {
   return (
-    <li className="space-y-3 rounded-3xl border border-site-line bg-white p-5" data-testid={`aula-${l.bookingId}`}>
+    <li className="space-y-3 rounded-[20px] border border-site-line bg-white p-5" data-testid={`aula-${l.bookingId}`}>
       <div className="flex items-center gap-3">
         <TeacherPhoto photoUrl={l.teacherPhotoUrl} name={l.teacherName} size={48} />
         <div className="min-w-0 flex-1">
-          <p className="font-semibold">{l.subject} com {l.teacherName}</p>
+          <p className="font-medium">{l.subject} com {l.teacherName}</p>
           <p className="text-sm text-site-muted">
             <LocalWhen iso={l.startsAt} teacherTz={tz} /> · {PLACE[l.modality]} · {l.studentFirstName}
           </p>

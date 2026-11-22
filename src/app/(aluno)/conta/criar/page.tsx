@@ -24,7 +24,7 @@ export default async function GuardianSignupPage({ searchParams }: { searchParam
       </div>
       <SignupForm start={signupStartAction} finish={signupFinishAction} next={next} />
       <p className="text-sm text-site-muted">
-        Já tem conta? <Link href={next ? `/conta/entrar?voltar=${encodeURIComponent(next)}` : '/conta/entrar'} className="inline-flex min-h-11 items-center font-semibold text-indigo-600 underline">Entrar</Link>
+        Já tem conta? <Link href={next ? `/conta/entrar?voltar=${encodeURIComponent(next)}` : '/conta/entrar'} className="inline-flex min-h-11 items-center font-medium text-indigo-600 underline">Entrar</Link>
       </p>
     </div>
   );

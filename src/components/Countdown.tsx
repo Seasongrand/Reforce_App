@@ -25,7 +25,8 @@ export function Countdown({ secondsLeft }: { secondsLeft: number }) {
     tick();
     return () => clearInterval(t);
   }, [secondsLeft, router]);
-  const bar = 'sticky top-0 z-10 -mx-5 flex items-center gap-2.5 bg-yellow-400 px-5 py-3 text-[15px] font-semibold text-indigo-950';
+  // fica logo abaixo do topo fixo (64 px no celular, 72 px no computador)
+  const bar = 'sticky top-16 z-10 -mx-5 flex items-center gap-2.5 rounded-b-lg border-b border-indigo-950/10 bg-[#f1effd] px-5 py-3 text-[15px] font-medium text-indigo-950 lg:top-[72px]';
   const icon = (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="13" r="8" />
@@ -39,7 +40,7 @@ export function Countdown({ secondsLeft }: { secondsLeft: number }) {
   const s = Math.floor((left % 60000) / 1000);
   return (
     <p className={bar} data-testid="cronometro" role="timer">
-      {icon}Horário guardado para você por <span className="font-display text-lg">{m}:{String(s).padStart(2, '0')}</span>
+      {icon}Horário guardado para você por <span className="font-display tracking-tight text-lg">{m}:{String(s).padStart(2, '0')}</span>
     </p>
   );
 }

@@ -12,8 +12,9 @@
 }
 
 @theme inline {
-  --font-site: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  /* --app-text e --app-display trocam a fonte numa área inteira (as telas do aluno usam a do site público) */
+  --font-site: var(--app-text, var(--font-inter)), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--app-display, var(--font-space-grotesk)), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {

@@ -7,8 +7,8 @@ import { ALERT, INPUT, LABEL } from './ui';
 
 type StartAction = (prev: unknown, form: FormData) => Promise<ActionState<{ codeId: string; sentTo: string }>>;
 type FinishAction = (prev: unknown, form: FormData) => Promise<ActionState>;
-const BTN = 'inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60';
-const QUIET = 'inline-flex min-h-11 items-center rounded-xl px-2 text-sm font-semibold text-indigo-600';
+const BTN = 'inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60';
+const QUIET = 'inline-flex min-h-11 items-center rounded-xl px-2 text-sm font-medium text-indigo-600';
 
 export function EmailChange({ start, finish }: { start: StartAction; finish: FinishAction }) {
   const [startState, startRun, starting] = useActionState(start, null);
@@ -23,7 +23,7 @@ export function EmailChange({ start, finish }: { start: StartAction; finish: Fin
       <form action={startRun} className="max-w-xl space-y-3">
         <label className={LABEL}>E-mail novo<input className={INPUT} name="email" type="email" required autoComplete="email" /></label>
         {startState && !startState.ok && <p className={ALERT} role="alert">{startState.error}</p>}
-        {done && <p className="rounded-2xl bg-green-100 px-4 py-3 text-sm font-semibold text-green-800" role="status">E-mail trocado.</p>}
+        {done && <p className="rounded-[20px] bg-green-100 px-4 py-3 text-sm font-medium text-green-800" role="status">E-mail trocado.</p>}
         <button className={BTN} disabled={starting}>{starting ? 'Enviando…' : 'Enviar código'}</button>
       </form>
     );
@@ -34,7 +34,7 @@ export function EmailChange({ start, finish }: { start: StartAction; finish: Fin
       <input type="hidden" name="codeId" value={sent.codeId} />
       <label className={LABEL}>Código
         <input id="email-code" name="code" inputMode="numeric" autoComplete="one-time-code" required maxLength={6} placeholder="000000"
-          className={`${INPUT} max-w-48 text-center font-display text-xl tracking-[0.3em]`} />
+          className={`${INPUT} max-w-48 text-center font-display tracking-tight text-xl tracking-[0.3em]`} />
       </label>
       {finishState && !finishState.ok && <p className={ALERT} role="alert">{finishState.error}</p>}
       <div className="flex flex-wrap items-center gap-2">

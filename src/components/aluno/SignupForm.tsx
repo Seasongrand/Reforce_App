@@ -41,8 +41,8 @@ export function SignupForm({ start, finish, next }: { start: StartAction; finish
         <label className={LABEL}>WhatsApp
           <input className={INPUT} name="phone" type="tel" required autoComplete="tel" placeholder="(11) 99999-9999" defaultValue={v('phone')} />
         </label>
-        <fieldset className="space-y-2.5 rounded-2xl border border-site-line p-4">
-          <legend className="px-1 text-sm font-semibold">Primeiro aluno <span className="font-normal text-site-muted">(pode deixar para depois)</span></legend>
+        <fieldset className="space-y-2.5 rounded-[20px] border border-site-line p-4">
+          <legend className="px-1 text-sm font-medium">Primeiro aluno <span className="font-normal text-site-muted">(pode deixar para depois)</span></legend>
           <div className="grid grid-cols-2 gap-2.5">
             <label className={LABEL}>Primeiro nome
               <input className={INPUT} name="studentFirstName" defaultValue={v('studentFirstName')} />
@@ -77,7 +77,7 @@ export function SignupForm({ start, finish, next }: { start: StartAction; finish
       {next && <input type="hidden" name="voltar" value={next} />}
       <label className={LABEL}>Código
         <input id="code" name="code" inputMode="numeric" autoComplete="one-time-code" required maxLength={6} placeholder="000000"
-          className="min-h-16 rounded-2xl border-2 border-indigo-600 px-4 text-center font-display text-3xl font-semibold tracking-[0.4em] focus:outline-none" />
+          className="min-h-16 rounded-[20px] border-2 border-indigo-600 px-4 text-center font-display tracking-tight text-3xl font-normal tracking-[0.4em] focus:outline-none" />
       </label>
       {finishState && !finishState.ok && <p className={ALERT} role="alert">{finishState.error}</p>}
       <button className={PRIMARY} disabled={finishing}>{finishing ? 'Conferindo…' : 'Confirmar e entrar'}</button>

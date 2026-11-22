@@ -61,7 +61,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             <>
               <h1 className={TITLE}>Pague com PIX</h1>
               {/* no celular, quem paga no mesmo aparelho usa o "copia e cola": ele vem antes do QR */}
-              <section className="flex flex-col items-center gap-5 rounded-2xl border border-site-line p-5" data-testid="pix">
+              <section className="flex flex-col items-center gap-5 rounded-[20px] border border-site-line p-5" data-testid="pix">
                 <div className="order-2 flex flex-col items-center gap-2.5 sm:order-1">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={qr} alt="QR do PIX" width={220} height={220} className="rounded-xl" />
@@ -91,7 +91,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             <>
               <h1 className={TITLE}>Pague com cartão</h1>
               <section className="space-y-3" data-testid="cartao">
-                <a className="inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-indigo-600 text-[17px] font-semibold text-white hover:bg-indigo-700"
+                <a className="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-indigo-600 text-[17px] font-medium text-white hover:bg-indigo-700"
                   href={pending.cardUrl}>Ir para o pagamento seguro com cartão</a>
               </section>
             </>

@@ -14,7 +14,7 @@ export function ReviewForm({ bookingId, action }: { bookingId: string; action: (
     <form action={run} className="space-y-5">
       <input type="hidden" name="bookingId" value={bookingId} />
       <fieldset>
-        <legend className="mb-2 text-sm font-semibold">Sua nota</legend>
+        <legend className="mb-2 text-sm font-medium">Sua nota</legend>
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((n) => (
             <label key={n} className="cursor-pointer">
@@ -27,7 +27,7 @@ export function ReviewForm({ bookingId, action }: { bookingId: string; action: (
             </label>
           ))}
         </div>
-        <p className="mt-1 min-h-5 text-sm font-semibold text-site-muted">{LABELS[rating]}</p>
+        <p className="mt-1 min-h-5 text-sm font-medium text-site-muted">{LABELS[rating]}</p>
       </fieldset>
       <label className={LABEL}>Conte como foi (opcional)
         <textarea name="comment" rows={4} maxLength={1000} className={`${INPUT} py-3`} />

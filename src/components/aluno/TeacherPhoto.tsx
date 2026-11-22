@@ -11,7 +11,7 @@ export function TeacherPhoto({ photoUrl, name, size }: { photoUrl: string | null
       role="img"
       aria-label={`Iniciais de ${name}`}
       style={{ ...style, fontSize: Math.round(size / 3) }}
-      className="flex flex-none items-center justify-center bg-site-line font-display font-bold text-indigo-600"
+      className="flex flex-none items-center justify-center bg-site-line font-display tracking-tight font-normal text-indigo-600"
     >
       {initials}
     </div>
