@@ -9,7 +9,7 @@ import { enqueue } from '@/worker/enqueue';
 import type { Deps } from '../deps';
 import { DomainError } from '../errors';
 import { teacherPhotoState } from '../teachers/photo';
-import { KIND_LABEL, listVerifications, type VerificationKind, type VerificationView } from '../teachers/verification';
+import { KIND_LABEL, listVerifications, requiredKinds, type VerificationKind, type VerificationView } from '../teachers/verification';
 
 const today = (now: Temporal.Instant) => now.toZonedDateTimeISO('America/Sao_Paulo').toPlainDate();
 
@@ -99,11 +99,15 @@ export async function decideVerification(
 export async function approveTeacher(deps: Deps, input: { teacherId: string; staffId: string }, now: Temporal.Instant) {
   const t = await deps.db.selectFrom('teachers').select(['status', 'slug']).where('id', '=', input.teacherId).executeTakeFirst();
   if (!t || t.status !== 'in_review') throw new DomainError('conflict', 'o professor não está em análise');
-  const ok = await sql<{ n: number }>`
-    SELECT count(DISTINCT kind)::int AS n FROM teacher_verifications
+  const ok = await sql<{ kind: VerificationKind }>`
+    SELECT DISTINCT kind FROM teacher_verifications
      WHERE teacher_id = ${input.teacherId} AND status = 'approved'
        AND (valid_until IS NULL OR valid_until >= ${today(now).toString()}::date)`.execute(deps.db);
-  if (ok.rows[0]!.n !== 3) throw new DomainError('conflict', 'aprove antes as três verificações (identidade, antecedentes e formação)');
+  const approved = new Set(ok.rows.map((r) => r.kind));
+  const lacking = (await requiredKinds(deps, input.teacherId)).filter((k) => !approved.has(k));
+  if (lacking.length > 0) {
+    throw new DomainError('conflict', `aprove antes as verificações que faltam: ${lacking.map((k) => KIND_LABEL[k]).join(', ')}`);
+  }
   if (!(await teacherPhotoState(deps, input.teacherId)).approvedId) {
     throw new DomainError('conflict', 'aprove a foto do professor antes do perfil');
   }

@@ -17,6 +17,12 @@ export const TEMPLATES = {
   lembrete_24h_professor: 'teacher',
   lembrete_1h_professor: 'teacher',
   pedido_avaliacao_responsavel: 'guardian',
+  // contestação da aula (22/11)
+  contestacao_aberta_professor: 'teacher',
+  contestacao_aceita_responsavel: 'guardian',
+  contestacao_aceita_professor: 'teacher',
+  contestacao_negada_responsavel: 'guardian',
+  contestacao_negada_professor: 'teacher',
 } as const;
 
 export type Template = keyof typeof TEMPLATES;

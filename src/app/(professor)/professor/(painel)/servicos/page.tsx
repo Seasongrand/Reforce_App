@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { sql } from 'kysely';
 import { ActionForm } from '@/components/ActionForm';
 import { ServiceForm } from '@/components/professor/ServiceForm';
 import { subjectName } from '@/domain/catalog';
@@ -24,6 +25,7 @@ export default async function ServicesPage() {
     .orderBy('active', 'desc').orderBy('modality').execute();
   const subjects = await db.selectFrom('teacher_subjects').innerJoin('subjects', 'subjects.id', 'teacher_subjects.subject_id')
     .select(['subjects.id', 'subjects.name']).distinct().where('teacher_id', '=', teacherId).execute();
+  const inPersonCleared = (await sql<{ ok: boolean }>`SELECT in_person_cleared(${teacherId}) AS ok`.execute(db)).rows[0]!.ok;
   const floor = config.priceFloorCents;
   const link = config.commissionBps.teacher_link;
   const search = config.commissionBps.marketplace;
@@ -53,6 +55,12 @@ export default async function ServicesPage() {
               </div>
               <p className="font-display tracking-tight text-xl font-normal">{formatBRL(s.price_cents)}</p>
             </div>
+            {s.active && s.modality !== 'online' && !inPersonCleared && (
+              <p className="rounded-lg bg-violet-50 px-3 py-2 text-sm" data-testid="falta-certidao">
+                Esta aula só aparece para as famílias depois que a certidão de antecedentes for aprovada.{' '}
+                <Link className="font-medium text-indigo-700 underline" href="/professor/verificacao">Enviar a certidão</Link>
+              </p>
+            )}
             <p className="text-sm">
               Você recebe <strong>{formatBRL(splitCommission(s.price_cents, link).teacher)}</strong> pelo seu link e{' '}
               <strong>{formatBRL(splitCommission(s.price_cents, search).teacher)}</strong> pela busca.

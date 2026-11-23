@@ -15,7 +15,7 @@ const description =
 export const metadata: Metadata = { title, description, openGraph: { title, description } };
 
 const PROMISES = [
-  { title: 'Professores verificados', text: 'Identidade, antecedentes criminais e formação conferidos.' },
+  { title: 'Professores verificados', text: 'Identidade e formação conferidas. Na aula presencial, também os antecedentes criminais.' },
   { title: 'Pagamento protegido', text: 'O valor só vai para o professor depois da aula. Se ele faltar, o dinheiro volta.' },
   { title: 'Online ou presencial', text: 'Na sala da Reforce, direto no navegador, ou na sua casa.' },
 ];

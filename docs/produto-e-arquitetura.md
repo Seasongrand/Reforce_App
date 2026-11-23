@@ -148,7 +148,7 @@ A família vai da busca à aula paga em sete passos. O professor só vende depoi
 
 1.  **Cadastra-se e monta o perfil:** disciplinas, séries, formação, vídeo curto e preço por modalidade.
 
-2.  **Envia os documentos:** identidade com selfie, certidão de antecedentes criminais e comprovante de formação.
+2.  **Envia os documentos:** identidade com selfie e comprovante de formação. Quem dá aula presencial também envia a certidão de antecedentes criminais (decisão do dono, 22/11).
 
 3.  **Passa pela análise da equipe.** O perfil só vende, pela busca ou pelo link próprio, depois de aprovado.
 
@@ -188,7 +188,7 @@ A família vai da busca à aula paga em sete passos. O professor só vende depoi
 | Aluno não aparece                                              | O professor recebe conforme a regra de cancelamento; o responsável é avisado                                     |
 | Família contesta a aula em até 24 horas                        | O repasse fica retido; o suporte decide com o registro da sala ou do código                                      |
 | Professor cancela aula paga                                    | Reembolso integral ou outro professor; cancelamentos repetidos suspendem o perfil                                |
-| Certidão do professor vence                                    | O perfil sai da busca até a nova certidão ser aprovada                                                           |
+| Certidão do professor vence                                    | A aula presencial sai da busca até a nova certidão ser aprovada; a online continua                               |
 | Telefone ou e-mail digitado na conversa antes da primeira aula | O trecho é ocultado e os dois são avisados do motivo                                                             |
 | Responsável em outro fuso                                      | Vê tudo no próprio fuso; a confirmação cita os dois horários quando diferem                                      |
 

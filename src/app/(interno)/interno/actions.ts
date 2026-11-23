@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { approveTeacher, decideVerification, setTeacherStatus } from '@/domain/staff/review';
 import { decideOutcome, type Outcome } from '@/domain/lessons/close';
+import { resolveDispute } from '@/domain/lessons/dispute';
 import { appDeps, now } from '@/server/app';
 import { errorMessage, type ActionState } from '@/server/action-result';
 import { requireStaff } from '@/server/session';
@@ -49,4 +50,10 @@ export async function decideOutcomeAction(_: unknown, f: FormData): Promise<Acti
   return run(async (staffId) => decideOutcome(appDeps(), {
     bookingId: s(f, 'bookingId'), outcome: s(f, 'outcome') as Outcome, staffId,
   }, await now()), '/interno/aulas');
+}
+
+export async function resolveDisputeAction(_: unknown, f: FormData): Promise<ActionState> {
+  return run(async (staffId) => resolveDispute(appDeps(), {
+    disputeId: s(f, 'disputeId'), staffId, decision: s(f, 'decision') as 'for_teacher' | 'for_guardian', note: s(f, 'note'),
+  }, await now()), '/interno/contestacoes');
 }

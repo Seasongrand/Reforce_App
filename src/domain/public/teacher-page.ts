@@ -83,8 +83,11 @@ export async function publicTeacherPage(deps: Deps, slug: string, now: Temporal.
      ORDER BY kind, valid_until DESC NULLS FIRST`.execute(deps.db)).rows
     .map((b) => ({ kind: b.kind, validUntil: b.valid_until }));
 
-  const svcs = await deps.db.selectFrom('services').select(['id', 'subject', 'modality', 'duration_min', 'price_cents'])
-    .where('teacher_id', '=', t.id).where('active', '=', true).orderBy('modality').orderBy('duration_min').execute();
+  // aula presencial só com a certidão de antecedentes em dia (decisão do dono, 22/11)
+  const inPersonCleared = badges.some((b) => b.kind === 'criminal_record');
+  const svcs = (await deps.db.selectFrom('services').select(['id', 'subject', 'modality', 'duration_min', 'price_cents'])
+    .where('teacher_id', '=', t.id).where('active', '=', true).orderBy('modality').orderBy('duration_min').execute())
+    .filter((s) => s.modality === 'online' || inPersonCleared);
   const days = Math.min(t.horizon_days, PUBLIC_DAYS);
   const services: PublicService[] = [];
   for (const s of svcs) {
@@ -107,7 +110,7 @@ export async function publicTeacherPage(deps: Deps, slug: string, now: Temporal.
     teacherId: t.id, slug: t.slug, name: t.display_name, headline: t.headline, bio: t.bio, timezone: t.timezone,
     sellable, subjects, badges, services,
     photoUrl: photoId ? `/api/fotos/${photoId}` : null,
-    verified: sellable && badges.length === 3,
+    verified: sellable && badges.some((b) => b.kind === 'identity') && badges.some((b) => b.kind === 'education'),
     minPriceCents: services.length > 0 ? Math.min(...services.map((s) => s.priceCents)) : null,
     modalities: order.filter((m) => services.some((s) => s.modality === m)),
     nextSlot: allSlots[0] ?? null,

@@ -68,7 +68,7 @@ export async function teacherDashboard(deps: Deps, teacherId: string, now: Tempo
     },
     {
       key: 'documentos', label: 'Documentos de verificação', done: docsMissing.length === 0, href: '/professor/verificacao',
-      detail: docsMissing.length === 0 ? 'Identidade, antecedentes e formação enviados' : `Falta: ${docsMissing.join(', ')}`,
+      detail: docsMissing.length === 0 ? 'Documentos enviados' : `Falta: ${docsMissing.join(', ')}`,
     },
     {
       key: 'recebimento', label: 'Conta de recebimento', done: !missing.includes('conta de recebimento'), href: '/professor/recebimento',

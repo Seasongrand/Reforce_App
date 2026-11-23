@@ -76,7 +76,7 @@ export async function lessonsOfDay(db: Db, now: Temporal.Instant, tz = 'America/
   }));
 }
 
-export type RefundReason = 'teacher_no_show' | 'student_excused' | 'student_no_show' | 'late_payment';
+export type RefundReason = 'teacher_no_show' | 'dispute' | 'student_excused' | 'student_no_show' | 'late_payment';
 
 export interface RefundItem {
   orderId: string;
@@ -91,19 +91,21 @@ export interface RefundItem {
 
 /**
  * Pedidos com devolução decidida (toda ou parte), os mais recentes primeiro.
- * Motivo, nesta ordem: falta do professor; falta do aluno justificada pelo
+ * Motivo, nesta ordem: falta do professor; contestação aceita; falta do aluno justificada pelo
  * professor (repasse devolvido); falta do aluno (o que não ficou com o
  * professor); senão, pagamento depois do prazo.
  */
 export async function refundList(db: Db, limit = 50): Promise<RefundItem[]> {
   const { rows } = await sql<{
     order_id: string; paid_at: string; guardian: string; teacher: string; amount_cents: number; refunded_cents: number;
-    teacher_no_show: boolean; excused: boolean; no_show: boolean;
+    teacher_no_show: boolean; dispute: boolean; excused: boolean; no_show: boolean;
   }>`
     SELECT o.id AS order_id, coalesce(p.paid_at, p.created_at) AS paid_at, g.name AS guardian, t.display_name AS teacher,
            p.amount_cents, p.refunded_cents,
            EXISTS (SELECT 1 FROM bookings b JOIN lesson_sessions ls ON ls.booking_id = b.id
                     WHERE b.order_id = o.id AND ls.outcome = 'teacher_no_show') AS teacher_no_show,
+           EXISTS (SELECT 1 FROM bookings b JOIN disputes d ON d.booking_id = b.id
+                    WHERE b.order_id = o.id AND d.status = 'for_guardian') AS dispute,
            EXISTS (SELECT 1 FROM bookings b JOIN payouts po ON po.booking_id = b.id
                     WHERE b.order_id = o.id AND po.status = 'refunded') AS excused,
            EXISTS (SELECT 1 FROM bookings b WHERE b.order_id = o.id AND b.status = 'no_show') AS no_show
@@ -124,6 +126,6 @@ export async function refundList(db: Db, limit = 50): Promise<RefundItem[]> {
     teacherName: r.teacher,
     amountCents: r.amount_cents,
     refundedCents: r.refunded_cents,
-    reason: r.teacher_no_show ? 'teacher_no_show' : r.excused ? 'student_excused' : r.no_show ? 'student_no_show' : 'late_payment',
+    reason: r.teacher_no_show ? 'teacher_no_show' : r.dispute ? 'dispute' : r.excused ? 'student_excused' : r.no_show ? 'student_no_show' : 'late_payment',
   }));
 }

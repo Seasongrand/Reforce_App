@@ -8,6 +8,7 @@ const ITEMS: PanelNavItem[] = [
   { href: '/interno', label: 'Início', icon: 'home' },
   { href: '/interno/verificacoes', label: 'Verificações', icon: 'shield' },
   { href: '/interno/aulas', label: 'Aulas', icon: 'video' },
+  { href: '/interno/contestacoes', label: 'Contestações', icon: 'flag' },
   { href: '/interno/professores', label: 'Professores', icon: 'users' },
   { href: '/interno/reembolsos', label: 'Reembolsos', icon: 'undo' },
 ];

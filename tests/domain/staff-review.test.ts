@@ -13,7 +13,7 @@ import { openPaymentAccount } from '@/domain/teachers/payment-account';
 import { submitForReview } from '@/domain/teachers/review';
 import { closeAppDb } from '../helpers/app';
 import { closeTestPool, testPool, truncateAll } from '../helpers/db';
-import { insertTeacher, seedTestCatalog } from '../helpers/fixtures';
+import { insertService, insertTeacher, seedTestCatalog } from '../helpers/fixtures';
 import { NOW, testDeps } from '../helpers/scenario';
 
 beforeEach(async () => {
@@ -39,9 +39,10 @@ async function approvedPhoto(teacherId: string) {
   await q(`INSERT INTO teacher_photos (teacher_id, image, width, height, status) VALUES ($1, '\\x00', 512, 512, 'approved')`, [teacherId]);
 }
 
-/** Professor em análise, com os três documentos enviados e conta aberta. */
-async function teacherInReview() {
+/** Professor em análise, com os três documentos enviados e conta aberta (por padrão, com aula presencial). */
+async function teacherInReview(modality: 'online' | 'at_student' = 'at_student') {
   const id = await insertTeacher(testPool());
+  await insertService(testPool(), id, { modality });
   await testPool().query(`UPDATE teachers SET email = 'ana@exemplo.com' WHERE id = $1`, [id]);
   await updateTeacherProfile(deps(), id, {
     displayName: 'Ana Souza', slug: 'ana-souza', timezone: 'America/Sao_Paulo', whatsappOptIn: false, subjects: [[1, 9]],
@@ -97,7 +98,7 @@ describe('fila e decisões', () => {
     const t = await teacherInReview();
     const s = await staff();
     await decideVerification(deps(), { verificationId: t.verifications.identity, staffId: s, decision: 'approved' }, NOW);
-    await expect(approveTeacher(deps(), { teacherId: t.teacherId, staffId: s }, NOW)).rejects.toThrow(/três verificações/);
+    await expect(approveTeacher(deps(), { teacherId: t.teacherId, staffId: s }, NOW)).rejects.toThrow(/formação.*antecedentes|antecedentes.*formação/);
     await decideVerification(deps(), { verificationId: t.verifications.criminal_record, staffId: s, decision: 'approved' }, NOW);
     await decideVerification(deps(), { verificationId: t.verifications.education, staffId: s, decision: 'approved' }, NOW);
     await expect(approveTeacher(deps(), { teacherId: t.teacherId, staffId: s }, NOW)).rejects.toThrow(/foto/);
@@ -134,7 +135,32 @@ describe('vencimento da certidão', () => {
     expect(await q(`SELECT status FROM teacher_verifications WHERE id = $1`, [t.verifications.criminal_record])).toEqual([
       { status: 'expired' },
     ]);
-    expect(await q(`SELECT id FROM teachers_listed`)).toEqual([]);
+    // continua vendendo aula online; a presencial some até a nova certidão
+    expect(await q(`SELECT id FROM teachers_listed`)).toEqual([{ id: t.teacherId }]);
+    expect(await q(`SELECT in_person_cleared($1) AS ok`, [t.teacherId])).toEqual([{ ok: false }]);
+  });
+});
+
+describe('certidão só para aula presencial', () => {
+  it('quem só dá aula online é aprovado com identidade e formação, sem a certidão', async () => {
+    const t = await teacherInReview('online');
+    const s = await staff();
+    for (const k of ['identity', 'education'] as const) {
+      await decideVerification(deps(), { verificationId: t.verifications[k], staffId: s, decision: 'approved' }, NOW);
+    }
+    await approvedPhoto(t.teacherId);
+    await approveTeacher(deps(), { teacherId: t.teacherId, staffId: s }, NOW);
+    expect(await q(`SELECT id FROM teachers_listed`)).toEqual([{ id: t.teacherId }]);
+  });
+
+  it('quem dá aula presencial precisa da certidão aprovada', async () => {
+    const t = await teacherInReview('at_student');
+    const s = await staff();
+    for (const k of ['identity', 'education'] as const) {
+      await decideVerification(deps(), { verificationId: t.verifications[k], staffId: s, decision: 'approved' }, NOW);
+    }
+    await approvedPhoto(t.teacherId);
+    await expect(approveTeacher(deps(), { teacherId: t.teacherId, staffId: s }, NOW)).rejects.toThrow(/antecedentes/);
   });
 });
 

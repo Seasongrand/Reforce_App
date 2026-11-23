@@ -30,7 +30,9 @@ export interface MessageContext {
   teacher: { name: string; slug: string; timezone: string; phone: string | null; email: string | null; teachingAddress: string | null };
   familyAddress: string | null;
   checkinCode: string | null;
-  links: { lesson: string; teacherPage: string; teacherPanel: string; review: string };
+  links: { lesson: string; teacherPage: string; teacherPanel: string; review: string; account: string };
+  /** Contestação da família, quando houver: o motivo e a decisão da equipe. */
+  dispute: { reason: string; note: string | null } | null;
 }
 
 export interface RenderedMessage {
@@ -46,7 +48,7 @@ export async function loadMessageContext(deps: Deps, bookingId: string, db: Kyse
     s_name: string; s_grade: string | null;
     t_name: string; t_slug: string; t_tz: string; t_phone: string | null; t_email: string | null; t_address: string | null;
     a_street: string | null; a_number: string | null; a_district: string | null; a_city: string | null; a_state: string | null;
-    prev_starts_at: string | null;
+    prev_starts_at: string | null; d_reason: string | null; d_note: string | null;
   }>`
     SELECT b.order_id, b.modality, b.starts_at, b.ends_at, o.total_cents, o.lessons,
            sv.subject AS subject_slug, sj.name AS subject_name, sv.duration_min,
@@ -55,7 +57,7 @@ export async function loadMessageContext(deps: Deps, bookingId: string, db: Kyse
            t.display_name AS t_name, t.slug AS t_slug, t.timezone AS t_tz, t.phone_e164 AS t_phone,
            t.email AS t_email, t.teaching_address AS t_address,
            a.street AS a_street, a.number AS a_number, a.district AS a_district, a.city AS a_city, a.state AS a_state,
-           prev.starts_at AS prev_starts_at
+           prev.starts_at AS prev_starts_at, d.reason AS d_reason, d.decision_note AS d_note
       FROM bookings b
       JOIN orders o ON o.id = b.order_id
       JOIN services sv ON sv.id = b.service_id
@@ -65,6 +67,8 @@ export async function loadMessageContext(deps: Deps, bookingId: string, db: Kyse
       JOIN teachers t ON t.id = b.teacher_id
       LEFT JOIN addresses a ON a.id = b.address_id
       LEFT JOIN bookings prev ON prev.id = b.rescheduled_from
+      LEFT JOIN LATERAL (SELECT reason, decision_note FROM disputes WHERE booking_id = b.id
+                          ORDER BY opened_at DESC LIMIT 1) d ON true
      WHERE b.id = ${bookingId}`.execute(db);
   const r = rows[0];
   if (!r) throw new Error(`aula ${bookingId} não encontrada`);
@@ -95,7 +99,9 @@ export async function loadMessageContext(deps: Deps, bookingId: string, db: Kyse
       teacherPage: `${base}/p/${r.t_slug}`,
       teacherPanel: `${base}/professor/aulas`,
       review: `${base}/conta/avaliar/${bookingId}`,
+      account: `${base}/conta/aulas`,
     },
+    dispute: r.d_reason ? { reason: r.d_reason, note: r.d_note } : null,
   };
 }
 
@@ -219,6 +225,44 @@ export function render(template: Template, c: MessageContext): RenderedMessage {
         `com ${c.teacher.name}. Leva um minuto, e a sua nota ajuda outras famílias a escolher.\n\n` +
         `Avaliar a aula: ${c.links.review}\n\nPara marcar a próxima aula: ${c.links.teacherPage}`;
       return { whatsapp: { name: template, vars: { ...vars, link: c.links.review }, preview: text }, email: { subject, text } };
+    case 'contestacao_aberta_professor':
+    case 'contestacao_aceita_professor':
+    case 'contestacao_negada_professor': {
+      const at = formatPtBr(c.startsAt, c.teacher.timezone);
+      const reason = c.dispute?.reason ?? 'sem motivo informado';
+      if (template === 'contestacao_aberta_professor') {
+        subject = `Aula contestada: ${c.student.firstName}, ${at}`;
+        text = `Olá, ${c.teacher.name}.\n\nA família de ${c.student.firstName} contestou a aula de ${c.subject} de ${at}.\n` +
+          `Motivo: ${reason}\n\nO valor desta aula fica retido até a equipe da Reforce decidir, com o registro da ` +
+          `sala ou do código da aula. Se quiser contar a sua versão, responda este e-mail.\n\nVeja no painel: ${c.links.teacherPanel}`;
+      } else if (template === 'contestacao_aceita_professor') {
+        subject = `Contestação decidida: aula de ${at} devolvida à família`;
+        text = `Olá, ${c.teacher.name}.\n\nA equipe da Reforce analisou a contestação da aula de ${c.subject} com ` +
+          `${c.student.firstName}, ${at}, e decidiu devolver o valor à família.\nMotivo: ${c.dispute?.note ?? ''}\n\n` +
+          `Veja no painel: ${c.links.teacherPanel}`;
+      } else {
+        subject = `Contestação decidida: o valor da aula de ${at} é seu`;
+        text = `Olá, ${c.teacher.name}.\n\nA equipe da Reforce analisou a contestação da aula de ${c.subject} com ` +
+          `${c.student.firstName}, ${at}, e decidiu a seu favor. O valor é liberado para a sua conta.\n` +
+          `Motivo: ${c.dispute?.note ?? ''}\n\nVeja no painel: ${c.links.teacherPanel}`;
+      }
+      return {
+        whatsapp: { name: template, vars: { professor: c.teacher.name, aluno: c.student.firstName, horario: at }, preview: text },
+        email: { subject, text },
+      };
+    }
+    case 'contestacao_aceita_responsavel':
+      subject = 'Contestação aceita: valor da aula devolvido';
+      text = `Olá, ${c.guardian.name}.\n\nAnalisamos a sua contestação da aula de ${c.subject} de ${c.student.firstName} ` +
+        `com ${c.teacher.name}, ${when}, e devolvemos ${formatBRL(c.totalCents)} pelo mesmo meio de pagamento.\n` +
+        `Motivo: ${c.dispute?.note ?? ''}\n\nSuas aulas: ${c.links.account}`;
+      return { whatsapp: { name: template, vars: { ...vars, link: c.links.account }, preview: text }, email: { subject, text } };
+    case 'contestacao_negada_responsavel':
+      subject = 'Contestação analisada: a aula foi mantida';
+      text = `Olá, ${c.guardian.name}.\n\nAnalisamos a sua contestação da aula de ${c.subject} de ${c.student.firstName} ` +
+        `com ${c.teacher.name}, ${when}, e a aula foi mantida.\nMotivo: ${c.dispute?.note ?? ''}\n\n` +
+        `Se tiver mais alguma informação, responda este e-mail. Suas aulas: ${c.links.account}`;
+      return { whatsapp: { name: template, vars: { ...vars, link: c.links.account }, preview: text }, email: { subject, text } };
     case 'confirmacao_professor': {
       const at = formatPtBr(c.startsAt, c.teacher.timezone);
       subject = `Nova aula paga: ${c.student.firstName}, ${at}`;
