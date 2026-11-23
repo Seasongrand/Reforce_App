@@ -654,6 +654,19 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await novaFam.click('button:has-text("Simular pagamento")');
   await novaFam.waitForURL('**/confirmado');
   await novaFam.goto('/conta/aulas');
+  // horário fixo semanal: liga a partir da aula paga, vê na lista e encerra
+  await novaFam.locator('[data-testid^="aula-"]').first().getByRole('link', { name: 'Repetir toda semana' }).click();
+  await novaFam.waitForURL(/\/conta\/horario-fixo\/[0-9a-f-]{36}$/);
+  await expect(novaFam.getByText(/chega o PIX da semana/)).toBeVisible();
+  await novaFam.getByRole('button', { name: 'Quero toda semana' }).click();
+  await novaFam.waitForURL('**/conta/aulas?fixo=1');
+  await expect(novaFam.getByTestId('horario-fixo')).toContainText('Toda');
+  await expect(novaFam.locator('[data-testid^="aula-"]').first().getByRole('link', { name: 'Repetir toda semana' })).toHaveCount(0);
+  await novaFam.getByTestId('horario-fixo').getByText('Encerrar horário fixo').click();
+  await novaFam.getByTestId('horario-fixo').getByRole('checkbox').check();
+  await novaFam.getByTestId('horario-fixo').getByRole('button', { name: 'Encerrar' }).click();
+  await novaFam.waitForURL('**/conta/aulas?fixo-encerrado=1');
+  await expect(novaFam.getByTestId('horario-fixo')).toHaveCount(0);
   await novaFam.locator('[data-testid^="aula-"]').first().getByRole('link', { name: 'Remarcar ou cancelar' }).click();
   await novaFam.waitForURL(/\/conta\/aulas\/[0-9a-f-]{36}$/);
   // o horário que ela pegou é o mais próximo: faltam menos de 24 horas, então só dá para remarcar

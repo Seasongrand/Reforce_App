@@ -36,6 +36,13 @@ export function Countdown({ secondsLeft }: { secondsLeft: number }) {
   );
   if (left === null) return <p className={bar} data-testid="cronometro">{icon}Horário guardado para você.</p>;
   if (left <= 0) return <p className={bar} role="alert">{icon}O tempo para pagar acabou.</p>;
+  // horário fixo semanal: a aula fica guardada por dias, e o relógio em minutos não ajuda
+  if (left >= 2 * 3600_000) {
+    const d = Math.floor(left / 86400_000);
+    const h = Math.floor((left % 86400_000) / 3600_000);
+    const parts = [d > 0 ? `${d} ${d === 1 ? 'dia' : 'dias'}` : '', h > 0 ? `${h} h` : ''].filter(Boolean).join(' e ');
+    return <p className={bar} data-testid="cronometro">{icon}Horário guardado para você por mais {parts}</p>;
+  }
   const m = Math.floor(left / 60000);
   const s = Math.floor((left % 60000) / 1000);
   return (

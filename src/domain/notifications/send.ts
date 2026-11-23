@@ -34,7 +34,9 @@ export async function sendDueNotifications(
     for (const n of rows) {
       // o pedido de avaliação só sai para aula concluída e ainda não avaliada
       const reviewAskStale = n.template === 'pedido_avaliacao_responsavel' && (n.booking_status !== 'completed' || n.reviewed);
-      if ((NEEDS_CONFIRMED.has(n.template) && n.booking_status !== 'confirmed') || reviewAskStale) {
+      // a cobrança do horário fixo só sai enquanto a aula da semana ainda espera o pagamento
+      const chargeStale = n.template === 'horario_fixo_cobranca' && n.booking_status !== 'held';
+      if ((NEEDS_CONFIRMED.has(n.template) && n.booking_status !== 'confirmed') || reviewAskStale || chargeStale) {
         await sql`UPDATE notifications SET status = 'cancelled' WHERE id = ${n.id}`.execute(trx);
         out.cancelled += 1;
         continue;

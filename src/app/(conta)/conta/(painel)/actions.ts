@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { finishEmailChange, startEmailChange, updateGuardianProfile } from '@/domain/guardians/profile';
 import { sendMessage } from '@/domain/messages';
 import { cancelByFamily, rescheduleByFamily, type RescheduleReason } from '@/domain/lessons/change';
+import { endWeeklySeries, startWeeklySeries } from '@/domain/booking/weekly';
 import { openDispute, type DisputeReason } from '@/domain/lessons/dispute';
 import { Temporal } from 'temporal-polyfill';
 import { acquisitionFor, originCookieName } from '@/domain/family-origin';
@@ -171,4 +172,29 @@ export async function disputeAction(_: unknown, form: FormData): Promise<ActionS
   }
   revalidatePath('/conta', 'layout');
   redirect('/conta/aulas?aba=anteriores&contestada=1');
+}
+
+export async function startWeeklyAction(_: unknown, form: FormData): Promise<ActionState> {
+  const guardianId = await currentSubject('guardian');
+  if (!guardianId) return { ok: false, error: 'Sua sessão expirou. Entre de novo.' };
+  try {
+    await startWeeklySeries(appDeps(), { guardianId, bookingId: field(form, 'bookingId') }, await now());
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+  revalidatePath('/conta', 'layout');
+  redirect('/conta/aulas?fixo=1');
+}
+
+export async function endWeeklyAction(_: unknown, form: FormData): Promise<ActionState> {
+  const guardianId = await currentSubject('guardian');
+  if (!guardianId) return { ok: false, error: 'Sua sessão expirou. Entre de novo.' };
+  if (form.get('confirm') !== 'on') return { ok: false, error: 'Marque a confirmação para encerrar.' };
+  try {
+    await endWeeklySeries(appDeps(), { guardianId, seriesId: field(form, 'seriesId') }, await now());
+  } catch (err) {
+    return { ok: false, error: errorMessage(err) };
+  }
+  revalidatePath('/conta', 'layout');
+  redirect('/conta/aulas?fixo-encerrado=1');
 }

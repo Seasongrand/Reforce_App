@@ -10,7 +10,7 @@ function lesson(id: string, starts: string, status = 'confirmed', minutes = 60):
   return {
     bookingId: id, startsAt, endsAt: startsAt.add({ minutes }), status, modality: 'online', subject: 'Matemática',
     studentFirstName: 'Aluno', studentGrade: '9º ano', address: null, checkedIn: false, outcome: null,
-    refundableUntil: null, refundCents: null, refunded: false, dispute: null,
+    refundableUntil: null, refundCents: null, refunded: false, weekly: false, dispute: null,
   };
 }
 

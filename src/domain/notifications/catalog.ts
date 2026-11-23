@@ -17,6 +17,9 @@ export const TEMPLATES = {
   lembrete_24h_professor: 'teacher',
   lembrete_1h_professor: 'teacher',
   pedido_avaliacao_responsavel: 'guardian',
+  // horário fixo semanal (22/11)
+  horario_fixo_cobranca: 'guardian',
+  horario_fixo_encerrado: 'guardian',
   // contestação da aula (22/11)
   contestacao_aberta_professor: 'teacher',
   contestacao_aceita_responsavel: 'guardian',
