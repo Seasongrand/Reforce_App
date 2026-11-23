@@ -1,5 +1,5 @@
 import { ActionForm } from '@/components/ActionForm';
-import { KIND_LABEL, listVerifications, VERIFICATION_KINDS } from '@/domain/teachers/verification';
+import { IN_PERSON_ONLY, KIND_LABEL, listVerifications, requiredKinds, VERIFICATION_KINDS } from '@/domain/teachers/verification';
 import { appDeps } from '@/server/app';
 import { requireTeacher } from '@/server/session';
 import { uploadDocumentAction } from '../actions';
@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic';
 
 const HELP: Record<string, string> = {
   identity: 'Documento com foto (RG ou CNH) e uma selfie segurando o documento.',
-  criminal_record: 'Certidão de antecedentes criminais da Polícia Federal, emitida de graça em gov.br.',
+  criminal_record:
+    'Só para quem dá aula presencial, na casa do aluno ou no seu endereço. É a certidão de antecedentes criminais da Polícia Federal: sai de graça em gov.br, em poucos minutos.',
   education: 'Diploma, histórico ou declaração de matrícula.',
 };
 const STATUS: Record<string, string> = {
@@ -18,6 +19,7 @@ const STATUS: Record<string, string> = {
 export default async function VerificationPage() {
   const teacherId = await requireTeacher();
   const all = await listVerifications(appDeps(), teacherId);
+  const required = await requiredKinds(appDeps(), teacherId);
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-medium">Documentos de verificação</h1>
@@ -30,6 +32,11 @@ export default async function VerificationPage() {
         return (
           <section key={kind} className="card space-y-3" data-testid={`verificacao-${kind}`}>
             <h2 className="font-medium">{KIND_LABEL[kind].charAt(0).toUpperCase() + KIND_LABEL[kind].slice(1)}</h2>
+            {kind === IN_PERSON_ONLY && !required.includes(kind) && (
+              <p className="text-sm font-medium text-indigo-700" data-testid="certidao-opcional">
+                Você só dá aula online, então não precisa enviar agora.
+              </p>
+            )}
             <p className="text-sm text-slate-600">{HELP[kind]}</p>
             {latest && (
               <p className="text-sm">
