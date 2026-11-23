@@ -49,6 +49,7 @@ export default async function GuardianLessons({ searchParams }: { searchParams: 
                   {l.lessonUrl && <a href={l.lessonUrl} className={`${BTN} bg-indigo-600 text-white`}>Página da aula</a>}
                   <a href={`/pedido/${l.orderId}/agenda.ics`} download="aula-reforce.ics" className={`${BTN} border border-site-field`}>Adicionar à agenda</a>
                   <Link href={`/conta/aulas/${l.bookingId}`} className={`${BTN} border border-site-field`}>Remarcar ou cancelar</Link>
+                  <Link href={`/conta/comprovante/${l.orderId}`} className={`${BTN} text-site-muted underline hover:text-indigo-950`}>Comprovante</Link>
                 </div>
               </AccountLessonCard>
             ))}
@@ -67,6 +68,7 @@ export default async function GuardianLessons({ searchParams }: { searchParams: 
               <div className="flex flex-wrap gap-2">
                 {l.canReview && <Link href={`/conta/avaliar/${l.bookingId}`} className={`${BTN} bg-indigo-600 text-white hover:bg-indigo-700`}>Avaliar a aula</Link>}
                 <Link href={`/p/${l.teacherSlug}`} className={`${BTN} border border-site-field`}>Marcar de novo</Link>
+                <Link href={`/conta/comprovante/${l.orderId}`} className={`${BTN} text-site-muted underline hover:text-indigo-950`}>Comprovante</Link>
               </div>
             </AccountLessonCard>
           ))}
