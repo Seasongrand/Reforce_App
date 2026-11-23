@@ -26,7 +26,7 @@ export default async function GuardianPanelLayout({ children }: { children: Reac
     <>
       <PanelHeader home="/" area="Minha conta" name={g.name} logout={logoutAction} />
       <div className="mx-auto grid max-w-6xl gap-6 px-5 pb-28 pt-6 md:grid-cols-[15rem_minmax(0,1fr)] md:gap-10 md:py-10">
-        <aside className="min-w-0 max-md:contents md:sticky md:top-6 md:self-start">
+        <aside className="min-w-0 print:!hidden max-md:contents md:sticky md:top-6 md:self-start">
           <PanelNav items={items} label="Minha conta" primary={PRIMARY} />
         </aside>
         <main className="min-w-0">{children}</main>

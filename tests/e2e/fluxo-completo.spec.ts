@@ -460,6 +460,13 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await teacher.goto('/professor/recebimento');
   await expect(teacher.getByTestId('ganho-a-receber')).toContainText('R$ 102,85');
   await expect(teacher.getByTestId(`repasse-${booking!.id}`)).toContainText('A receber');
+  // extrato do mês, com a planilha
+  await teacher.getByRole('link', { name: 'Extrato por mês' }).click();
+  await teacher.waitForURL('**/professor/recebimento/extrato');
+  await expect(teacher.getByTestId('extrato-total')).toContainText('R$ 102,85');
+  const csv = await teacher.request.get(await teacher.getByRole('link', { name: 'Baixar planilha' }).getAttribute('href') ?? '');
+  expect(csv.headers()['content-type']).toContain('text/csv');
+  expect(await csv.text()).toContain('Joana');
 
   // 7b. Em "Minha conta" (entrada por código, sem senha), a responsável avalia a aula concluída;
   // a avaliação aparece no perfil com o autor abreviado, o telefone oculto e sem o nome da aluna.
@@ -499,6 +506,12 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await acct.waitForURL('**/conta/aulas?aba=anteriores&avaliada=1');
   await expect(acct.getByText('Obrigado pela avaliação!')).toBeVisible();
   await expect(acct.getByTestId(`aula-${booking!.id}`)).toContainText('Sua avaliação');
+  // comprovante do pagamento, a partir da aula
+  await acct.getByTestId(`aula-${booking!.id}`).getByRole('link', { name: 'Comprovante' }).click();
+  await acct.waitForURL('**/conta/comprovante/**');
+  await expect(acct.getByTestId('comprovante')).toContainText('Comprovante de pagamento');
+  await expect(acct.getByTestId('comprovante')).toContainText('não é nota fiscal');
+  await acct.goBack();
   await acct.getByRole('navigation', { name: 'Minha conta' }).getByRole('link', { name: 'Início' }).click();
   await expect(acct.getByTestId('cartao-avaliar')).toContainText('Nenhuma aula esperando avaliação');
   // Alunos: cadastra, edita e remove um aluno sem aula; a aluna com aula não tem "Remover"

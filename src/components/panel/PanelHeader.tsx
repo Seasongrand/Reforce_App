@@ -16,7 +16,7 @@ export function PanelHeader({
   nameOnPhone?: boolean;
 }) {
   return (
-    <header className="border-b border-indigo-950/10 bg-[#fbfaff]">
+    <header className="print:hidden border-b border-indigo-950/10 bg-[#fbfaff]">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-5 lg:h-[72px]">
         <a href={home} className="flex min-w-0 items-center gap-2.5 text-indigo-950">
           <ArcMark className="size-5 flex-none text-indigo-600" />
