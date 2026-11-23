@@ -11,7 +11,7 @@ import { openPaymentAccount, isValidCpfCnpj } from '@/domain/teachers/payment-ac
 import { submitForReview } from '@/domain/teachers/review';
 import { appDb, closeAppDb } from '../helpers/app';
 import { closeTestPool, queuedJobs, testPool, truncateAll } from '../helpers/db';
-import { insertTeacher, seedTestCatalog } from '../helpers/fixtures';
+import { insertService, insertTeacher, seedTestCatalog } from '../helpers/fixtures';
 import { NOW, testDeps } from '../helpers/scenario';
 
 const STORAGE = path.resolve('var/test-private');
@@ -207,8 +207,15 @@ describe('conta de recebimento', () => {
 });
 
 describe('envio para análise', () => {
+  it('sem aula presencial, a certidão não entra no que falta', async () => {
+    const id = await insertTeacher(testPool());
+    await insertService(testPool(), id, { modality: 'online' });
+    await expect(submitForReview(deps(), id, NOW)).rejects.toThrow(/^(?!.*antecedentes).*identidade.*formação/s);
+  });
+
   it('lista o que falta; completo, passa para em análise', async () => {
     const id = await insertTeacher(testPool());
+    await insertService(testPool(), id, { modality: 'at_teacher' });
     await expect(submitForReview(deps(), id, NOW)).rejects.toThrow(/perfil.*identidade.*antecedentes.*formação.*recebimento/s);
     await updateTeacherProfile(deps(), id, profile(), NOW);
     await submitVerificationDocument(deps(), id, { kind: 'identity', files: [file('rg.pdf'), file('selfie.jpg')] }, NOW);

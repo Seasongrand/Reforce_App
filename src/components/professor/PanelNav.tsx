@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export type PanelIcon = 'home' | 'user' | 'users' | 'tag' | 'calendar' | 'video' | 'shield' | 'wallet' | 'undo' | 'chat';
+export type PanelIcon = 'home' | 'user' | 'users' | 'tag' | 'calendar' | 'video' | 'shield' | 'wallet' | 'undo' | 'chat' | 'flag';
 export interface PanelNavItem {
   href: string;
   label: string;
@@ -63,6 +63,7 @@ const PATHS: Record<PanelIcon, React.ReactNode> = {
     </>
   ),
   chat: <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />,
+  flag: <path d="M4 22V4m0 0s1.5-1 4-1 4.5 2 7 2 4-1 4-1v11s-1.5 1-4 1-4.5-2-7-2-4 1-4 1" />,
   undo: (
     <>
       <path d="M9 14 4 9l5-5" />

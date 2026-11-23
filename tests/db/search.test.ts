@@ -38,14 +38,22 @@ async function search(p: Partial<SearchParams>): Promise<Row[]> {
 }
 
 describe('busca por disciplina, série, modalidade e preço', () => {
-  it('volta os 2 professores esperados; a professora com certidão vencida fica fora', async () => {
+  it('volta os 3 professores da disciplina; na aula online a certidão vencida não tira da busca', async () => {
     const a = await insertListedTeacher(db(), { name: 'Ana' });
     const b = await insertListedTeacher(db(), { name: 'Bruno' });
     const c = await insertListedTeacher(db(), { name: 'Carla', criminalRecordExpired: true });
     const d = await insertListedTeacher(db(), { name: 'Davi', subjects: [[2, 9]] });
     for (const t of [a, b, c, d]) await refreshSlots(t.teacherId);
     const rows = await search({});
-    expect(rows.map((r) => r.display_name).sort()).toEqual(['Ana', 'Bruno']);
+    expect(rows.map((r) => r.display_name).sort()).toEqual(['Ana', 'Bruno', 'Carla']);
+  });
+
+  it('na aula presencial, a professora com certidão vencida fica fora', async () => {
+    const a = await insertListedTeacher(db(), { name: 'Ana', modality: 'at_teacher', lat: -23.56, lng: -46.65 });
+    const c = await insertListedTeacher(db(), { name: 'Carla', modality: 'at_teacher', lat: -23.56, lng: -46.65, criminalRecordExpired: true });
+    for (const t of [a, c]) await refreshSlots(t.teacherId);
+    const rows = await search({ modality: 'at_teacher', lat: -23.56, lng: -46.65, familyRadiusKm: 10 });
+    expect(rows.map((r) => r.display_name)).toEqual(['Ana']);
   });
 
   it('respeita o preço máximo', async () => {

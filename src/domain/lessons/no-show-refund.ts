@@ -8,9 +8,9 @@
 import { sql } from 'kysely';
 import type { Temporal } from 'temporal-polyfill';
 import { instantFromDb } from '@/time/zoned';
-import { enqueue } from '@/worker/enqueue';
 import type { Deps } from '../deps';
 import { DomainError } from '../errors';
+import { queueOrderRefund } from '../payment/order-refund';
 import { scheduleNotice } from '../notifications/schedule';
 
 export async function refundNoShowByTeacher(
@@ -34,27 +34,7 @@ export async function refundNoShowByTeacher(
     await sql`SELECT set_config('app.actor', ${`teacher:${input.teacherId}`}, true)`.execute(trx);
     await sql`UPDATE payouts SET status = 'refunded' WHERE id = ${po.id}`.execute(trx);
 
-    // Quanto deve estar devolvido desta cobrança ao final (a tarefa recebe o total, não o acréscimo):
-    // cada falta do aluno devolve o que não ficou com o professor; a falta devolvida aqui, a aula inteira.
-    const { rows } = await sql<{ payment_id: string; amount_cents: number; owed: number }>`
-      SELECT p.id AS payment_id, p.amount_cents,
-             coalesce(sum(CASE WHEN bk.status = 'no_show'
-                               THEN (o.total_cents / o.lessons)
-                                    - CASE WHEN po.status IS NULL OR po.status = 'refunded' THEN 0 ELSE po.gross_cents END
-                               ELSE 0 END), 0)::int AS owed
-        FROM orders o
-        JOIN payments p ON p.order_id = o.id AND p.status = 'paid'
-        JOIN bookings bk ON bk.order_id = o.id
-        LEFT JOIN payouts po ON po.booking_id = bk.id
-       WHERE o.id = ${b.order_id}
-       GROUP BY p.id, p.amount_cents, o.total_cents`.execute(trx);
-    const pay = rows[0];
-    if (pay) {
-      const goal = Math.min(pay.owed, pay.amount_cents);
-      await enqueue(trx, 'payment.refund', { paymentId: pay.payment_id, amountCents: goal }, { jobKey: `refund:${pay.payment_id}` });
-      await sql`UPDATE orders SET status = ${goal >= pay.amount_cents ? 'refunded' : 'partially_refunded'} WHERE id = ${b.order_id}`
-        .execute(trx);
-    }
+    await queueOrderRefund(trx, b.order_id);
     await scheduleNotice(trx, input.bookingId, 'falta_aluno_devolvida', now);
   });
 }

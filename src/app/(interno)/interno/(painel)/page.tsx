@@ -13,11 +13,12 @@ export default async function StaffHome() {
   await requireStaff();
   const { db } = appDeps();
   const today = await lessonsOfDay(db, await now());
-  const { rows } = await sql<{ pending_docs: number; in_review: number; releasing: number; unprocessed: number }>`
+  const { rows } = await sql<{ pending_docs: number; in_review: number; releasing: number; unprocessed: number; disputes: number }>`
     SELECT (SELECT count(*)::int FROM teacher_verifications WHERE status = 'pending') AS pending_docs,
            (SELECT count(*)::int FROM teachers WHERE status = 'in_review') AS in_review,
            (SELECT count(*)::int FROM payouts WHERE status = 'releasing') AS releasing,
-           (SELECT count(*)::int FROM webhook_events WHERE processed_at IS NULL) AS unprocessed`.execute(db);
+           (SELECT count(*)::int FROM webhook_events WHERE processed_at IS NULL) AS unprocessed,
+           (SELECT count(*)::int FROM disputes WHERE status = 'open') AS disputes`.execute(db);
   const c = rows[0]!;
   return (
     <div className="space-y-6">
@@ -30,6 +31,13 @@ export default async function StaffHome() {
         <Link href="/interno/aulas" className={CARD}>
           <p className="text-sm font-medium text-site-muted">Aulas de hoje</p>
           <p className="mt-1 font-display tracking-tight text-xl font-normal">{today.length === 0 ? 'Nenhuma aula hoje' : `${today.length} ${today.length === 1 ? 'aula' : 'aulas'}`}</p>
+        </Link>
+        <Link href="/interno/contestacoes" className={CARD}>
+          <p className="text-sm font-medium text-site-muted">Contestações</p>
+          <p className="mt-1 font-display tracking-tight text-xl font-normal" data-testid="contestacoes-abertas">
+            {c.disputes === 0 ? 'Nenhuma aberta' : `${c.disputes} ${c.disputes === 1 ? 'aberta' : 'abertas'}`}
+          </p>
+          {c.disputes > 0 && <p className="mt-1 text-sm text-site-muted">O repasse dessas aulas fica retido até a decisão.</p>}
         </Link>
         <Link href="/interno/aulas" className={CARD}>
           <p className="text-sm font-medium text-site-muted">Repasses</p>

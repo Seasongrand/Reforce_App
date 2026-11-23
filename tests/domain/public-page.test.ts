@@ -78,8 +78,24 @@ describe('página pública do professor', () => {
     expect(await publicTeacherPage(deps(), 'nao-existe', NOW)).toBeNull();
   });
 
-  it('aprovado com certidão vencida aparece como agenda indisponível, sem horários', async () => {
-    const t = await listedTeacher({ criminalRecordExpired: true });
+  it('com certidão vencida, segue vendendo a aula online e esconde a presencial', async () => {
+    const t = await listedTeacher();
+    // a varredura diária marca a certidão vencida como 'expired'
+    await testPool().query(`UPDATE teacher_verifications SET status = 'expired' WHERE teacher_id = $1 AND kind = 'criminal_record'`, [t.teacherId]);
+    await testPool().query(
+      `INSERT INTO services (teacher_id, subject, duration_min, price_cents, modality) VALUES ($1, 'matematica', 60, 15000, 'at_teacher')`,
+      [t.teacherId],
+    );
+    const slug = await slugOf(t.teacherId);
+    const page = await publicTeacherPage(deps(), slug, NOW);
+    expect(page).toMatchObject({ sellable: true, verified: true, nextSlot: TUE_14.toString(), modalities: ['online'] });
+    expect(page!.services.map((s) => s.modality)).toEqual(['online']);
+    expect(page!.badges.map((b) => b.kind).sort()).toEqual(['education', 'identity']);
+  });
+
+  it('sem identidade em dia, aparece como agenda indisponível, sem horários', async () => {
+    const t = await listedTeacher();
+    await testPool().query(`UPDATE teacher_verifications SET status = 'expired' WHERE teacher_id = $1 AND kind = 'identity'`, [t.teacherId]);
     const slug = await slugOf(t.teacherId);
     const page = await publicTeacherPage(deps(), slug, NOW);
     expect(page).toMatchObject({ sellable: false, verified: false, nextSlot: null });

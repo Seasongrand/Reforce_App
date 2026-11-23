@@ -9,6 +9,13 @@ import { cancelLessonByTeacherAction, checkinAction, joinRoomAction, refundNoSho
 
 export const dynamic = 'force-dynamic';
 
+const DISPUTE: Record<string, string> = {
+  open: 'A família contestou esta aula. O valor fica retido até a equipe decidir, e a decisão chega por e-mail.',
+  for_teacher: 'Contestação decidida a seu favor: o valor é seu.',
+  for_guardian: 'Contestação decidida a favor da família: o valor foi devolvido.',
+  shared: 'Contestação decidida pela equipe.',
+};
+
 /** Quantos dias de aulas anteriores a aba mostra. */
 const PAST_DAYS = 90;
 const MODALITY: Record<string, string> = { online: 'Online', at_teacher: 'No seu endereço', at_student: 'Na casa do aluno' };
@@ -61,6 +68,7 @@ export default async function TeacherLessonsPage({ searchParams }: { searchParam
               {l.checkedIn && ' · presença registrada'}</p>
             {l.address && <p className="text-sm">Endereço: {l.address}</p>}
             {l.refunded && <p className="text-sm text-site-muted" data-testid="devolvida">Valor devolvido ao aluno (falta justificada).</p>}
+            {l.dispute && <p className="rounded-lg bg-violet-50 px-3 py-2 text-sm" data-testid="contestada">{DISPUTE[l.dispute]}</p>}
             {l.refundableUntil && l.refundCents !== null && (
               <details className="text-sm">
                 <summary className="cursor-pointer text-brand">O aluno justificou a falta?</summary>

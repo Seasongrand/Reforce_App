@@ -29,6 +29,8 @@ export interface TeacherLesson {
   refunded: boolean;
   /** Aula de um horário fixo semanal da família. */
   weekly: boolean;
+  /** Contestação da família: aberta (valor retido) ou decidida. */
+  dispute: 'open' | 'for_teacher' | 'for_guardian' | 'shared' | null;
 }
 
 export async function teacherLessons(db: Db, teacherId: string, now: Temporal.Instant, pastDays = 7): Promise<TeacherLesson[]> {
@@ -36,12 +38,14 @@ export async function teacherLessons(db: Db, teacherId: string, now: Temporal.In
     id: string; starts_at: string; ends_at: string; status: string; modality: string; subject: string;
     first_name: string; grade: string | null; address: string | null; checked_in_at: string | null; outcome: string | null;
     payout_status: string | null; release_after: string | null; gross_cents: number | null; series_id: string | null;
+    dispute: TeacherLesson['dispute'];
   }>`
     SELECT b.id, b.starts_at, b.ends_at, b.status, b.modality, sv.subject, st.first_name, st.grade,
            CASE WHEN b.modality = 'at_student' AND b.status IN ('confirmed','completed','no_show')
                 THEN concat_ws(', ', a.street || coalesce(', ' || a.number, ''), a.district, a.city || '/' || a.state)
            END AS address,
-           ls.checked_in_at, ls.outcome, po.status AS payout_status, po.release_after, po.gross_cents, b.series_id
+           ls.checked_in_at, ls.outcome, po.status AS payout_status, po.release_after, po.gross_cents, b.series_id,
+           (SELECT d.status FROM disputes d WHERE d.booking_id = b.id ORDER BY d.opened_at DESC LIMIT 1) AS dispute
       FROM bookings b
       JOIN services sv ON sv.id = b.service_id
       JOIN students st ON st.id = b.student_id
@@ -53,7 +57,7 @@ export async function teacherLessons(db: Db, teacherId: string, now: Temporal.In
        AND b.ends_at >= ${now.subtract({ hours: 24 * pastDays }).toString()}::timestamptz
      ORDER BY b.starts_at`.execute(db);
   const refundableUntil = (r: (typeof rows)[number]) => {
-    if (r.status !== 'no_show' || r.payout_status !== 'held' || !r.release_after) return null;
+    if (r.status !== 'no_show' || r.payout_status !== 'held' || !r.release_after || r.dispute === 'open') return null;
     const until = instantFromDb(r.release_after);
     return until.epochMilliseconds > now.epochMilliseconds ? until : null;
   };
@@ -71,8 +75,9 @@ export async function teacherLessons(db: Db, teacherId: string, now: Temporal.In
     outcome: r.outcome,
     refundableUntil: refundableUntil(r),
     refundCents: r.status === 'no_show' && r.payout_status === 'held' ? r.gross_cents : null,
-    refunded: r.status === 'no_show' && r.payout_status === 'refunded',
+    refunded: r.status === 'no_show' && r.payout_status === 'refunded' && r.dispute !== 'for_guardian',
     weekly: r.series_id !== null,
+    dispute: r.dispute,
   }));
 }
 

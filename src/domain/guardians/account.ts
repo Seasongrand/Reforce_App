@@ -28,6 +28,9 @@ export interface AccountLesson {
   canReview: boolean;
   /** Aula de um horário fixo semanal. */
   seriesId: string | null;
+  /** Aula encerrada, com o repasse retido e dentro das 24 horas: dá para contestar. */
+  canDispute: boolean;
+  disputeStatus: 'open' | 'for_teacher' | 'for_guardian' | 'shared' | null;
 }
 
 export interface AccountView {
@@ -46,17 +49,20 @@ export async function accountView(deps: Deps, guardianId: string, now: Temporal.
     booking_id: string; order_id: string; starts_at: string; ends_at: string; status: string; modality: string;
     subject: string; t_name: string; t_slug: string; photo_id: string | null; s_name: string;
     r_rating: number | null; r_comment: string | null; series_id: string | null;
+    po_status: string | null; release_after: string | null; d_status: AccountLesson['disputeStatus'];
   }>`
     SELECT b.id AS booking_id, b.order_id, b.starts_at, b.ends_at, b.status, b.modality, sv.subject,
            t.display_name AS t_name, t.slug AS t_slug, st.first_name AS s_name,
            (SELECT p.id FROM teacher_photos p WHERE p.teacher_id = t.id AND p.status = 'approved') AS photo_id,
-           r.rating AS r_rating, r.comment AS r_comment, b.series_id
+           r.rating AS r_rating, r.comment AS r_comment, b.series_id, po.status AS po_status, po.release_after,
+           (SELECT d.status FROM disputes d WHERE d.booking_id = b.id AND d.opened_by = 'guardian') AS d_status
       FROM bookings b
       JOIN orders o ON o.id = b.order_id
       JOIN services sv ON sv.id = b.service_id
       JOIN teachers t ON t.id = b.teacher_id
       JOIN students st ON st.id = b.student_id
       LEFT JOIN reviews r ON r.booking_id = b.id
+      LEFT JOIN payouts po ON po.booking_id = b.id
      WHERE o.guardian_id = ${guardianId}
        AND b.status IN ('confirmed', 'completed', 'no_show')
      ORDER BY b.starts_at`.execute(deps.db);
@@ -81,6 +87,10 @@ export async function accountView(deps: Deps, guardianId: string, now: Temporal.
       review: r.r_rating !== null ? { rating: r.r_rating, comment: r.r_comment } : null,
       canReview: r.status === 'completed' && r.r_rating === null && endsAt.epochMilliseconds > cutoff.epochMilliseconds,
       seriesId: r.series_id,
+      // mesma regra de lessons/dispute.ts (openDispute confere de novo ao gravar)
+      canDispute: r.d_status === null && (r.status === 'completed' || r.status === 'no_show') && r.po_status === 'held'
+        && r.release_after !== null && now.epochMilliseconds < instantFromDb(r.release_after).epochMilliseconds,
+      disputeStatus: r.d_status,
     };
   });
   const isUpcoming = (l: AccountLesson) => l.status === 'confirmed' && Date.parse(l.endsAt) > now.epochMilliseconds;

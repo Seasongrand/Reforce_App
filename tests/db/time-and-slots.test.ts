@@ -103,12 +103,31 @@ describe('horários livres (free_slots)', () => {
     expect(slots[0]).toBe(sp('2026-11-17 17:00'));
   });
 
+  it('serviço presencial sem certidão de antecedentes aprovada não tem horário livre; o online tem', async () => {
+    const teacherId = await insertTeacher(db());
+    const online = await insertService(db(), teacherId);
+    const presencial = await insertService(db(), teacherId, { modality: 'at_student' });
+    await insertRule(db(), teacherId, 2, '14:00', '18:00');
+    const range = { from: '2026-11-17', to: '2026-11-17', now: '2026-11-16T12:00:00Z' };
+    const count = async (svc: string) => (await db().query(
+      `SELECT count(*)::int AS n FROM free_slots($1, $2, $3::date, $4::date, $5::timestamptz)`,
+      [teacherId, svc, range.from, range.to, range.now],
+    )).rows[0].n;
+    expect(await count(online)).toBeGreaterThan(0);
+    expect(await count(presencial)).toBe(0);
+    await db().query(`INSERT INTO teacher_verifications (teacher_id, kind, status, decided_at, valid_until)
+                      VALUES ($1, 'criminal_record', 'approved', now(), current_date + 180)`, [teacherId]);
+    expect(await count(presencial)).toBeGreaterThan(0);
+  });
+
   it('presencial com 30 min de deslocamento: depois da online das 14h às 15h10, recusa 15h30, aceita 16h; a seguinte só às 18h', async () => {
     const teacherId = await insertTeacher(db());
     const online = await insertService(db(), teacherId, { buffer_after_min: 10 });
     const presencial = await insertService(db(), teacherId, {
       modality: 'at_teacher', buffer_before_min: 30, buffer_after_min: 30,
     });
+    // aula presencial só tem horário com a certidão de antecedentes aprovada
+    await db().query(`INSERT INTO teacher_verifications (teacher_id, kind, status, decided_at) VALUES ($1, 'criminal_record', 'approved', now())`, [teacherId]);
     await insertRule(db(), teacherId, 2, '14:00', '20:00');
     const now = '2026-11-16 08:00-03';
     const fam1 = await insertFamilyOrder(db(), teacherId, online);

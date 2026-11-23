@@ -74,7 +74,10 @@ export default async function PayoutAccountPage() {
 
       {showEarnings && (
         <section className="space-y-4" aria-labelledby="meus-ganhos">
-          <h2 id="meus-ganhos" className="font-display tracking-tight text-xl font-normal">Meus ganhos</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id="meus-ganhos" className="font-display tracking-tight text-xl font-normal">Meus ganhos</h2>
+            <a href="/professor/recebimento/extrato" className="inline-flex min-h-11 items-center text-sm font-medium text-indigo-600 underline">Extrato por mês</a>
+          </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Total label="A receber" cents={e.pendingCents} testId="ganho-a-receber" className="col-span-2 sm:col-span-1"
               note={e.pendingCount === 0 ? 'Nada aguardando liberação.' : `${e.pendingCount} ${e.pendingCount === 1 ? 'aula aguardando' : 'aulas aguardando'} liberação.`} />

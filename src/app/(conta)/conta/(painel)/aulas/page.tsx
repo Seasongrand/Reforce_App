@@ -15,16 +15,22 @@ export const metadata: Metadata = { title: 'Aulas · Minha conta · Reforce' };
 const STATUS: Record<string, string> = { completed: 'Concluída', no_show: 'Falta registrada', confirmed: 'Aguardando' };
 const BTN = 'inline-flex min-h-11 items-center rounded-xl px-4 text-sm font-medium';
 const WEEKDAYS = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
+const DISPUTE: Record<string, string> = {
+  open: 'Contestação em análise: o valor fica guardado até a equipe decidir.',
+  for_guardian: 'Contestação aceita: o valor da aula foi devolvido.',
+  for_teacher: 'Contestação analisada: a aula foi mantida.',
+  shared: 'Contestação analisada.',
+};
 const EMPTY = 'rounded-[20px] border border-site-line bg-white p-5 text-site-muted';
 
 /** Aulas em duas abas: Próximas (a mais perto primeiro) e Anteriores (a mais recente primeiro). */
-export default async function GuardianLessons({ searchParams }: { searchParams: Promise<{ aba?: string; avaliada?: string; remarcada?: string; cancelada?: string; fixo?: string; 'fixo-encerrado'?: string }> }) {
+export default async function GuardianLessons({ searchParams }: { searchParams: Promise<{ aba?: string; avaliada?: string; remarcada?: string; cancelada?: string; contestada?: string; fixo?: string; 'fixo-encerrado'?: string }> }) {
   const guardianId = await requireGuardian();
   const at = await now();
   const v = await accountView(appDeps(), guardianId, at);
   const weekly = await weeklySeriesOf(appDeps().db, guardianId, at);
   const sp = await searchParams;
-  const { aba, avaliada, remarcada, cancelada } = sp;
+  const { aba, avaliada, remarcada, cancelada, contestada } = sp;
   const tab = aba === 'anteriores' ? 'past' : 'upcoming';
   const tabs = [
     { key: 'upcoming', label: 'Próximas', href: '/conta/aulas', count: v.upcoming.length },
@@ -36,6 +42,7 @@ export default async function GuardianLessons({ searchParams }: { searchParams: 
       {avaliada && <p className="rounded-[20px] bg-green-100 px-4 py-3 text-sm font-medium text-green-800" role="status">Obrigado pela avaliação!</p>}
       {remarcada && <p className="rounded-[20px] bg-green-100 px-4 py-3 text-sm font-medium text-green-800" role="status">Aula remarcada. O professor já foi avisado.</p>}
       {cancelada && <p className="rounded-[20px] bg-green-100 px-4 py-3 text-sm font-medium text-green-800" role="status">Aula cancelada. A devolução sai pelo mesmo meio de pagamento, e o professor já foi avisado.</p>}
+      {contestada && <p className="rounded-[20px] bg-green-100 px-4 py-3 text-sm font-medium text-green-800" role="status">Contestação enviada. O valor fica guardado até a equipe decidir, e a resposta chega por e-mail.</p>}
       {sp.fixo && <p className="rounded-[20px] bg-green-100 px-4 py-3 text-sm font-medium text-green-800" role="status">Horário fixo ligado. O PIX de cada semana chega 5 dias antes da aula.</p>}
       {sp['fixo-encerrado'] && <p className="rounded-[20px] bg-green-100 px-4 py-3 text-sm font-medium text-green-800" role="status">Horário fixo encerrado. As aulas já pagas continuam marcadas.</p>}
       {weekly.length > 0 && (
@@ -91,6 +98,7 @@ export default async function GuardianLessons({ searchParams }: { searchParams: 
                   <a href={`/pedido/${l.orderId}/agenda.ics`} download="aula-reforce.ics" className={`${BTN} border border-site-field`}>Adicionar à agenda</a>
                   <Link href={`/conta/aulas/${l.bookingId}`} className={`${BTN} border border-site-field`}>Remarcar ou cancelar</Link>
                   {!l.seriesId && <Link href={`/conta/horario-fixo/${l.bookingId}`} className={`${BTN} border border-site-field`}>Repetir toda semana</Link>}
+                  <Link href={`/conta/comprovante/${l.orderId}`} className={`${BTN} text-site-muted underline hover:text-indigo-950`}>Comprovante</Link>
                 </div>
               </AccountLessonCard>
             ))}
@@ -103,12 +111,15 @@ export default async function GuardianLessons({ searchParams }: { searchParams: 
           {v.past.map((l) => (
             <AccountLessonCard key={l.bookingId} l={l} tz={v.timezone}>
               <p className="text-sm text-site-muted">{STATUS[l.status] ?? l.status}</p>
+              {l.disputeStatus && <p className="rounded-lg bg-violet-50 px-3 py-2 text-sm" data-testid="contestacao">{DISPUTE[l.disputeStatus]}</p>}
               {l.review && (
                 <p className="text-sm"><Stars n={l.review.rating} /> <span className="text-site-muted">Sua avaliação{l.review.comment ? `: “${l.review.comment}”` : ''}</span></p>
               )}
               <div className="flex flex-wrap gap-2">
                 {l.canReview && <Link href={`/conta/avaliar/${l.bookingId}`} className={`${BTN} bg-indigo-600 text-white hover:bg-indigo-700`}>Avaliar a aula</Link>}
                 <Link href={`/p/${l.teacherSlug}`} className={`${BTN} border border-site-field`}>Marcar de novo</Link>
+                <Link href={`/conta/comprovante/${l.orderId}`} className={`${BTN} text-site-muted underline hover:text-indigo-950`}>Comprovante</Link>
+                {l.canDispute && <Link href={`/conta/contestar/${l.bookingId}`} className={`${BTN} text-site-muted underline hover:text-indigo-950`}>Algo deu errado? Contestar</Link>}
               </div>
             </AccountLessonCard>
           ))}
