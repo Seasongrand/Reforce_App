@@ -21,6 +21,7 @@ import { availableSlots } from '../availability';
 import { syncCalendarBusy } from '../calendar/sync';
 import type { Deps } from '../deps';
 import { DomainError } from '../errors';
+import { queueOrderRefund } from '../payment/order-refund';
 import { scheduleForRescheduledBooking, scheduleNotice } from '../notifications/schedule';
 import { checkinCode, checkinHash } from './checkin';
 
@@ -96,33 +97,6 @@ const lockTeacher = (trx: Transaction<DB>, teacherId: string) =>
   sql`SELECT pg_advisory_xact_lock(hashtextextended('teacher:' || ${teacherId}, 0))`.execute(trx);
 const actor = (trx: Transaction<DB>, who: string) => sql`SELECT set_config('app.actor', ${who}, true)`.execute(trx);
 
-/**
- * Devolução da aula cancelada pela tarefa payment.refund, que recebe quanto deve
- * estar devolvido ao final: aulas canceladas valem a aula inteira; faltas do aluno,
- * o que não ficou com o professor (mesma conta de lessons/no-show-refund.ts).
- */
-async function queueRefund(trx: Transaction<DB>, orderId: string): Promise<void> {
-  const { rows } = await sql<{ payment_id: string; amount_cents: number; owed: number }>`
-    SELECT p.id AS payment_id, p.amount_cents,
-           coalesce(sum(CASE WHEN bk.status = 'cancelled' THEN o.total_cents / o.lessons
-                             WHEN bk.status = 'no_show'
-                             THEN (o.total_cents / o.lessons)
-                                  - CASE WHEN po.status IS NULL OR po.status = 'refunded' THEN 0 ELSE po.gross_cents END
-                             ELSE 0 END), 0)::int AS owed
-      FROM orders o
-      JOIN payments p ON p.order_id = o.id AND p.status = 'paid'
-      JOIN bookings bk ON bk.order_id = o.id
-      LEFT JOIN payouts po ON po.booking_id = bk.id
-     WHERE o.id = ${orderId}
-     GROUP BY p.id, p.amount_cents`.execute(trx);
-  const pay = rows[0];
-  if (!pay) return;
-  const goal = Math.min(pay.owed, pay.amount_cents);
-  if (goal <= 0) return;
-  await enqueue(trx, 'payment.refund', { paymentId: pay.payment_id, amountCents: goal }, { jobKey: `refund:${pay.payment_id}` });
-  await sql`UPDATE orders SET status = ${goal >= pay.amount_cents ? 'refunded' : 'partially_refunded'} WHERE id = ${orderId}`.execute(trx);
-}
-
 async function afterFreed(trx: Transaction<DB>, l: LessonRow): Promise<void> {
   await enqueue(trx, 'calendar.delete_event', { bookingId: l.id }, { jobKey: `caldel:${l.id}` });
   await enqueue(trx, 'search.refresh_teacher', { teacherId: l.teacher_id }, { jobKey: `refresh:${l.teacher_id}` });
@@ -142,7 +116,7 @@ export async function cancelByFamily(
     }
     await actor(trx, `guardian:${input.guardianId}`);
     await sql`UPDATE bookings SET status = 'cancelled' WHERE id = ${l.id} AND status = 'confirmed'`.execute(trx);
-    await queueRefund(trx, l.order_id);
+    await queueOrderRefund(trx, l.order_id);
     await scheduleNotice(trx, l.id, 'cancelada_pela_familia', now);
     await scheduleNotice(trx, l.id, 'cancelamento_confirmado', now);
     await afterFreed(trx, l);
@@ -161,7 +135,7 @@ export async function cancelByTeacher(
     if (!upcoming(l, now)) throw new DomainError('conflict', 'esta aula não pode mais ser cancelada');
     await actor(trx, `teacher:${input.teacherId}`);
     await sql`UPDATE bookings SET status = 'cancelled' WHERE id = ${l.id} AND status = 'confirmed'`.execute(trx);
-    await queueRefund(trx, l.order_id);
+    await queueOrderRefund(trx, l.order_id);
     await scheduleNotice(trx, l.id, 'cancelada_pelo_professor', now);
     await afterFreed(trx, l);
     return { refundCents: perLesson(l) };
