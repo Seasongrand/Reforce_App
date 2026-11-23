@@ -17,6 +17,16 @@ export const KIND_LABEL: Record<VerificationKind, string> = {
   education: 'formação',
 };
 
+/** A certidão de antecedentes só é exigida de quem dá aula presencial (decisão do dono, 22/11). */
+export const IN_PERSON_ONLY: VerificationKind = 'criminal_record';
+
+/** Documentos que o professor precisa ter aprovados: a certidão só com serviço presencial ativo. */
+export async function requiredKinds(deps: Pick<Deps, 'db'>, teacherId: string): Promise<VerificationKind[]> {
+  const inPerson = await deps.db.selectFrom('services').select('id').where('teacher_id', '=', teacherId)
+    .where('active', '=', true).where('modality', '<>', 'online').executeTakeFirst();
+  return inPerson ? VERIFICATION_KINDS : VERIFICATION_KINDS.filter((k) => k !== IN_PERSON_ONLY);
+}
+
 const ALLOWED_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/webp']);
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
 

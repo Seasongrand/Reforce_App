@@ -22,7 +22,7 @@ export const STEPS_TITLE = 'Da inscrição à primeira aula paga em 3 passos';
 export const STEPS = [
   {
     title: 'Entre na lista e seja verificado como professor',
-    text: 'Leva poucos minutos. Quando a seleção abrir na sua cidade, você envia documento, antecedentes e formação, e a equipe confere.',
+    text: 'Leva poucos minutos. Quando a seleção abrir na sua cidade, você envia documento e formação, e a equipe confere. Para dar aula presencial, também a certidão de antecedentes, que sai de graça pela internet.',
   },
   {
     title: 'Monte sua página e sua agenda',
@@ -40,7 +40,7 @@ export const FEATURES = [
   { title: 'Cobra a aula na reserva', text: 'PIX ou cartão, pago antes da aula. Se o aluno faltar, você recebe.' },
   { title: 'Lembra o aluno da aula', text: 'Lembretes 24 h e 1 h antes, por WhatsApp e e-mail.' },
   { title: 'Abre a sala de aula online', text: 'No navegador do computador ou do celular. Abre 10 minutos antes.' },
-  { title: 'Mostra seu selo de professor verificado', text: 'Identidade, antecedentes e formação conferidos. O selo fica na sua página.' },
+  { title: 'Mostra seu selo de professor verificado', text: 'Identidade e formação conferidas. O selo fica na sua página.' },
 ] as const;
 
 export const FAQ_TITLE = 'Perguntas dos professores';
@@ -76,7 +76,7 @@ export const FAQ = [
   },
   {
     q: 'Quem pode participar?',
-    a: 'Professores de qualquer disciplina, do 6º ano ao pré-vestibular, inclusive universitários. Para o selo, a equipe confere documento com selfie, antecedentes criminais e formação.',
+    a: 'Professores de qualquer disciplina, do 6º ano ao pré-vestibular, inclusive universitários. Para o selo, a equipe confere documento com selfie e formação. Quem dá aula presencial também envia a certidão de antecedentes criminais, que sai de graça pela internet.',
   },
 ];
 

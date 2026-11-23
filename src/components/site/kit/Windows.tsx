@@ -23,7 +23,7 @@ export function StepVisual({ step }: { step: number }) {
     return (
       <Win title="Verificação" label="Tela de verificação com documento, antecedentes e formação conferidos">
         <ul className="win__list">
-          {['Documento com foto e selfie', 'Certidão de antecedentes criminais', 'Diploma ou declaração de matrícula'].map((t) => (
+          {['Documento com foto e selfie', 'Antecedentes criminais, para aula presencial', 'Diploma ou declaração de matrícula'].map((t) => (
             <li key={t}><Check />{t}<span className="win__tag">Conferido</span></li>
           ))}
         </ul>

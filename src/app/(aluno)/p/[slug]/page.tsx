@@ -60,7 +60,7 @@ export default async function TeacherPublicPage({
               <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">O que verificamos</summary>
               <ul className="mb-3 space-y-2 text-sm text-site-muted">
                 <li>✓ Identidade conferida</li>
-                <li>✓ Certidão de antecedentes criminais{record?.validUntil ? `, válida até ${br(record.validUntil)}` : ''}</li>
+                {record && <li>✓ Certidão de antecedentes criminais{record.validUntil ? `, válida até ${br(record.validUntil)}` : ''}</li>}
                 <li>✓ Formação conferida</li>
               </ul>
             </details>}
