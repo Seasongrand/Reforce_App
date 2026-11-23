@@ -57,7 +57,7 @@ export default async function TeacherLessonsPage({ searchParams }: { searchParam
           <li key={l.bookingId} className={`${CARD} space-y-2`} data-testid={`aula-${l.bookingId}`}>
             <p className="font-display tracking-tight text-lg font-normal">{formatPtBr(l.startsAt, tz)}</p>
             <p className="font-medium">{l.subject} · {l.studentFirstName}{l.studentGrade && ` (${l.studentGrade})`}</p>
-            <p className="text-sm text-site-muted">{MODALITY[l.modality]} · <span data-testid="situacao">{STATUS[l.status] ?? l.status}</span>
+            <p className="text-sm text-site-muted">{MODALITY[l.modality]} · <span data-testid="situacao">{STATUS[l.status] ?? l.status}</span>{l.weekly && " · Horário fixo semanal"}
               {l.checkedIn && ' · presença registrada'}</p>
             {l.address && <p className="text-sm">Endereço: {l.address}</p>}
             {l.refunded && <p className="text-sm text-site-muted" data-testid="devolvida">Valor devolvido ao aluno (falta justificada).</p>}

@@ -26,6 +26,8 @@ export interface AccountLesson {
   lessonUrl: string | null;
   review: { rating: number; comment: string | null } | null;
   canReview: boolean;
+  /** Aula de um horário fixo semanal. */
+  seriesId: string | null;
 }
 
 export interface AccountView {
@@ -43,12 +45,12 @@ export async function accountView(deps: Deps, guardianId: string, now: Temporal.
   const { rows } = await sql<{
     booking_id: string; order_id: string; starts_at: string; ends_at: string; status: string; modality: string;
     subject: string; t_name: string; t_slug: string; photo_id: string | null; s_name: string;
-    r_rating: number | null; r_comment: string | null;
+    r_rating: number | null; r_comment: string | null; series_id: string | null;
   }>`
     SELECT b.id AS booking_id, b.order_id, b.starts_at, b.ends_at, b.status, b.modality, sv.subject,
            t.display_name AS t_name, t.slug AS t_slug, st.first_name AS s_name,
            (SELECT p.id FROM teacher_photos p WHERE p.teacher_id = t.id AND p.status = 'approved') AS photo_id,
-           r.rating AS r_rating, r.comment AS r_comment
+           r.rating AS r_rating, r.comment AS r_comment, b.series_id
       FROM bookings b
       JOIN orders o ON o.id = b.order_id
       JOIN services sv ON sv.id = b.service_id
@@ -78,6 +80,7 @@ export async function accountView(deps: Deps, guardianId: string, now: Temporal.
         : null,
       review: r.r_rating !== null ? { rating: r.r_rating, comment: r.r_comment } : null,
       canReview: r.status === 'completed' && r.r_rating === null && endsAt.epochMilliseconds > cutoff.epochMilliseconds,
+      seriesId: r.series_id,
     };
   });
   const isUpcoming = (l: AccountLesson) => l.status === 'confirmed' && Date.parse(l.endsAt) > now.epochMilliseconds;

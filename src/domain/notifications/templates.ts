@@ -30,7 +30,7 @@ export interface MessageContext {
   teacher: { name: string; slug: string; timezone: string; phone: string | null; email: string | null; teachingAddress: string | null };
   familyAddress: string | null;
   checkinCode: string | null;
-  links: { lesson: string; teacherPage: string; teacherPanel: string; review: string };
+  links: { lesson: string; teacherPage: string; teacherPanel: string; review: string; order: string; account: string };
 }
 
 export interface RenderedMessage {
@@ -95,6 +95,8 @@ export async function loadMessageContext(deps: Deps, bookingId: string, db: Kyse
       teacherPage: `${base}/p/${r.t_slug}`,
       teacherPanel: `${base}/professor/aulas`,
       review: `${base}/conta/avaliar/${bookingId}`,
+      order: `${base}/pedido/${r.order_id}`,
+      account: `${base}/conta/aulas`,
     },
   };
 }
@@ -219,6 +221,18 @@ export function render(template: Template, c: MessageContext): RenderedMessage {
         `com ${c.teacher.name}. Leva um minuto, e a sua nota ajuda outras famílias a escolher.\n\n` +
         `Avaliar a aula: ${c.links.review}\n\nPara marcar a próxima aula: ${c.links.teacherPage}`;
       return { whatsapp: { name: template, vars: { ...vars, link: c.links.review }, preview: text }, email: { subject, text } };
+    case 'horario_fixo_cobranca':
+      subject = `Horário fixo: pague a aula de ${c.subject} de ${formatPtBr(c.startsAt, c.guardian.timezone)}`;
+      text = `Olá, ${c.guardian.name}.\n\nO horário fixo de ${c.student.firstName} com ${c.teacher.name} está reservado ` +
+        `para ${when}. Para confirmar esta aula, pague ${formatBRL(c.totalCents)} por PIX até 24 horas antes dela.\n\n` +
+        `Pagar a aula: ${c.links.order}\n\nSem pagamento até lá, só esta semana fica sem aula.`;
+      return { whatsapp: { name: template, vars: { ...vars, link: c.links.order }, preview: text }, email: { subject, text } };
+    case 'horario_fixo_encerrado':
+      subject = `Horário fixo com ${c.teacher.name} encerrado`;
+      text = `Olá, ${c.guardian.name}.\n\nO horário fixo de ${c.student.firstName} com ${c.teacher.name} foi encerrado ` +
+        `porque as aulas das últimas três semanas não foram pagas. O horário voltou a ficar livre para outras famílias.\n\n` +
+        `Para marcar de novo: ${c.links.teacherPage}`;
+      return { whatsapp: { name: template, vars: { ...vars, link: c.links.teacherPage }, preview: text }, email: { subject, text } };
     case 'confirmacao_professor': {
       const at = formatPtBr(c.startsAt, c.teacher.timezone);
       subject = `Nova aula paga: ${c.student.firstName}, ${at}`;

@@ -27,19 +27,21 @@ export interface TeacherLesson {
   refundCents: number | null;
   /** O professor devolveu o valor desta aula (falta justificada). */
   refunded: boolean;
+  /** Aula de um horário fixo semanal da família. */
+  weekly: boolean;
 }
 
 export async function teacherLessons(db: Db, teacherId: string, now: Temporal.Instant, pastDays = 7): Promise<TeacherLesson[]> {
   const { rows } = await sql<{
     id: string; starts_at: string; ends_at: string; status: string; modality: string; subject: string;
     first_name: string; grade: string | null; address: string | null; checked_in_at: string | null; outcome: string | null;
-    payout_status: string | null; release_after: string | null; gross_cents: number | null;
+    payout_status: string | null; release_after: string | null; gross_cents: number | null; series_id: string | null;
   }>`
     SELECT b.id, b.starts_at, b.ends_at, b.status, b.modality, sv.subject, st.first_name, st.grade,
            CASE WHEN b.modality = 'at_student' AND b.status IN ('confirmed','completed','no_show')
                 THEN concat_ws(', ', a.street || coalesce(', ' || a.number, ''), a.district, a.city || '/' || a.state)
            END AS address,
-           ls.checked_in_at, ls.outcome, po.status AS payout_status, po.release_after, po.gross_cents
+           ls.checked_in_at, ls.outcome, po.status AS payout_status, po.release_after, po.gross_cents, b.series_id
       FROM bookings b
       JOIN services sv ON sv.id = b.service_id
       JOIN students st ON st.id = b.student_id
@@ -70,6 +72,7 @@ export async function teacherLessons(db: Db, teacherId: string, now: Temporal.In
     refundableUntil: refundableUntil(r),
     refundCents: r.status === 'no_show' && r.payout_status === 'held' ? r.gross_cents : null,
     refunded: r.status === 'no_show' && r.payout_status === 'refunded',
+    weekly: r.series_id !== null,
   }));
 }
 

@@ -32,6 +32,9 @@ export interface HoldRequest {
   idempotencyKey: string;
   /** Origem da família no primeiro contato; vale a primeira registrada. */
   acquisition?: 'teacher_link' | 'marketplace';
+  /** Horário fixo semanal: a aula da semana fica presa até este instante (24 horas antes dela). */
+  holdUntil?: Temporal.Instant;
+  seriesId?: string;
 }
 
 export type HoldResult =
@@ -156,7 +159,7 @@ async function holdInTx(
     .where('teacher_id', '=', req.teacherId).where('guardian_id', '=', req.guardianId).executeTakeFirstOrThrow();
   const commissionBps = deps.config.commissionBps[link.acquisition as 'teacher_link' | 'marketplace'];
 
-  const holdExpiresAt = now.add({ minutes: deps.config.holdMinutes });
+  const holdExpiresAt = req.holdUntil ?? now.add({ minutes: deps.config.holdMinutes });
   const order = await trx
     .insertInto('orders')
     .values({
@@ -208,12 +211,13 @@ async function holdInTx(
     // 3. ocupar o horário; se alguém chegou antes, o banco responde 23P01
     const ins = await sql<{ id: string }>`
       INSERT INTO bookings (order_id, teacher_id, student_id, service_id, starts_at, ends_at, blocked,
-                            local_start, timezone, status, hold_expires_at, modality, address_id)
+                            local_start, timezone, status, hold_expires_at, modality, address_id, series_id)
       SELECT ${order.id}, t.id, ${req.studentId}, ${req.serviceId},
              s, s + make_interval(mins => ${svc.duration_min}::int),
              tstzrange(s - make_interval(mins => ${svc.buffer_before_min}::int),
                        s + make_interval(mins => ${svc.duration_min + svc.buffer_after_min}::int), '[)'),
-             ${local}::timestamp, t.timezone, 'held', ${ts(holdExpiresAt)}::timestamptz, ${svc.modality}, ${addressId}
+             ${local}::timestamp, t.timezone, 'held', ${ts(holdExpiresAt)}::timestamptz, ${svc.modality}, ${addressId},
+             ${req.seriesId ?? null}::uuid
         FROM teachers t, LATERAL (SELECT ${local}::timestamp AT TIME ZONE t.timezone AS s) x
        WHERE t.id = ${req.teacherId}
       RETURNING id`.execute(trx);

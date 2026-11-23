@@ -92,6 +92,7 @@ export interface Bookings {
   modality: Generated<string>;
   order_id: string;
   rescheduled_from: string | null;
+  series_id: string | null;
   service_id: string;
   starts_at: string;
   status: Generated<BookingStatus>;
@@ -337,7 +338,11 @@ export interface TeacherGuardianLinks {
   acquisition: string;
   created_at: Generated<string>;
   guardian_id: string;
+  guardian_notified_at: string | null;
+  guardian_read_at: string | null;
   teacher_id: string;
+  teacher_notified_at: string | null;
+  teacher_read_at: string | null;
 }
 
 export interface TeacherNextSlot {
@@ -466,6 +471,21 @@ export interface WebhookEvents {
   received_at: Generated<string>;
 }
 
+export interface WeeklySeries {
+  address_id: string | null;
+  created_at: Generated<string>;
+  ended_at: string | null;
+  ended_reason: string | null;
+  guardian_id: string;
+  id: Generated<string>;
+  local_start: string;
+  service_id: string;
+  status: Generated<string>;
+  student_id: string;
+  teacher_id: string;
+  timezone: string;
+}
+
 export interface DB {
   addresses: Addresses;
   auth_codes: AuthCodes;
@@ -509,4 +529,5 @@ export interface DB {
   teachers: Teachers;
   teachers_listed: TeachersListed;
   webhook_events: WebhookEvents;
+  weekly_series: WeeklySeries;
 }

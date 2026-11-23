@@ -11,6 +11,7 @@ import { retryDeferredWebhooks } from './payment/webhook';
 import { closeLessons } from './lessons/close';
 import { releaseDuePayouts } from './payouts/release';
 import { reconcileReleasing } from './payouts/reconcile';
+import { prepareWeeklySeries } from './booking/weekly';
 
 /** Reservas temporárias vencidas liberam o horário; a cobrança é cancelada (§1). */
 export async function expireHolds(deps: Deps, now: Temporal.Instant): Promise<{ bookings: number; charges: number }> {
@@ -51,6 +52,7 @@ export async function expireHolds(deps: Deps, now: Temporal.Instant): Promise<{ 
 export async function runMinuteSweeps(deps: Deps, now: Temporal.Instant): Promise<Record<string, unknown>> {
   const steps: Array<[string, () => Promise<unknown>]> = [
     ['expireHolds', () => expireHolds(deps, now)],
+    ['prepareWeeklySeries', () => prepareWeeklySeries(deps, now)],
     ['retryDeferredWebhooks', () => retryDeferredWebhooks(deps, now)],
     ['sendDueNotifications', () => sendDueNotifications(deps, now)],
     ['closeLessons', () => closeLessons(deps, now)],
