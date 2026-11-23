@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 const REASON: Record<RefundReason, string> = {
   teacher_no_show: 'Falta do professor',
+  dispute: 'Contestação aceita',
   student_excused: 'Falta justificada do aluno',
   student_no_show: 'Falta do aluno (devolve a parte que não fica com o professor)',
   late_payment: 'Pagamento depois do prazo',
