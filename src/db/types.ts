@@ -151,11 +151,13 @@ export interface DevProviderCalls {
 
 export interface Disputes {
   booking_id: string;
+  decision_note: string | null;
   id: Generated<string>;
   opened_at: Generated<string>;
   opened_by: string;
   reason: string;
   resolved_at: string | null;
+  resolved_by: string | null;
   status: Generated<string>;
 }
 
@@ -355,6 +357,7 @@ export interface TeacherNextSlot {
 }
 
 export interface TeacherPaymentAccounts {
+  api_key_ciphertext: Buffer | null;
   created_at: Generated<string>;
   provider: string;
   provider_account_id: string;

@@ -22,7 +22,8 @@ WITH due AS (
 )
 UPDATE payouts p SET status = 'releasing', release_attempted_at = $1::timestamptz
   FROM due WHERE p.id = due.id
-RETURNING p.id, p.provider_escrow_id`;
+RETURNING p.id, p.provider_escrow_id,
+          (SELECT a.api_key_ciphertext FROM teacher_payment_accounts a WHERE a.teacher_id = p.teacher_id) AS account_key`;
 
 /** Marca como liberado só o que está em 'releasing'. $1 = id, $2 = agora. */
 export const MARK_RELEASED_SQL = `

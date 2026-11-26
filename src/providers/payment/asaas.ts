@@ -43,11 +43,11 @@ export class AsaasPaymentProvider implements PaymentProvider {
     return this.opts.env === 'production' ? 'https://api.asaas.com/v3' : 'https://api-sandbox.asaas.com/v3';
   }
 
-  private async call<T>(method: string, path: string, body?: unknown): Promise<T> {
+  private async call<T>(method: string, path: string, body?: unknown, apiKey = this.opts.apiKey): Promise<T> {
     const res = await (this.opts.fetch ?? fetch)(`${this.base}${path}`, {
       method,
       headers: {
-        access_token: this.opts.apiKey, 'content-type': 'application/json', accept: 'application/json',
+        access_token: apiKey, 'content-type': 'application/json', accept: 'application/json',
         'user-agent': 'Reforce/1.0',
       },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -59,7 +59,7 @@ export class AsaasPaymentProvider implements PaymentProvider {
   }
 
   async createRecipientAccount(input: RecipientAccountInput): Promise<RecipientAccount> {
-    const a = await this.call<{ id: string; walletId: string }>('POST', '/accounts', {
+    const a = await this.call<{ id: string; walletId: string; apiKey?: string }>('POST', '/accounts', {
       name: input.name,
       email: input.email,
       cpfCnpj: input.cpfCnpj,
@@ -73,7 +73,7 @@ export class AsaasPaymentProvider implements PaymentProvider {
       externalReference: input.teacherId,
     });
     // a subconta recebe o split assim que criada; os documentos do professor ficam no próprio Asaas
-    return { accountId: a.id, walletId: a.walletId, status: 'active' };
+    return { accountId: a.id, walletId: a.walletId, apiKey: a.apiKey, status: 'active' };
   }
 
   async createCharge(input: CreateChargeInput): Promise<Charge> {
@@ -116,19 +116,21 @@ export class AsaasPaymentProvider implements PaymentProvider {
     await this.call('POST', `/payments/${chargeId}/refund`, amountCents === undefined ? {} : { value: reais(amountCents) });
   }
 
-  private escrowOf(chargeId: string) {
-    return this.call<{ id: string; status: 'ACTIVE' | 'DONE'; finishReason?: string }>('GET', `/payments/${chargeId}/escrow`);
+  /** A retenção só aparece para a subconta que recebeu o split: usa a chave dela. */
+  private escrowOf(chargeId: string, accountKey?: string) {
+    if (!accountKey) throw new AsaasApiError(400, 'sem a chave da subconta do professor para consultar a retenção');
+    return this.call<{ id: string; status: 'ACTIVE' | 'DONE'; finishReason?: string }>('GET', `/payments/${chargeId}/escrow`, undefined, accountKey);
   }
 
-  async releaseEscrow(chargeId: string): Promise<{ status: 'released' | 'pending' }> {
-    const e = await this.escrowOf(chargeId);
+  async releaseEscrow(chargeId: string, accountKey?: string): Promise<{ status: 'released' | 'pending' }> {
+    const e = await this.escrowOf(chargeId, accountKey);
     if (e.status === 'DONE') return { status: 'released' };
-    const r = await this.call<{ status?: string }>('POST', `/escrow/${e.id}/finish`);
+    const r = await this.call<{ status?: string }>('POST', `/escrow/${e.id}/finish`, undefined, accountKey);
     return { status: r.status === 'ACTIVE' ? 'pending' : 'released' };
   }
 
-  async getEscrow(chargeId: string): Promise<{ status: 'held' | 'released' | 'refunded' }> {
-    const e = await this.escrowOf(chargeId);
+  async getEscrow(chargeId: string, accountKey?: string): Promise<{ status: 'held' | 'released' | 'refunded' }> {
+    const e = await this.escrowOf(chargeId, accountKey);
     if (e.status === 'ACTIVE') return { status: 'held' };
     return { status: e.finishReason === 'PAYMENT_REFUNDED' || e.finishReason === 'CHARGEBACK' ? 'refunded' : 'released' };
   }
@@ -161,8 +163,11 @@ export class AsaasPaymentProvider implements PaymentProvider {
       });
       done.push('webhook cadastrado');
     }
-    await this.call('POST', '/accounts/escrow', { enabled: true, isFeePayer: false, daysToExpire: input.escrowDays });
-    done.push(`Conta Escrow padrão: ${input.escrowDays} dias`);
+    const escrow = await this.call<{ enabled?: boolean; daysToExpire?: number }>('GET', '/accounts/escrow');
+    if (!escrow.enabled || escrow.daysToExpire !== input.escrowDays) {
+      await this.call('POST', '/accounts/escrow', { enabled: true, isFeePayer: false, daysToExpire: input.escrowDays });
+      done.push(`Conta Escrow padrão: ${input.escrowDays} dias`);
+    }
     return done;
   }
 }

@@ -9,6 +9,7 @@ import type { RecipientAccountInput } from '@/providers/payment/types';
 import { onlyDigits } from '@/providers/geocoding/fake';
 import type { Deps } from '../deps';
 import { DomainError } from '../errors';
+import { sealSecret, SUBACCOUNT_KEY_LABEL } from '@/lib/secret-box';
 import { normalizeEmail } from '../auth/codes';
 import { normalizePhoneBR } from '../guardians/identify';
 
@@ -81,10 +82,13 @@ export async function openPaymentAccount(
     province: input.province?.trim(),
     incomeValueCents: input.incomeValueCents,
   });
-  await sql`INSERT INTO teacher_payment_accounts (teacher_id, provider, provider_account_id, wallet_id, status)
-            VALUES (${teacherId}, ${deps.providers.payment.name}, ${acc.accountId}, ${acc.walletId}, ${acc.status})
+  // a chave da subconta vai cifrada; sem ela não dá para liberar a retenção no Asaas
+  const keyCipher = acc.apiKey ? sealSecret(deps.config.fileEncryptionKeyHex, SUBACCOUNT_KEY_LABEL, acc.apiKey) : null;
+  await sql`INSERT INTO teacher_payment_accounts (teacher_id, provider, provider_account_id, wallet_id, status, api_key_ciphertext)
+            VALUES (${teacherId}, ${deps.providers.payment.name}, ${acc.accountId}, ${acc.walletId}, ${acc.status}, ${keyCipher})
             ON CONFLICT (teacher_id) DO UPDATE
                SET provider = EXCLUDED.provider, provider_account_id = EXCLUDED.provider_account_id,
-                   wallet_id = EXCLUDED.wallet_id, status = EXCLUDED.status`.execute(deps.db);
+                   wallet_id = EXCLUDED.wallet_id, status = EXCLUDED.status,
+                   api_key_ciphertext = EXCLUDED.api_key_ciphertext`.execute(deps.db);
   return { status: acc.status };
 }

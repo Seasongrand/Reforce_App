@@ -55,22 +55,26 @@ describe('AsaasPaymentProvider', () => {
   });
 
   it('conta do professor: subconta com renda em reais; devolve conta e carteira', async () => {
-    const { calls, p } = api([{ body: { id: 'acc_1', walletId: 'wal_9' } }]);
+    const { calls, p } = api([{ body: { id: 'acc_1', walletId: 'wal_9', apiKey: 'chave-da-subconta' } }]);
     expect(await p.createRecipientAccount({
       teacherId: 't1', name: 'Ana', email: 'ana@exemplo.com', cpfCnpj: '52998224725', birthDate: '1990-05-10',
       phone: '+5511977776666', postalCode: '01310100', address: 'Av. Paulista', addressNumber: '1000', incomeValueCents: 500000,
-    })).toEqual({ accountId: 'acc_1', walletId: 'wal_9', status: 'active' });
+    })).toEqual({ accountId: 'acc_1', walletId: 'wal_9', apiKey: 'chave-da-subconta', status: 'active' });
     expect(calls[0]!.body).toMatchObject({ incomeValue: 5000, mobilePhone: '11977776666', externalReference: 't1' });
   });
 
-  it('retenção: ativa = retida; liberar encerra a garantia; devolvida conta como devolvida', async () => {
+  it('retenção, com a chave da subconta: ativa = retida; liberar encerra a garantia; devolvida conta como devolvida', async () => {
     const a = api([{ body: { id: 'esc_1', status: 'ACTIVE' } }]);
-    expect(await a.p.getEscrow('pay_1')).toEqual({ status: 'held' });
+    expect(await a.p.getEscrow('pay_1', 'chave-subconta')).toEqual({ status: 'held' });
+    expect(a.calls[0]!.key).toBe('chave-subconta');
     const b = api([{ body: { id: 'esc_1', status: 'ACTIVE' } }, { body: { status: 'DONE' } }]);
-    expect(await b.p.releaseEscrow('pay_1')).toEqual({ status: 'released' });
-    expect(b.calls[1]!.url).toBe('https://api-sandbox.asaas.com/v3/escrow/esc_1/finish');
+    expect(await b.p.releaseEscrow('pay_1', 'chave-subconta')).toEqual({ status: 'released' });
+    expect(b.calls[1]).toMatchObject({ url: 'https://api-sandbox.asaas.com/v3/escrow/esc_1/finish', key: 'chave-subconta' });
     const c = api([{ body: { id: 'esc_1', status: 'DONE', finishReason: 'PAYMENT_REFUNDED' } }]);
-    expect(await c.p.getEscrow('pay_1')).toEqual({ status: 'refunded' });
+    expect(await c.p.getEscrow('pay_1', 'chave-subconta')).toEqual({ status: 'refunded' });
+    const d = api([]);
+    await expect(d.p.getEscrow('pay_1')).rejects.toThrow(/chave da subconta/);
+    expect(d.calls).toEqual([]);
   });
 
   it('devolução parcial em reais; cancelar cobrança já removida não é erro', async () => {
@@ -96,7 +100,7 @@ describe('AsaasPaymentProvider', () => {
   it('produção usa a API de produção', async () => {
     const calls: string[] = [];
     const fetch = (async (url: string) => { calls.push(url); return new Response('{"id":"esc","status":"ACTIVE"}'); }) as unknown as typeof globalThis.fetch;
-    await new AsaasPaymentProvider({ apiKey: 'k', env: 'production', webhookToken: TOKEN, fetch }).getEscrow('pay_1');
+    await new AsaasPaymentProvider({ apiKey: 'k', env: 'production', webhookToken: TOKEN, fetch }).getEscrow('pay_1', 'chave-subconta');
     expect(calls[0]).toBe('https://api.asaas.com/v3/payments/pay_1/escrow');
   });
 });
