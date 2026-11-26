@@ -11,6 +11,7 @@ import { instantFromDb } from '@/time/zoned';
 import { splitCommission } from '../payouts/split';
 import type { Deps } from '../deps';
 import { DomainError } from '../errors';
+import { isValidCpfCnpj } from '../teachers/payment-account';
 
 export interface StartPaymentResult {
   paymentId: string;
@@ -20,10 +21,15 @@ export interface StartPaymentResult {
 
 export async function startPayment(
   deps: Deps,
-  input: { orderId: string; guardianId: string; method: PaymentMethod },
+  input: { orderId: string; guardianId: string; method: PaymentMethod; payerCpf?: string },
   now: Temporal.Instant,
 ): Promise<StartPaymentResult> {
   const { db, providers, config } = deps;
+  // o Asaas exige o CPF/CNPJ de quem paga; ele vai ao provedor e não é guardado aqui
+  const payerCpf = input.payerCpf?.replace(/\D/g, '') || undefined;
+  if (providers.payment.name === 'asaas' && (!payerCpf || !isValidCpfCnpj(payerCpf))) {
+    throw new DomainError('invalid', 'informe um CPF válido de quem vai pagar');
+  }
   return db.transaction().execute(async (trx) => {
     await sql`SELECT pg_advisory_xact_lock(hashtextextended('order:' || ${input.orderId}, 0))`.execute(trx);
     const order = await trx
@@ -76,7 +82,7 @@ export async function startPayment(
       split: { walletId: account.wallet_id, fixedCents: split.teacher },
       escrow: true,
       expiresAt,
-      payer: { name: order.name, email: order.email, phone: order.phone_e164 },
+      payer: { name: order.name, email: order.email, phone: order.phone_e164, cpfCnpj: payerCpf },
     });
     const payment = await trx
       .insertInto('payments')

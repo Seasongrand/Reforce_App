@@ -98,3 +98,11 @@ O sistema roda inteiro com adaptadores falsos. Cada adaptador real entra quando 
 - Adaptador pronto (`src/providers/video/daily.ts`). Na Railway: `VIDEO_PROVIDER=daily`, `DAILY_API_KEY` (só lá), `DAILY_DOMAIN=reforce` e `DAILY_WEBHOOK_SECRET` (base64 de 32 bytes).
 - O webhook de presença (`/api/webhooks/video`) é cadastrado no Daily pelo worker, ao iniciar.
 - **O worker precisa rodar em produção antes da abertura** (`npm run worker`, num segundo serviço da Railway com o mesmo repositório e as mesmas variáveis). Hoje só o site (`next start`) roda; sem o worker não saem lembretes nem repasses, as reservas vencidas não são liberadas e as salas não são criadas antes da aula (a sala ainda é criada na hora em que alguém entra).
+
+## Pagamento pelo Asaas (26/11)
+
+- Adaptador pronto (`src/providers/payment/asaas.ts`), testado no sandbox: subconta do professor e Conta Escrow padrão funcionaram. A cobrança com split depende de habilitar o split no painel (Integrações › Segurança › Habilitar Split), no sandbox e na conta real.
+- Na Railway, quando for ligar: `PAYMENT_PROVIDER=asaas`, `ASAAS_ENV=production`, `ASAAS_API_KEY` (só lá) e `ASAAS_WEBHOOK_TOKEN` (32 caracteres ou mais). O worker cadastra o webhook de pagamento e liga a Conta Escrow padrão (45 dias) ao iniciar.
+- O Asaas exige o CPF de quem paga: a tela de pagamento pede o CPF, que vai direto ao Asaas e não é guardado.
+- A Conta Escrow segura o dinheiro por no máximo 45 dias; por isso a agenda do professor abre no máximo 42 dias à frente (migração 0019).
+- Confirmar com o Asaas a mensalidade da Conta Escrow por subconta.

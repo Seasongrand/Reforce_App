@@ -41,6 +41,12 @@ const schema = z
     PRICE_FLOOR_CENTS: int(0, 0, 10_000_000),
     // Provedores (§3): 'fake' até as credenciais reais chegarem
     PAYMENT_PROVIDER: z.enum(['fake', 'asaas']).default('fake'),
+    // Asaas: chave e token do webhook só em variáveis de ambiente
+    ASAAS_API_KEY: z.string().min(10).optional(),
+    ASAAS_ENV: z.enum(['sandbox', 'production']).default('sandbox'),
+    ASAAS_WEBHOOK_TOKEN: z.string().min(32, 'deve ter pelo menos 32 caracteres').optional(),
+    // retenção padrão da Conta Escrow: o máximo do Asaas (45 dias), acima da agenda de 42 dias mais a contestação
+    ASAAS_ESCROW_DAYS: int(45, 1, 45),
     VIDEO_PROVIDER: z.enum(['fake', 'daily']).default('fake'),
     // Daily: chave e segredo do webhook (base64) só em variáveis de ambiente; o subdomínio da conta
     DAILY_API_KEY: z.string().min(10).optional(),
@@ -73,6 +79,11 @@ const schema = z
     }
     if (e.NODE_ENV === 'production' && e.DEV_TOOLS === '1') {
       ctx.addIssue({ code: 'custom', path: ['DEV_TOOLS'], message: 'não pode ser 1 em produção' });
+    }
+    if (e.PAYMENT_PROVIDER === 'asaas') {
+      for (const k of ['ASAAS_API_KEY', 'ASAAS_WEBHOOK_TOKEN'] as const) {
+        if (!e[k]) ctx.addIssue({ code: 'custom', path: [k], message: 'obrigatório com PAYMENT_PROVIDER=asaas' });
+      }
     }
     if (e.VIDEO_PROVIDER === 'daily') {
       for (const k of ['DAILY_API_KEY', 'DAILY_DOMAIN', 'DAILY_WEBHOOK_SECRET'] as const) {
@@ -131,6 +142,8 @@ export interface AppConfig {
   email: { resendApiKey: string; from: string };
   /** Sala de vídeo pelo Daily (só com VIDEO_PROVIDER=daily). */
   daily: { apiKey: string; domain: string; webhookSecret: string };
+  /** Pagamento pelo Asaas (só com PAYMENT_PROVIDER=asaas). */
+  asaas: { apiKey: string; env: 'sandbox' | 'production'; webhookToken: string; escrowDays: number };
 }
 
 export function loadConfig(env: Env): AppConfig {
@@ -174,6 +187,7 @@ export function loadConfig(env: Env): AppConfig {
     contactEmail: e.CONTACT_EMAIL,
     email: { resendApiKey: e.RESEND_API_KEY ?? '', from: e.EMAIL_FROM },
     daily: { apiKey: e.DAILY_API_KEY ?? '', domain: e.DAILY_DOMAIN ?? '', webhookSecret: e.DAILY_WEBHOOK_SECRET ?? '' },
+    asaas: { apiKey: e.ASAAS_API_KEY ?? '', env: e.ASAAS_ENV, webhookToken: e.ASAAS_WEBHOOK_TOKEN ?? '', escrowDays: e.ASAAS_ESCROW_DAYS },
   };
 }
 

@@ -21,11 +21,19 @@ function MethodButton({ method, title, note, pending }: { method: 'pix' | 'card'
   );
 }
 
-export function PayChoice({ orderId, action, switchFrom }: { orderId: string; action: Action; switchFrom?: 'pix' | 'card' }) {
+export function PayChoice({ orderId, action, switchFrom, askCpf = false }: { orderId: string; action: Action; switchFrom?: 'pix' | 'card'; askCpf?: boolean }) {
   const [state, run, pending] = useActionState(action, null);
   return (
     <form action={run} className="space-y-3">
       <input type="hidden" name="orderId" value={orderId} />
+      {askCpf && (
+        <label className="block space-y-1.5">
+          <span className="text-[15px] font-medium">CPF de quem paga</span>
+          <input name="payerCpf" required inputMode="numeric" autoComplete="off" maxLength={18} placeholder="000.000.000-00"
+            className="block min-h-12 w-full rounded-lg border border-site-field bg-white px-3 text-[16px] focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/30" />
+          <span className="block text-[13px] text-site-muted">O banco exige o CPF para emitir a cobrança. Ele vai direto para o provedor de pagamento, e a Reforce não guarda.</span>
+        </label>
+      )}
       {switchFrom ? (
         <button name="method" value={switchFrom === 'pix' ? 'card' : 'pix'} disabled={pending} className={SECONDARY}>
           {switchFrom === 'pix' ? 'Trocar para cartão' : 'Trocar para PIX'}

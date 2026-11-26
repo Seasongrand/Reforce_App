@@ -11,7 +11,9 @@ export async function startPaymentAction(_: unknown, f: FormData): Promise<Actio
   if (!guardianId) return { ok: false, error: 'Sua sessão expirou.' };
   const orderId = String(f.get('orderId') ?? '');
   try {
-    await startPayment(appDeps(), { orderId, guardianId, method: f.get('method') === 'card' ? 'card' : 'pix' }, await now());
+    await startPayment(appDeps(), {
+      orderId, guardianId, method: f.get('method') === 'card' ? 'card' : 'pix', payerCpf: String(f.get('payerCpf') ?? '') || undefined,
+    }, await now());
   } catch (err) {
     return { ok: false, error: errorMessage(err) };
   }

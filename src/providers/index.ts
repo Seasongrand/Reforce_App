@@ -11,6 +11,7 @@ import type { CalendarProvider } from './calendar/types';
 import { FakeEmailSender } from './email/fake';
 import { ResendEmailSender } from './email/resend';
 import { DailyVideoProvider } from './video/daily';
+import { AsaasPaymentProvider } from './payment/asaas';
 import type { EmailSender } from './email/types';
 import { FakeGeocoder } from './geocoding/fake';
 import type { Geocoder } from './geocoding/types';
@@ -41,11 +42,12 @@ const notYet = (what: string, env: string) =>
 export function providers(db: Db, cfg: AppConfig): Providers {
   const fakeOpts = { webhookSecret: cfg.fakeWebhookSecret, appBaseUrl: cfg.appBaseUrl, failOn: cfg.fakeFail };
   const p = cfg.providers;
-  if (p.payment !== 'fake') throw notYet('Asaas', 'PAYMENT_PROVIDER');
   if (p.whatsapp !== 'fake') throw notYet('WhatsApp Cloud API', 'WHATSAPP_PROVIDER');
   if (p.calendar !== 'fake') throw notYet('Google Calendar', 'CALENDAR_PROVIDER');
   return {
-    payment: new FakePaymentProvider(db, fakeOpts),
+    payment: p.payment === 'asaas'
+      ? new AsaasPaymentProvider({ apiKey: cfg.asaas.apiKey, env: cfg.asaas.env, webhookToken: cfg.asaas.webhookToken })
+      : new FakePaymentProvider(db, fakeOpts),
     video: p.video === 'daily' ? new DailyVideoProvider(cfg.daily) : new FakeVideoProvider(db, fakeOpts),
     whatsapp: new FakeWhatsAppSender(db),
     email: p.email === 'resend'
