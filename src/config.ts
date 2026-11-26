@@ -43,7 +43,10 @@ const schema = z
     PAYMENT_PROVIDER: z.enum(['fake', 'asaas']).default('fake'),
     VIDEO_PROVIDER: z.enum(['fake', 'daily', 'whereby']).default('fake'),
     WHATSAPP_PROVIDER: z.enum(['fake', 'meta']).default('fake'),
-    EMAIL_PROVIDER: z.enum(['fake', 'ses']).default('fake'),
+    EMAIL_PROVIDER: z.enum(['fake', 'resend']).default('fake'),
+    // Resend: a chave só em variável de ambiente; o remetente num domínio verificado lá
+    RESEND_API_KEY: z.string().min(10).optional(),
+    EMAIL_FROM: z.string().min(3).default('Reforce <avisos@reforce.app.br>'),
     CALENDAR_PROVIDER: z.enum(['fake', 'google']).default('fake'),
     GEOCODING_PROVIDER: z.enum(['fake']).default('fake'),
     // Documentos de verificação: cifrados em disco (AES-256-GCM), fora do banco
@@ -66,6 +69,9 @@ const schema = z
     }
     if (e.NODE_ENV === 'production' && e.DEV_TOOLS === '1') {
       ctx.addIssue({ code: 'custom', path: ['DEV_TOOLS'], message: 'não pode ser 1 em produção' });
+    }
+    if (e.EMAIL_PROVIDER === 'resend' && !e.RESEND_API_KEY) {
+      ctx.addIssue({ code: 'custom', path: ['RESEND_API_KEY'], message: 'obrigatório com EMAIL_PROVIDER=resend' });
     }
     if (e.SITE_MODE === 'completo') {
       if (!e.SESSION_SECRET) ctx.addIssue({ code: 'custom', path: ['SESSION_SECRET'], message: 'obrigatório no site completo' });
@@ -101,7 +107,7 @@ export interface AppConfig {
     payment: 'fake' | 'asaas';
     video: 'fake' | 'daily' | 'whereby';
     whatsapp: 'fake' | 'meta';
-    email: 'fake' | 'ses';
+    email: 'fake' | 'resend';
     calendar: 'fake' | 'google';
     geocoding: 'fake';
   };
@@ -112,6 +118,8 @@ export interface AppConfig {
   fakeFail: string[];
   waitlistExportPassword: string | null;
   contactEmail: string;
+  /** Envio de e-mail pelo Resend (só com EMAIL_PROVIDER=resend). */
+  email: { resendApiKey: string; from: string };
 }
 
 export function loadConfig(env: Env): AppConfig {
@@ -153,6 +161,7 @@ export function loadConfig(env: Env): AppConfig {
     fakeFail: e.FAKE_FAIL.split(',').map((x) => x.trim()).filter(Boolean),
     waitlistExportPassword: e.WAITLIST_EXPORT_PASSWORD ?? null,
     contactEmail: e.CONTACT_EMAIL,
+    email: { resendApiKey: e.RESEND_API_KEY ?? '', from: e.EMAIL_FROM },
   };
 }
 
