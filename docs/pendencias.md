@@ -75,7 +75,7 @@ O sistema roda inteiro com adaptadores falsos. Cada adaptador real entra quando 
 - **Asaas, devolução parcial com retenção.** Só acontece se `STUDENT_NO_SHOW_TEACHER_PCT` for menor que 100. Confirme como a retenção da subconta se comporta.
 - **Asaas, `daysToExpire` por subconta, mensalidade por subconta e CPF do pagador.** O código manda nome, e-mail e telefone do responsável; se o CPF for obrigatório, é um campo a mais no checkout.
 - **Cartão.** O repasse é pedido 24 horas depois da aula, mas no cartão o valor só fica disponível no prazo de liquidação do provedor (cerca de 32 dias sem antecipação). Decidido em 17/11: sem antecipação; a FAQ e a tela de recebimento dizem que, no cartão, o professor recebe em cerca de 30 dias.
-- **Mensalidade da conta de recebimento.** A FAQ não promete “sem mensalidade”: diz que qualquer custo além da comissão é informado antes de o professor aceitar. Decidir depois de confirmar a taxa da Conta Escrow do Asaas e falar com o contador.
+- **Mensalidade da conta de recebimento.** A FAQ não promete “sem mensalidade”: diz que qualquer custo além da comissão é informado antes de o professor aceitar. Taxa do Asaas já confirmada (R$ 9,90 por subconta por mês, mais R$ 99,90 da conta principal); decidir se repassa ao professor ou embute na comissão.
 - **Cancelamento e remarcação.** A FAQ não fala do assunto porque o sistema ainda não tem (Fase 2). Definir a regra antes da abertura.
 - **Vídeo.** Entrada restrita por participante, presença por webhook e tempo mínimo de presença para contar a aula como dada (hoje basta entrar). O papel de observador para o responsável existe na interface, mas não aparece nas telas.
 
@@ -105,4 +105,4 @@ O sistema roda inteiro com adaptadores falsos. Cada adaptador real entra quando 
 - Na Railway, quando for ligar: `PAYMENT_PROVIDER=asaas`, `ASAAS_ENV=production`, `ASAAS_API_KEY` (só lá) e `ASAAS_WEBHOOK_TOKEN` (32 caracteres ou mais). O worker cadastra o webhook de pagamento e liga a Conta Escrow padrão (45 dias) ao iniciar.
 - O Asaas exige o CPF de quem paga: a tela de pagamento pede o CPF, que vai direto ao Asaas e não é guardado.
 - A Conta Escrow segura o dinheiro por no máximo 45 dias; por isso a agenda do professor abre no máximo 42 dias à frente (migração 0019).
-- Confirmar com o Asaas a mensalidade da Conta Escrow por subconta.
+- Tarifa da Conta Escrow, confirmada pelo chat do Asaas em 26/11: R$ 99,90 por mês na conta principal, a partir da primeira subconta ativa, e R$ 9,90 por mês por subconta ativa, mesmo sem cobranças. Vale para conta MEI. Como a subconta nasce quando o professor preenche o recebimento, a cobrança começa com o primeiro professor cadastrado em produção: só ligar o Asaas real no piloto. Professor que parar de dar aula deve ter a subconta desativada para não custar.
