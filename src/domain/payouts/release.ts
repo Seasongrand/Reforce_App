@@ -7,6 +7,7 @@
 import { CompiledQuery } from 'kysely';
 import type { Temporal } from 'temporal-polyfill';
 import type { Deps } from '../deps';
+import { accountKey } from './account-key';
 import { CLAIM_DUE_PAYOUTS_SQL, MARK_RELEASED_SQL } from './sql';
 
 export async function releaseDuePayouts(
@@ -15,7 +16,7 @@ export async function releaseDuePayouts(
   limit = 50,
 ): Promise<{ claimed: number; released: number; failed: number }> {
   const claimed = await deps.db.transaction().execute((trx) =>
-    trx.executeQuery<{ id: string; provider_escrow_id: string }>(
+    trx.executeQuery<{ id: string; provider_escrow_id: string; account_key: Buffer | null }>(
       CompiledQuery.raw(CLAIM_DUE_PAYOUTS_SQL, [now.toString(), limit]),
     ),
   );
@@ -23,7 +24,7 @@ export async function releaseDuePayouts(
   let failed = 0;
   for (const p of claimed.rows) {
     try {
-      const r = await deps.providers.payment.releaseEscrow(p.provider_escrow_id);
+      const r = await deps.providers.payment.releaseEscrow(p.provider_escrow_id, accountKey(deps, p.account_key));
       if (r.status === 'released') {
         const done = await deps.db.executeQuery(CompiledQuery.raw(MARK_RELEASED_SQL, [p.id, now.toString()]));
         released += done.rows.length;

@@ -21,6 +21,8 @@ export interface RecipientAccountInput {
 export interface RecipientAccount {
   accountId: string;
   walletId: string;
+  /** Chave de API da subconta (Asaas): necessária para consultar e liberar a retenção. Guardada cifrada. */
+  apiKey?: string;
   status: 'pending' | 'active';
 }
 
@@ -69,8 +71,9 @@ export interface PaymentProvider {
   createCharge(input: CreateChargeInput): Promise<Charge>;
   cancelCharge(chargeId: string): Promise<void>;
   refund(chargeId: string, amountCents?: number): Promise<void>;
-  releaseEscrow(chargeId: string): Promise<{ status: 'released' | 'pending' }>;
-  getEscrow(chargeId: string): Promise<{ status: 'held' | 'released' | 'refunded' }>;
+  /** `accountKey`: chave da subconta que recebeu o split (o Asaas exige a dela para a retenção). */
+  releaseEscrow(chargeId: string, accountKey?: string): Promise<{ status: 'released' | 'pending' }>;
+  getEscrow(chargeId: string, accountKey?: string): Promise<{ status: 'held' | 'released' | 'refunded' }>;
   /** Valida a assinatura e traduz a notificação; lança WebhookSignatureError. */
   parseWebhook(headers: HeaderBag, rawBody: string): PaymentEvent;
 }
