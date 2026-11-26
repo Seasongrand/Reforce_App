@@ -92,8 +92,9 @@ export function StudentHome({ signedIn }: { signedIn: boolean }) {
           <div className="wrap">
             <p className="t-label">Sua aula protegida</p>
             <p className="mo-wh__text">
-              Você paga na reserva e o valor só vai para o professor depois da aula. Se ele faltar, o dinheiro volta inteiro, sem precisar pedir. E
-              antes de aparecer aqui, cada professor tem <strong>identidade e formação</strong> conferidas. Quem dá aula presencial também tem a <strong>certidão de antecedentes</strong> conferida.
+              Você paga na reserva e o valor só vai para o professor 24 horas depois da aula. Se ele faltar, o dinheiro volta inteiro, sem precisar pedir.
+              Se algo der errado, você conta nesse prazo e a equipe confere antes de liberar. E cada professor tem <strong>identidade e formação</strong>
+              conferidas; quem dá aula presencial, também a <strong>certidão de antecedentes</strong>.
             </p>
           </div>
         </section>

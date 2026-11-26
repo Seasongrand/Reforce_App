@@ -37,8 +37,8 @@ export const STEPS = [
 export const FEATURES_TITLE = 'Cobrança, lembretes e sala de aula.';
 export const FEATURES_MUTED = 'Tudo dentro da Reforce.';
 export const FEATURES = [
-  { title: 'Cobra a aula na reserva', text: 'PIX ou cartão, pago antes da aula. Se o aluno faltar, você recebe.' },
-  { title: 'Lembra o aluno da aula', text: 'Lembretes 24 h e 1 h antes, por WhatsApp e e-mail.' },
+  { title: 'Cobra a aula na reserva', text: 'PIX ou cartão, pago antes da aula. Aluno com horário fixo paga cada semana por PIX. Se faltar, você recebe.' },
+  { title: 'Lembra o aluno da aula', text: 'Lembretes 24 h e 1 h antes, para o aluno e para você, por WhatsApp e e-mail.' },
   { title: 'Abre a sala de aula online', text: 'No navegador do computador ou do celular. Abre 10 minutos antes.' },
   { title: 'Mostra seu selo de professor verificado', text: 'Identidade e formação conferidas. O selo fica na sua página.' },
 ] as const;
@@ -52,11 +52,19 @@ export const FAQ = [
   },
   {
     q: 'Quando eu recebo?',
-    a: 'Pago por PIX, o valor é liberado 24 horas depois da aula. Pago no cartão, quando a operadora repassa, em cerca de 30 dias. Se o responsável contestar a aula, a equipe confere a presença antes.',
+    a: 'Pago por PIX, o valor é liberado 24 horas depois da aula. Pago no cartão, quando a operadora repassa, em cerca de 30 dias. Se o responsável contestar a aula nesse prazo, a equipe confere o registro da aula antes de liberar.',
   },
   {
     q: 'Preciso ter CNPJ?',
     a: 'Não. Você abre uma conta de recebimento no Asaas, nosso parceiro de pagamentos, com o seu CPF (ou CNPJ, se tiver), e transfere para o seu banco quando quiser.',
+  },
+  {
+    q: 'Dá para ter aluno fixo toda semana?',
+    a: 'Sim. Depois da primeira aula paga, a família pode repetir o horário toda semana. Ele fica reservado, e o PIX de cada aula chega 5 dias antes. Sem pagamento até 24 horas antes, só aquela aula é cancelada.',
+  },
+  {
+    q: 'Como acompanho o que recebi?',
+    a: 'No painel, em Recebimento. O extrato de cada mês mostra aula por aula: o valor, a comissão e o que é seu, com a planilha para baixar.',
   },
   {
     q: 'Posso levar os alunos que já tenho?',
