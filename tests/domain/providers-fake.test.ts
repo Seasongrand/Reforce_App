@@ -208,7 +208,7 @@ describe('fábrica de provedores', () => {
   });
 
   it('adaptador real sem implementação falha com mensagem clara', () => {
-    expect(() => providers(appDb(), testConfig({ PAYMENT_PROVIDER: 'asaas' }))).toThrow(/Asaas.*credenciais/);
+    expect(() => providers(appDb(), testConfig({ WHATSAPP_PROVIDER: 'meta' }))).toThrow(/WhatsApp.*credenciais/);
   });
 });
 

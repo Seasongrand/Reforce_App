@@ -34,7 +34,8 @@ export interface CreateChargeInput {
   /** Parte do professor retida até a liberação (Conta Escrow). */
   escrow: true;
   expiresAt: Temporal.Instant;
-  payer: { name: string; email?: string | null; phone: string };
+  /** CPF ou CNPJ de quem paga: o Asaas exige; vai ao provedor e nunca é guardado pela plataforma. */
+  payer: { name: string; email?: string | null; phone: string; cpfCnpj?: string };
 }
 
 export interface CheckoutData {
@@ -47,7 +48,8 @@ export interface Charge {
   checkoutData: CheckoutData;
 }
 
-export type PaymentEventType = 'payment.paid' | 'payment.refunded' | 'payment.failed' | 'payment.expired';
+/** 'payment.other': aviso que não muda nada aqui (o provedor manda vários tipos). */
+export type PaymentEventType = 'payment.paid' | 'payment.refunded' | 'payment.failed' | 'payment.expired' | 'payment.other';
 
 export interface PaymentEvent {
   eventId: string;

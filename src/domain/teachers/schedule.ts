@@ -137,6 +137,9 @@ export async function removeOverride(deps: Deps, teacherId: string, overrideId: 
 
 export const SLOT_STEPS = [10, 15, 20, 30, 60] as const;
 
+/** Teto da agenda: a retenção do pagamento no Asaas dura até 45 dias (aula + contestação + folga). */
+export const MAX_HORIZON_DAYS = 42;
+
 export async function updateScheduleSettings(
   deps: Deps,
   teacherId: string,
@@ -145,8 +148,9 @@ export async function updateScheduleSettings(
   if (!Number.isInteger(s.minNoticeMin) || s.minNoticeMin < 0 || s.minNoticeMin > 7 * 24 * 60) {
     throw new DomainError('invalid', 'antecedência mínima entre 0 e 7 dias');
   }
-  if (!Number.isInteger(s.horizonDays) || s.horizonDays < 1 || s.horizonDays > 180) {
-    throw new DomainError('invalid', 'janela de agendamento entre 1 e 180 dias');
+  // o pagamento fica retido por no máximo 45 dias no provedor: a agenda abre até 42 dias à frente
+  if (!Number.isInteger(s.horizonDays) || s.horizonDays < 1 || s.horizonDays > MAX_HORIZON_DAYS) {
+    throw new DomainError('invalid', `janela de agendamento entre 1 e ${MAX_HORIZON_DAYS} dias`);
   }
   if (!(SLOT_STEPS as readonly number[]).includes(s.slotStepMin)) throw new DomainError('invalid', 'grade de horários inválida');
   if (s.maxLessonsPerDay !== null && (!Number.isInteger(s.maxLessonsPerDay) || s.maxLessonsPerDay < 1 || s.maxLessonsPerDay > 24)) {

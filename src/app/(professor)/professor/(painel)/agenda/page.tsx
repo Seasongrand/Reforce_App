@@ -103,7 +103,7 @@ export default async function AgendaPage() {
             <div className="space-y-1 py-3">
               <label className={sentence} htmlFor="horizonDays">Mostrar horários para os próximos
                 <select id="horizonDays" name="horizonDays" className={select} defaultValue={t.horizon_days}>
-                  {options([[7, '7 dias'], [14, '14 dias'], [30, '30 dias'], [60, '60 dias'], [90, '90 dias'], [180, '180 dias']], t.horizon_days, (v) => `${v} dias`)}
+                  {options([[7, '7 dias'], [14, '14 dias'], [30, '30 dias'], [42, '42 dias (6 semanas)']], t.horizon_days, (v) => `${v} dias`)}
                 </select></label>
               <p className="text-[13px] text-site-muted">Depois disso a agenda fica fechada, para você não se comprometer cedo demais.</p>
             </div>

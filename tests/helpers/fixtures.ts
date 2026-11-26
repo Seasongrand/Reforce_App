@@ -35,7 +35,7 @@ export async function insertTeacher(
       over.display_name ?? `Professor ${n}`,
       over.timezone ?? 'America/Sao_Paulo',
       over.min_notice_min ?? 120,
-      over.horizon_days ?? 60,
+      over.horizon_days ?? 42,
       over.slot_step_min ?? 30,
       over.max_lessons_per_day ?? null,
     ],

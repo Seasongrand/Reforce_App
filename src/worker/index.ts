@@ -8,6 +8,7 @@ import { config } from '@/config';
 import { getDb } from '@/db/client';
 import { providers } from '@/providers';
 import { DailyVideoProvider } from '@/providers/video/daily';
+import { AsaasPaymentProvider } from '@/providers/payment/asaas';
 import { getClock } from '@/time/dev-clock';
 import { buildTaskList, CRONTAB } from './tasks';
 
@@ -22,6 +23,14 @@ async function main() {
     crontab: CRONTAB,
   });
   console.log(`worker rodando (adaptadores: ${JSON.stringify(cfg.providers)})`);
+  // Asaas: webhook de pagamento e Conta Escrow padrão; se falhar, tenta de novo no próximo início
+  if (deps.providers.payment instanceof AsaasPaymentProvider) {
+    deps.providers.payment.ensureSetup({
+      webhookUrl: `${cfg.appBaseUrl}/api/webhooks/pagamento`, email: cfg.contactEmail, escrowDays: cfg.asaas.escrowDays,
+    })
+      .then((r) => console.log(`[asaas] configuração: ${r.join('; ')}`))
+      .catch((err) => console.error('[asaas] configuração inicial falhou:', (err as Error).message));
+  }
   // Daily: o webhook de presença é cadastrado uma vez; se falhar, tenta de novo no próximo início
   if (deps.providers.video instanceof DailyVideoProvider) {
     deps.providers.video.ensureWebhook(`${cfg.appBaseUrl}/api/webhooks/video`)

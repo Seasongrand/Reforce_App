@@ -50,6 +50,10 @@ export async function processPaymentEvent(deps: Deps, webhookEventId: string, no
       SELECT payload, processed_at FROM webhook_events WHERE id = ${webhookEventId} FOR UPDATE`.execute(trx);
     const ev = rows[0]!;
     if (ev.processed_at) return 'duplicate';
+    if (ev.payload.type === 'payment.other') {
+      await sql`UPDATE webhook_events SET processed_at = ${now.toString()}::timestamptz WHERE id = ${webhookEventId}`.execute(trx);
+      return 'processed';
+    }
     const payment = await trx.selectFrom('payments').selectAll()
       .where('provider', '=', deps.providers.payment.name)
       .where('provider_charge_id', '=', ev.payload.chargeId)

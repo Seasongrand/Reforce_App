@@ -54,7 +54,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           {!pending && (
             <>
               <h1 className={TITLE}>Como você quer pagar?</h1>
-              <PayChoice orderId={id} action={startPaymentAction} />
+              <PayChoice orderId={id} action={startPaymentAction} askCpf={deps.providers.payment.name === 'asaas'} />
             </>
           )}
           {pending?.method === 'pix' && qr && (
@@ -102,7 +102,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                 <span aria-hidden="true" className="size-2.5 flex-none animate-pulse rounded-full bg-green-500" />
                 Assim que o pagamento cair, esta página avança sozinha.
               </p>
-              <PayChoice orderId={id} action={startPaymentAction} switchFrom={pending.method} />
+              <PayChoice orderId={id} action={startPaymentAction} switchFrom={pending.method} askCpf={deps.providers.payment.name === 'asaas'} />
             </>
           )}
           <ProtectedNote>
