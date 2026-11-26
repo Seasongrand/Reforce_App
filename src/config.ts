@@ -41,7 +41,11 @@ const schema = z
     PRICE_FLOOR_CENTS: int(0, 0, 10_000_000),
     // Provedores (§3): 'fake' até as credenciais reais chegarem
     PAYMENT_PROVIDER: z.enum(['fake', 'asaas']).default('fake'),
-    VIDEO_PROVIDER: z.enum(['fake', 'daily', 'whereby']).default('fake'),
+    VIDEO_PROVIDER: z.enum(['fake', 'daily']).default('fake'),
+    // Daily: chave e segredo do webhook (base64) só em variáveis de ambiente; o subdomínio da conta
+    DAILY_API_KEY: z.string().min(10).optional(),
+    DAILY_DOMAIN: z.string().regex(/^[a-z0-9-]+$/, 'só o subdomínio, por exemplo reforce').optional(),
+    DAILY_WEBHOOK_SECRET: z.string().regex(/^[A-Za-z0-9+/]{32,}={0,2}$/, 'segredo em base64 (32 bytes ou mais)').optional(),
     WHATSAPP_PROVIDER: z.enum(['fake', 'meta']).default('fake'),
     EMAIL_PROVIDER: z.enum(['fake', 'resend']).default('fake'),
     // Resend: a chave só em variável de ambiente; o remetente num domínio verificado lá
@@ -69,6 +73,11 @@ const schema = z
     }
     if (e.NODE_ENV === 'production' && e.DEV_TOOLS === '1') {
       ctx.addIssue({ code: 'custom', path: ['DEV_TOOLS'], message: 'não pode ser 1 em produção' });
+    }
+    if (e.VIDEO_PROVIDER === 'daily') {
+      for (const k of ['DAILY_API_KEY', 'DAILY_DOMAIN', 'DAILY_WEBHOOK_SECRET'] as const) {
+        if (!e[k]) ctx.addIssue({ code: 'custom', path: [k], message: 'obrigatório com VIDEO_PROVIDER=daily' });
+      }
     }
     if (e.EMAIL_PROVIDER === 'resend' && !e.RESEND_API_KEY) {
       ctx.addIssue({ code: 'custom', path: ['RESEND_API_KEY'], message: 'obrigatório com EMAIL_PROVIDER=resend' });
@@ -105,7 +114,7 @@ export interface AppConfig {
   priceFloorCents: number;
   providers: {
     payment: 'fake' | 'asaas';
-    video: 'fake' | 'daily' | 'whereby';
+    video: 'fake' | 'daily';
     whatsapp: 'fake' | 'meta';
     email: 'fake' | 'resend';
     calendar: 'fake' | 'google';
@@ -120,6 +129,8 @@ export interface AppConfig {
   contactEmail: string;
   /** Envio de e-mail pelo Resend (só com EMAIL_PROVIDER=resend). */
   email: { resendApiKey: string; from: string };
+  /** Sala de vídeo pelo Daily (só com VIDEO_PROVIDER=daily). */
+  daily: { apiKey: string; domain: string; webhookSecret: string };
 }
 
 export function loadConfig(env: Env): AppConfig {
@@ -162,6 +173,7 @@ export function loadConfig(env: Env): AppConfig {
     waitlistExportPassword: e.WAITLIST_EXPORT_PASSWORD ?? null,
     contactEmail: e.CONTACT_EMAIL,
     email: { resendApiKey: e.RESEND_API_KEY ?? '', from: e.EMAIL_FROM },
+    daily: { apiKey: e.DAILY_API_KEY ?? '', domain: e.DAILY_DOMAIN ?? '', webhookSecret: e.DAILY_WEBHOOK_SECRET ?? '' },
   };
 }
 
