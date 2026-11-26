@@ -7,6 +7,7 @@ import { run } from 'graphile-worker';
 import { config } from '@/config';
 import { getDb } from '@/db/client';
 import { providers } from '@/providers';
+import { DailyVideoProvider } from '@/providers/video/daily';
 import { getClock } from '@/time/dev-clock';
 import { buildTaskList, CRONTAB } from './tasks';
 
@@ -21,6 +22,12 @@ async function main() {
     crontab: CRONTAB,
   });
   console.log(`worker rodando (adaptadores: ${JSON.stringify(cfg.providers)})`);
+  // Daily: o webhook de presença é cadastrado uma vez; se falhar, tenta de novo no próximo início
+  if (deps.providers.video instanceof DailyVideoProvider) {
+    deps.providers.video.ensureWebhook(`${cfg.appBaseUrl}/api/webhooks/video`)
+      .then((r) => console.log(`[daily] webhook de presença: ${r === 'created' ? 'cadastrado' : 'já existia'}`))
+      .catch((err) => console.error('[daily] não consegui cadastrar o webhook de presença:', (err as Error).message));
+  }
   await runner.promise;
 }
 
