@@ -92,3 +92,9 @@ O sistema roda inteiro com adaptadores falsos. Cada adaptador real entra quando 
 - **Volume medido nesta máquina:** 2.000 retratos em cerca de 3 s e busca com mediana de cerca de 28 ms, devolvendo os 2.000 professores (o documento citou 1,3 s e 6 ms em outra máquina). A busca da Fase 2 vai paginar.
 - **Tabelas criadas e ainda sem tela:** `teacher_search`, `teacher_next_slot` (atualizadas pelo worker), `reviews`, `messages` e `disputes` (a liberação do repasse já respeita disputa aberta). Entram nas fases seguintes sem migrar o esquema.
 - **Falha intermitente sem causa encontrada.** Na verificação do zero (banco e dependências recém-criados), o teste “processa as tarefas enfileiradas pela confirmação” terminou uma vez com a tarefa `search.refresh_teacher` ainda na fila. Não se repetiu em 19 execuções seguidas. O teste agora mostra tentativas e erro da tarefa que sobrar; se voltar a acontecer, a mensagem explica a causa.
+
+## Vídeo pelo Daily (26/11)
+
+- Adaptador pronto (`src/providers/video/daily.ts`). Na Railway: `VIDEO_PROVIDER=daily`, `DAILY_API_KEY` (só lá), `DAILY_DOMAIN=reforce` e `DAILY_WEBHOOK_SECRET` (base64 de 32 bytes).
+- O webhook de presença (`/api/webhooks/video`) é cadastrado no Daily pelo worker, ao iniciar.
+- **O worker precisa rodar em produção antes da abertura** (`npm run worker`, num segundo serviço da Railway com o mesmo repositório e as mesmas variáveis). Hoje só o site (`next start`) roda; sem o worker não saem lembretes nem repasses, as reservas vencidas não são liberadas e as salas não são criadas antes da aula (a sala ainda é criada na hora em que alguém entra).
