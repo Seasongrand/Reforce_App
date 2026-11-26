@@ -13,9 +13,9 @@ describe('perguntas frequentes', () => {
     expect(faq.every((f) => !/[{}]/.test(f.a))).toBe(true);
   });
 
-  it('tem oito perguntas, sem repetir, com respostas curtas', () => {
-    expect(FAQ).toHaveLength(8);
-    expect(new Set(FAQ.map((f) => f.q)).size).toBe(8);
+  it('tem dez perguntas, sem repetir, com respostas curtas', () => {
+    expect(FAQ).toHaveLength(10);
+    expect(new Set(FAQ.map((f) => f.q)).size).toBe(10);
     for (const f of FAQ) expect(f.a.split(/\s+/).length).toBeLessThanOrEqual(45);
   });
 

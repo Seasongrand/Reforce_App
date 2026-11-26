@@ -22,7 +22,7 @@ test('página da lista de espera: seções, perguntas e celular', async ({ page,
     await expect(page.getByRole('heading', { name: h })).toBeAttached();
   }
   // as perguntas ficam todas abertas, sem acordeão
-  await expect(page.locator('#perguntas details[open]')).toHaveCount(8);
+  await expect(page.locator('#perguntas details[open]')).toHaveCount(10);
   await expect(page.getByText('a Reforce fica com 15% das aulas de alunos que chegam pela busca')).toBeVisible();
   await expect(page.getByText('com o seu CPF (ou CNPJ, se tiver)')).toBeVisible();
   await expect(page.getByText('Se o aluno justificar, você pode devolver o valor pelo painel')).toBeVisible();
