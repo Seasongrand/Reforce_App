@@ -21,6 +21,7 @@ export function SiteFooter() {
         <div className="space-y-2 text-[15px]">
           <h2 className="text-sm text-[#9e9fb8]">Reforce</h2>
           <a href="/professores" className="flex min-h-11 items-center hover:underline">Para professores</a>
+          <a href="/termos" className="flex min-h-11 items-center hover:underline">Termos de uso</a>
           <a href="/privacidade" className="flex min-h-11 items-center hover:underline">Política de privacidade</a>
         </div>
       </div>

@@ -1,12 +1,12 @@
 /**
  * Rotas abertas no modo "lista de espera" (SITE_MODE=lista_de_espera): só a
- * página inicial com a inscrição, a política de privacidade, a checagem de
+ * página inicial com a inscrição, a política de privacidade, os termos de uso, a checagem de
  * saúde, a página "Entrar" (aviso da abertura para alunos) e as exportações
  * protegidas. O resto do marketplace fica fechado até os
  * provedores reais (e-mail, pagamento, vídeo) estarem configurados.
  */
 const OPEN = new Set([
-  '/', '/privacidade', '/api/saude', '/api/lista-de-espera.csv', '/favicon.ico', '/robots.txt',
+  '/', '/privacidade', '/termos', '/api/saude', '/api/lista-de-espera.csv', '/favicon.ico', '/robots.txt',
   '/professores', // página dos professores (também em "/" neste modo)
   '/icon.svg', // ícone do site (src/app/icon.svg)
   '/entrar', // botão "Entrar": aluno pede aviso da abertura

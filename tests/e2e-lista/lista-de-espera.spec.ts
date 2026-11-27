@@ -29,7 +29,7 @@ test('página da lista de espera: seções, perguntas e celular', async ({ page,
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 
   await page.goto('/privacidade');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Política de privacidade das listas de espera');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Política de privacidade');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   expect((await request.get('/professor/entrar')).status()).toBe(404);
 });
@@ -220,4 +220,35 @@ test('acesso da equipe: com a senha, entra no painel interno e como professor e 
   expect((await anon.request.get('/interno')).status()).toBe(404);
   await anon.close();
   await ctx.close();
+});
+
+/** Nenhum texto passa do fim da sua seção (em telas largas a seção tinha altura fixa e o FAQ cobria a seção seguinte, 27/11). */
+for (const [w, h] of [[1280, 720], [1366, 768], [1440, 900]] as const) {
+  test(`nada transborda da seção em ${w}x${h}`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: h });
+    for (const p of ['/', '/entrar', '/privacidade', '/termos']) {
+      await page.goto(p);
+      const over = await page.evaluate(() => {
+        const out: string[] = [];
+        for (const s of document.querySelectorAll('main > section, main > .section, footer.closing')) {
+          const r = s.getBoundingClientRect();
+          for (const el of s.querySelectorAll('h1,h2,h3,p,li,summary,a,button,label')) {
+            const e = el.getBoundingClientRect();
+            if (e.height > 0 && e.bottom > r.bottom + 2) { out.push(`${s.id}: ${(el.textContent ?? '').trim().slice(0, 40)}`); break; }
+          }
+        }
+        return out;
+      });
+      expect(over, p).toEqual([]);
+    }
+  });
+}
+
+test('termos de uso abertos na lista de espera, com o rodapé apontando para eles', async ({ page }) => {
+  await page.goto('/termos');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Termos de uso');
+  await expect(page.getByText('Até 24 horas antes da aula, a família pode cancelar com devolução integral')).toBeVisible();
+  await page.goto('/privacidade');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Política de privacidade');
+  await expect(page.locator('footer a[href="/termos"]').first()).toBeAttached();
 });
