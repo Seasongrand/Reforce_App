@@ -24,8 +24,8 @@ Métricas de apoio, olhadas toda semana:
 
 Um marketplace precisa dos dois lados no mesmo lugar ao mesmo tempo. Abrir no Brasil inteiro espalha os poucos professores e deixa a busca vazia em quase toda cidade.
 
-- **Cidade:** a que tiver mais inscritos nos dois lados em /equipe › Por cidade. `[DEFINIR]` depois de olhar a lista.
-- **Disciplinas:** as três com mais professores e mais alunos inscritos nessa cidade (em /equipe › Por disciplina). Matemática costuma liderar, mas a lista decide.
+- **Cidade: São Paulo** (decisão do dono, 27/11). A lista de espera ainda estava vazia nessa data, então a escolha não veio dos inscritos.
+- **Disciplinas: Matemática, Física e Redação** (escolha do agente a pedido do dono, 27/11), entre as quatro do catálogo. Matemática é a de maior procura no reforço; Física é a que mais pesa no ensino médio e no vestibular entre as exatas; Redação atende o ENEM e o vestibular, que em São Paulo têm muita procura. Química fica para depois. Rever quando a lista de espera tiver inscritos em /equipe › Por disciplina.
 - **Online primeiro.** A aula online não depende de distância, então um professor da cidade atende qualquer aluno. O presencial entra quando houver professores com a certidão aprovada.
 - **Quando passar para a próxima cidade:** quando a primeira tiver, por 4 semanas seguidas, mais aulas pagas do que na semana anterior e menos de uma contestação aceita a cada 20 aulas. Os dois números são uma sugestão `[DEFINIR]`.
 
@@ -111,5 +111,5 @@ Evitar o que não dá para provar ainda: número de professores, notas médias, 
 2. Certidão do domínio e troca do endereço do site (Claude, assim que o https sair).
 3. Resend, Daily e Asaas em produção (dono cria as contas; Claude configura).
 4. Termos e privacidade revisados (dono, com advogado).
-5. Escolher a cidade e as disciplinas olhando /equipe (dono).
+5. ~~Escolher a cidade e as disciplinas~~: São Paulo; Matemática, Física e Redação (27/11).
 6. Convidar os primeiros professores (fase 1).
