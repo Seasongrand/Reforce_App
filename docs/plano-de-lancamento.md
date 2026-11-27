@@ -105,11 +105,25 @@ Evitar o que não dá para provar ainda: número de professores, notas médias, 
 | Mensagem de WhatsApp não aprovada na Meta | modelo recusado | o e-mail cobre sozinho enquanto isso; reescrever o modelo como mensagem de utilidade |
 | Atraso na aprovação de documentos | professor parado em análise | meta de 2 dias úteis; olhar /interno › Verificações todo dia na fase 1 |
 
-## 7. Ordem prática, a partir de hoje
+## 7. Calendário (decisão do dono, 27/11)
 
-1. Plano do Railway (dono).
-2. Certidão do domínio e troca do endereço do site (Claude, assim que o https sair).
-3. Resend, Daily e Asaas em produção (dono cria as contas; Claude configura).
-4. Termos e privacidade revisados (dono, com advogado).
+O ano letivo acaba no começo de dezembro e as famílias só voltam a procurar professor com a volta às aulas. Por isso:
+
+| Quando | O que | Quem |
+|---|---|---|
+| 27/11 a meados de dezembro | Divulgar para professores: post e carrossel no LinkedIn, grupos de WhatsApp e Facebook, e-mails às licenciaturas (enviados em 27/11 para USP, UFABC, Mackenzie e PUC-SP). Mensagem: "monte sua página nas férias" | dono |
+| Até 16/12 | Plano pago da Railway | dono |
+| Dezembro e janeiro | Professores se inscrevem e montam a página com calma; a equipe confere documentos | dono + equipe |
+| Segunda quinzena de janeiro | Piloto fechado (fase 1): worker, sala de vídeo e Asaas em produção, endereço da empresa de volta no rodapé, pagamento real pequeno de teste | Claude configura; dono convida |
+| Começo de fevereiro | Abertura para as famílias (fase 2), junto com a volta às aulas em São Paulo | dono + Claude |
+
+Custos até o piloto: só a Railway. A tarifa da Conta Escrow do Asaas começa com a primeira subconta em produção, ou seja, no piloto.
+
+## 8. Ordem prática, a partir de hoje
+
+1. Plano do Railway (dono, até 16/12).
+2. ~~Domínio com https e endereço do site~~ (feito).
+3. ~~Resend~~ (feito); Daily e Asaas em produção no piloto (dono cria as contas; Claude configura).
+4. Termos e privacidade revisados (dono; versão inicial no ar desde 27/11).
 5. ~~Escolher a cidade e as disciplinas~~: São Paulo; Matemática, Física e Redação (27/11).
-6. Convidar os primeiros professores (fase 1).
+6. Divulgar para professores até meados de dezembro; piloto na segunda quinzena de janeiro; famílias em fevereiro.
