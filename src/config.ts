@@ -29,8 +29,8 @@ const schema = z
     // Resumo executivo: 15% busca, 5% link do professor (hipóteses)
     COMMISSION_MARKETPLACE_BPS: int(1500, 0, 10_000),
     COMMISSION_TEACHER_LINK_BPS: int(500, 0, 10_000),
-    // §1: prazos de 24 h e 15 min são sugestões
-    DISPUTE_WINDOW_HOURS: int(24, 0, 24 * 30),
+    // §1: prazos sugeridos; a contestação caiu de 24 h para 2 h em 27/11 (dono), para o PIX chegar antes ao professor
+    DISPUTE_WINDOW_HOURS: int(2, 0, 24 * 30),
     TEACHER_NO_SHOW_MINUTES: int(15, 1, 240),
     // §3.7: renovar a certidão a cada 6 meses
     CRIMINAL_RECORD_VALIDITY_MONTHS: int(6, 1, 24),

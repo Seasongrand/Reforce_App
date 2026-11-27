@@ -30,7 +30,7 @@ export const STEPS = [
   },
   {
     title: 'Dê a aula e receba',
-    text: 'O aluno paga na reserva. Pago por PIX, o valor é liberado para você 24 horas depois da aula.',
+    text: 'O aluno paga na reserva. Pago por PIX, o valor é liberado para você 2 horas depois da aula.',
   },
 ] as const;
 
@@ -52,7 +52,7 @@ export const FAQ = [
   },
   {
     q: 'Quando eu recebo?',
-    a: 'Pago por PIX, o valor é liberado 24 horas depois da aula. Pago no cartão, quando a operadora repassa, em cerca de 30 dias. Se o responsável contestar a aula nesse prazo, a equipe confere o registro da aula antes de liberar.',
+    a: 'Pago por PIX, o valor é liberado 2 horas depois da aula. Pago no cartão, quando a operadora repassa, em cerca de 30 dias. Se o responsável contestar a aula nesse prazo, a equipe confere o registro da aula antes de liberar.',
   },
   {
     q: 'Preciso ter CNPJ?',

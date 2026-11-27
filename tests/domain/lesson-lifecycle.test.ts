@@ -79,7 +79,7 @@ describe('sala de vídeo', () => {
 });
 
 describe('desfecho da aula online', () => {
-  it('os dois presentes: aula concluída e repasse retido até 24 h depois do fim, com a comissão do pedido', async () => {
+  it('os dois presentes: aula concluída e repasse retido até 2 h depois do fim, com a comissão do pedido', async () => {
     const l = await onlineLesson();
     await presence(l.room, 'teacher', 'joined', TUE_14.subtract({ minutes: 1 }));
     await presence(l.room, 'student', 'joined', TUE_14.add({ minutes: 2 }));
@@ -91,7 +91,7 @@ describe('desfecho da aula online', () => {
       gross_cents: 12100, commission_bps: 500, platform_cents: 605, teacher_cents: 11495, status: 'held',
       provider_escrow_id: l.chargeId,
     });
-    expect((p!.release_after as Date).toISOString()).toBe('2026-11-18T18:00:00.000Z');
+    expect((p!.release_after as Date).toISOString()).toBe('2026-11-17T20:00:00.000Z');
     expect((await q(`SELECT outcome FROM lesson_sessions WHERE booking_id = $1`, [l.bookingId]))[0]!.outcome).toBe('taught');
     // aula dada: o pedido de avaliação à família sai 1 hora depois do fechamento
     const ask = await q(`SELECT channel, send_at FROM notifications WHERE booking_id = $1 AND template = 'pedido_avaliacao_responsavel'`, [l.bookingId]);
@@ -219,10 +219,10 @@ describe('liberação do repasse', () => {
 
   it('antes do prazo não libera; depois libera e chama o provedor uma vez', async () => {
     const l = await completed();
-    expect(await releaseDuePayouts(deps(), at('2026-11-18T17:59:00Z'))).toMatchObject({ released: 0 });
-    expect(await releaseDuePayouts(deps(), at('2026-11-18T18:00:00Z'))).toMatchObject({ released: 1 });
+    expect(await releaseDuePayouts(deps(), at('2026-11-17T19:59:00Z'))).toMatchObject({ released: 0 });
+    expect(await releaseDuePayouts(deps(), at('2026-11-17T20:00:00Z'))).toMatchObject({ released: 1 });
     expect(await payout(l.bookingId)).toMatchObject({ status: 'released' });
-    expect(await releaseDuePayouts(deps(), at('2026-11-18T18:05:00Z'))).toMatchObject({ released: 0 });
+    expect(await releaseDuePayouts(deps(), at('2026-11-17T20:05:00Z'))).toMatchObject({ released: 0 });
     expect(await q(`SELECT ref FROM dev_provider_calls WHERE operation = 'releaseEscrow'`)).toEqual([{ ref: l.chargeId }]);
   });
 

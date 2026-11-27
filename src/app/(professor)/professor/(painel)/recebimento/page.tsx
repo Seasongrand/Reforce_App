@@ -68,7 +68,7 @@ export default async function PayoutAccountPage() {
         <h1 className="font-display tracking-tight text-3xl font-normal">Recebimento</h1>
         <p className="text-site-muted">
           O aluno paga na plataforma. Sua parte fica retida no provedor de pagamento e é liberada na sua conta
-          24 horas depois da aula, se ninguém contestar; no cartão, quando a operadora repassa o valor, em cerca de 30 dias.
+          2 horas depois da aula, se ninguém contestar; no cartão, quando a operadora repassa o valor, em cerca de 30 dias.
         </p>
       </div>
 

@@ -43,14 +43,14 @@ const templates = async (bookingId: string) =>
   (await q(`SELECT DISTINCT template FROM notifications WHERE booking_id = $1 ORDER BY template`, [bookingId])).map((r) => r.template);
 
 describe('família contesta a aula', () => {
-  it('em até 24 horas: o repasse fica retido, o professor é avisado e nada é liberado', async () => {
+  it('em até 2 horas: o repasse fica retido, o professor é avisado e nada é liberado', async () => {
     const l = await taughtLesson();
-    expect(await disputeState(deps().db, l.guardianId, l.bookingId, END.add({ hours: 2 }))).toMatchObject({
-      canOpen: true, openUntil: END.add({ hours: 24 }).toString(), dispute: null,
+    expect(await disputeState(deps().db, l.guardianId, l.bookingId, END.add({ hours: 1 }))).toMatchObject({
+      canOpen: true, openUntil: END.add({ hours: 2 }).toString(), dispute: null,
     });
     await openDispute(deps(), {
       guardianId: l.guardianId, bookingId: l.bookingId, reason: 'not_happened', details: 'O professor não apareceu.',
-    }, END.add({ hours: 2 }));
+    }, END.add({ hours: 1 }));
     expect(await q(`SELECT opened_by, status, reason FROM disputes WHERE booking_id = $1`, [l.bookingId])).toEqual([
       { opened_by: 'guardian', status: 'open', reason: 'A aula não aconteceu: O professor não apareceu.' },
     ]);
@@ -66,13 +66,13 @@ describe('família contesta a aula', () => {
 
   it('a conta da família oferece contestar só dentro do prazo', async () => {
     const l = await taughtLesson();
-    expect((await accountView(deps(), l.guardianId, END.add({ hours: 2 }))).past[0]).toMatchObject({ canDispute: true, disputeStatus: null });
+    expect((await accountView(deps(), l.guardianId, END.add({ hours: 1 }))).past[0]).toMatchObject({ canDispute: true, disputeStatus: null });
     expect((await accountView(deps(), l.guardianId, END.add({ hours: 25 }))).past[0]).toMatchObject({ canDispute: false });
   });
 
-  it('depois de 24 horas do fim da aula, não dá mais para contestar', async () => {
+  it('depois de 2 horas do fim da aula, não dá mais para contestar', async () => {
     const l = await taughtLesson();
-    const late = END.add({ hours: 24, minutes: 1 });
+    const late = END.add({ hours: 2, minutes: 1 });
     expect(await disputeState(deps().db, l.guardianId, l.bookingId, late)).toMatchObject({ canOpen: false });
     await expect(openDispute(deps(), { guardianId: l.guardianId, bookingId: l.bookingId, reason: 'other', details: 'x' }, late))
       .rejects.toThrow(/prazo/);

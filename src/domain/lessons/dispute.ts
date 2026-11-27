@@ -28,7 +28,7 @@ export type DisputeStatus = 'open' | 'for_teacher' | 'for_guardian' | 'shared';
 export interface DisputeState {
   /** Pode abrir agora: aula do responsável, encerrada, com repasse retido e ainda no prazo. */
   canOpen: boolean;
-  /** Fim do prazo (24 horas depois da aula), quando há repasse retido. */
+  /** Fim do prazo (2 horas depois da aula, DISPUTE_WINDOW_HOURS), quando há repasse retido. */
   openUntil: string | null;
   dispute: { status: DisputeStatus; reason: string; openedAt: string } | null;
 }

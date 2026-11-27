@@ -90,8 +90,8 @@ Datas boas para empurrar: semanas de prova e de recuperação no fim de cada bim
 
 O que dizer em cada lado, com base no que o produto faz de verdade:
 
-- **Para o professor:** agenda e cobrança num lugar só, com pagamento antes da aula, lembretes automáticos e o dinheiro na conta 24 horas depois da aula paga por PIX. Pelos alunos que ele mesmo traz, a comissão é a menor.
-- **Para a família:** professor com identidade e formação conferidas, pagamento só na reserva e dinheiro de volta se o professor faltar. Se algo der errado, a família contesta em até 24 horas.
+- **Para o professor:** agenda e cobrança num lugar só, com pagamento antes da aula, lembretes automáticos e o dinheiro na conta 2 horas depois da aula paga por PIX. Pelos alunos que ele mesmo traz, a comissão é a menor.
+- **Para a família:** professor com identidade e formação conferidas, pagamento só na reserva e dinheiro de volta se o professor faltar. Se algo der errado, a família contesta em até 2 horas.
 
 Evitar o que não dá para provar ainda: número de professores, notas médias, "o melhor", "o mais barato". Quando houver avaliações reais, elas entram no site.
 

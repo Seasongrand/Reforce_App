@@ -14,7 +14,7 @@ describe('configuração', () => {
     expect(c.holdMinutes).toBe(10);
     expect(c.pixExpiryLeadMinutes).toBe(1);
     expect(c.commissionBps).toEqual({ marketplace: 1500, teacher_link: 500 });
-    expect(c.disputeWindowHours).toBe(24);
+    expect(c.disputeWindowHours).toBe(2);
     expect(c.teacherNoShowMinutes).toBe(15);
     expect(c.criminalRecordValidityMonths).toBe(6);
     expect(c.calendarFreeBusyTimeoutMs).toBe(2000);

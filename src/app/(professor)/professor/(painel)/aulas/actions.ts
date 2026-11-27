@@ -48,7 +48,7 @@ export async function checkinAction(_: unknown, f: FormData): Promise<ActionStat
   return { ok: true, data: undefined };
 }
 
-/** Falta justificada: devolve ao responsável o valor da aula em que o aluno faltou (até 24 h depois da aula). */
+/** Falta justificada: devolve ao responsável o valor da aula em que o aluno faltou (até 2 h depois da aula). */
 export async function refundNoShowAction(_: unknown, f: FormData): Promise<ActionState> {
   const teacherId = await requireTeacher();
   if (f.get('confirm') !== 'on') return { ok: false, error: 'Marque a confirmação para devolver o valor.' };
