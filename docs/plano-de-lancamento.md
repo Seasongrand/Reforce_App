@@ -25,7 +25,7 @@ Métricas de apoio, olhadas toda semana:
 Um marketplace precisa dos dois lados no mesmo lugar ao mesmo tempo. Abrir no Brasil inteiro espalha os poucos professores e deixa a busca vazia em quase toda cidade.
 
 - **Cidade: São Paulo** (decisão do dono, 27/11). A lista de espera ainda estava vazia nessa data, então a escolha não veio dos inscritos.
-- **Disciplinas: Matemática, Física e Redação** (escolha do agente a pedido do dono, 27/11), entre as quatro do catálogo. Matemática é a de maior procura no reforço; Física é a que mais pesa no ensino médio e no vestibular entre as exatas; Redação atende o ENEM e o vestibular, que em São Paulo têm muita procura. Química fica para depois. Rever quando a lista de espera tiver inscritos em /equipe › Por disciplina.
+- **Disciplinas: todas** (decisão do dono, 27/11, que substitui a escolha de Matemática, Física e Redação feita no mesmo dia). As 16 disciplinas da lista de espera entram desde o piloto, porque o dono já tem professores conhecidos de várias áreas (História e Física, por exemplo). O risco é a busca abrir vazia em algumas disciplinas: na abertura para as famílias, a página inicial e a divulgação destacam as disciplinas que tiverem professores com horário.
 - **Online primeiro.** A aula online não depende de distância, então um professor da cidade atende qualquer aluno. O presencial entra quando houver professores com a certidão aprovada.
 - **Quando passar para a próxima cidade:** quando a primeira tiver, por 4 semanas seguidas, mais aulas pagas do que na semana anterior e menos de uma contestação aceita a cada 20 aulas. Os dois números são uma sugestão `[DEFINIR]`.
 
@@ -125,5 +125,5 @@ Custos até o piloto: só a Railway. A tarifa da Conta Escrow do Asaas começa c
 2. ~~Domínio com https e endereço do site~~ (feito).
 3. ~~Resend~~ (feito); Daily e Asaas em produção no piloto (dono cria as contas; Claude configura).
 4. Termos e privacidade revisados (dono; versão inicial no ar desde 27/11).
-5. ~~Escolher a cidade e as disciplinas~~: São Paulo; Matemática, Física e Redação (27/11).
+5. ~~Escolher a cidade e as disciplinas~~: São Paulo, todas as disciplinas (27/11).
 6. Divulgar para professores até meados de dezembro; piloto na segunda quinzena de janeiro; famílias em fevereiro.
