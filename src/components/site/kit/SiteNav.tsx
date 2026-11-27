@@ -13,7 +13,7 @@ export function SiteNav({ links, secondary, primary }: { links: NavLink[]; secon
       <div className="wrap nav__bar">
         <a className="skip-link" href="#top">Ir para o conteúdo</a>
         <a className="nav__logo" href="/">
-          <span className="mark" data-mark="arc" aria-hidden="true" />
+          <span className="mark" data-mark="balao" aria-hidden="true" />
           Reforce
         </a>
         <nav className="nav__links" aria-label="Principal">

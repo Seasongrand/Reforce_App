@@ -1,4 +1,4 @@
-import { ArcMark } from './SiteHeader';
+import { BrandMark } from './SiteHeader';
 
 /** Rodapé das telas do aluno, no visual do rodapé escuro do site público. */
 export function SiteFooter() {
@@ -8,7 +8,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:gap-16 lg:px-8">
         <div className="space-y-3">
           <a href="/" className="inline-flex items-center gap-2 font-display text-xl tracking-tight">
-            <ArcMark className="size-5" />
+            <BrandMark className="size-6" />
             Reforce
           </a>
           <p className="max-w-xs text-lg leading-snug">Aulas particulares com professores verificados, do 6º ano ao pré-vestibular.</p>

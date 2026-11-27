@@ -3,6 +3,7 @@
  * lista de espera. Gerada no build; usa a fonte padrão do ImageResponse.
  */
 import { ImageResponse } from 'next/og';
+import { BRAND_MARK_PATH } from '@/components/site/brand';
 
 export const alt = 'Reforce: lista de espera de professores';
 export const size = { width: 1200, height: 630 };
@@ -25,7 +26,10 @@ export default function Image() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 20, fontSize: 30, color: '#DDDBFF' }}>
-          <span style={{ fontSize: 44, fontWeight: 700, color: '#FFFFFF' }}>Reforce</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 44, fontWeight: 700, color: '#FFFFFF' }}>
+            <svg width="48" height="48" viewBox="0 0 48 48"><path fill="#A5B4FC" fillRule="evenodd" d={BRAND_MARK_PATH} /></svg>
+            Reforce
+          </span>
           <span>Mais tempo para ensinar. Mais confiança para aprender.</span>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 24, fontSize: 92, fontWeight: 700, lineHeight: 1.05 }}>

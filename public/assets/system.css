@@ -657,12 +657,16 @@ html:not([data-tone="dark"]) :is(.frame--cta, .frame--lit, .footer--statement) {
 .mark[data-mark="ring"]  { --mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 5.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z'/%3E%3C/svg%3E"); }
 .mark[data-mark="petal"] { --mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='6.6' r='5'/%3E%3Ccircle cx='17.4' cy='12' r='5'/%3E%3Ccircle cx='12' cy='17.4' r='5'/%3E%3Ccircle cx='6.6' cy='12' r='5'/%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3C/svg%3E"); }
 .mark[data-mark="leaf"]  { --mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 21C3 10 10 3 21 3c0 11-7 18-18 18z'/%3E%3C/svg%3E"); }
+.mark[data-mark="balao"] { --mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill-rule='evenodd' d='M14 4h20a10 10 0 0 1 10 10v12a10 10 0 0 1-10 10H18l-9 8v-8.6A10 10 0 0 1 4 26V14A10 10 0 0 1 14 4zM15.6 10v20h4.2v-7.2h2.6l5.1 7.2h4.9l-5.6-7.8a6.2 6.2 0 0 0-2.8-12.2zm4.2 3.7h4.1a2.6 2.6 0 0 1 0 5.2h-4.1z'/%3E%3C/svg%3E"); }
 .mark[data-mark="stack"] { --mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='2.5' width='20' height='5.5' rx='2.75'/%3E%3Crect x='2' y='9.25' width='14' height='5.5' rx='2.75'/%3E%3Crect x='2' y='16' width='8' height='5.5' rx='2.75'/%3E%3C/svg%3E"); }
 /* initial: the name's first letter on a small accent tile (<span class="mark mark--initial" aria-hidden="true">K</span>);
    wordmark: no mark, the name alone */
 .mark.mark--initial { -webkit-mask: none; mask: none; display: inline-grid; place-items: center; border-radius: calc(var(--r-sm) * 0.75);
   color: var(--accent-ink); font: var(--display-weight, 400) 13px/1 var(--font-display); letter-spacing: 0; }
 .footer__mark .mark, .footer .nav__logo .mark { width: 0.8em; height: 0.8em; margin-right: 0.18em; vertical-align: -0.04em; }
+/* o balão da Reforce tem mais detalhe que as formas do kit: um pouco maior ao lado do nome */
+.mark[data-mark="balao"] { width: 28px; height: 28px; }
+.footer__mark .mark[data-mark="balao"], .footer .nav__logo .mark[data-mark="balao"] { width: 1em; height: 1em; vertical-align: -0.12em; }
 .footer__mark .mark--initial, .footer .nav__logo .mark--initial { width: 1em; height: 1em; font-size: 0.6em; }
 .nav--split .nav__logo .mark--initial { width: 26px; height: 26px; font-size: 15px; }
 .nav__links { display: flex; align-self: stretch; gap: var(--s-1); flex: 1; min-width: 0; }
@@ -769,6 +773,7 @@ html:not([data-tone="dark"]) :is(.frame--cta, .frame--lit, .footer--statement) {
   .nav__bar { gap: var(--s-2); }
   .nav__logo { font-size: clamp(16px, 4.6vw, 20px); gap: 6px; white-space: nowrap; }
   .nav__logo .mark:not(.mark--initial) { width: 20px; height: 20px; }
+  .nav__logo .mark[data-mark="balao"] { width: 24px; height: 24px; }
   .nav:not(.is-open) .nav__actions .btn { height: 44px; padding-inline: var(--s-3); font-size: var(--t-small); }
   /* with the phone action bar the bar's button is the action's copy at the foot: the nav's goes into the sheet, so
      the first screen shows it once, the hero's (the bar waits until that has scrolled away; without script, twice
