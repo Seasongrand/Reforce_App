@@ -49,7 +49,7 @@ export function SiteClosing({
             ))}
           </div>
           <div className="footer__legal">
-            <span>© {new Date().getFullYear()} Reforce &nbsp; <a href="/privacidade">Privacidade</a></span>
+            <span>© {new Date().getFullYear()} Reforce &nbsp; <a href="/termos">Termos</a> &nbsp; <a href="/privacidade">Privacidade</a></span>
             <a className="credits" href="/assets/creditos.html">Fotografias via Wikimedia Commons</a>
           </div>
         </div>

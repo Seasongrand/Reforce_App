@@ -106,3 +106,10 @@ O sistema roda inteiro com adaptadores falsos. Cada adaptador real entra quando 
 - O Asaas exige o CPF de quem paga: a tela de pagamento pede o CPF, que vai direto ao Asaas e não é guardado.
 - A Conta Escrow segura o dinheiro por no máximo 45 dias; por isso a agenda do professor abre no máximo 42 dias à frente (migração 0019).
 - Tarifa da Conta Escrow, confirmada pelo chat do Asaas em 26/11: R$ 99,90 por mês na conta principal, a partir da primeira subconta ativa, e R$ 9,90 por mês por subconta ativa, mesmo sem cobranças. Vale para conta MEI. Como a subconta nasce quando o professor preenche o recebimento, a cobrança começa com o primeiro professor cadastrado em produção: só ligar o Asaas real no piloto. Professor que parar de dar aula deve ter a subconta desativada para não custar.
+
+## Termos de uso e política de privacidade (27/11)
+
+- Versão inicial escrita pelo agente a partir do código (`/termos` e `/privacidade`), sem revisão jurídica. O dono não tem verba para advogado agora: procurar revisão gratuita (Núcleo de Prática Jurídica de faculdade de Direito, Sebrae) e manter o piloto pequeno até lá.
+- Faltam os dados da empresa para a identificação no rodapé das duas páginas: `COMPANY_LEGAL_NAME`, `COMPANY_CNPJ` (formato 00.000.000/0000-00) e `COMPANY_ADDRESS` na Railway. Sem elas, a página mostra só "Reforce" e o e-mail.
+- Promessas do texto que dependem de rotina, não de código: confirmar que os registros de acesso (IP, data e hora) ficam 6 meses (Marco Civil, art. 15) na Railway ou guardá-los; apagar os documentos de verificação quando a conta do professor for encerrada; responder pedidos de titular em até 15 dias.
+- Quem mudar uma regra (prazos, comissão, faltas) ou passar a usar outro fornecedor muda o texto das duas páginas.

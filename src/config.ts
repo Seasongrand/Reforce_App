@@ -67,6 +67,10 @@ const schema = z
     FAKE_FAIL: z.string().default(''),
     // Exportação da lista de espera (CSV), protegida por senha; sem senha, a exportação não existe
     WAITLIST_EXPORT_PASSWORD: z.string().min(16, 'deve ter pelo menos 16 caracteres').optional(),
+    // Identificação da empresa nas páginas de termos e privacidade (Decreto 7.962/2013); sem elas, a página omite a linha
+    COMPANY_LEGAL_NAME: z.string().min(3).optional(),
+    COMPANY_CNPJ: z.string().regex(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, 'CNPJ no formato 00.000.000/0000-00').optional(),
+    COMPANY_ADDRESS: z.string().min(10).optional(),
     CONTACT_EMAIL: z.string().regex(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, 'e-mail inválido').default('ola.reforce@gmail.com'),
   })
   .superRefine((e, ctx) => {
@@ -138,6 +142,8 @@ export interface AppConfig {
   fakeFail: string[];
   waitlistExportPassword: string | null;
   contactEmail: string;
+  /** Nome empresarial, CNPJ e endereço, quando configurados. */
+  company: { legalName: string | null; cnpj: string | null; address: string | null };
   /** Envio de e-mail pelo Resend (só com EMAIL_PROVIDER=resend). */
   email: { resendApiKey: string; from: string };
   /** Sala de vídeo pelo Daily (só com VIDEO_PROVIDER=daily). */
@@ -185,6 +191,7 @@ export function loadConfig(env: Env): AppConfig {
     fakeFail: e.FAKE_FAIL.split(',').map((x) => x.trim()).filter(Boolean),
     waitlistExportPassword: e.WAITLIST_EXPORT_PASSWORD ?? null,
     contactEmail: e.CONTACT_EMAIL,
+    company: { legalName: e.COMPANY_LEGAL_NAME ?? null, cnpj: e.COMPANY_CNPJ ?? null, address: e.COMPANY_ADDRESS ?? null },
     email: { resendApiKey: e.RESEND_API_KEY ?? '', from: e.EMAIL_FROM },
     daily: { apiKey: e.DAILY_API_KEY ?? '', domain: e.DAILY_DOMAIN ?? '', webhookSecret: e.DAILY_WEBHOOK_SECRET ?? '' },
     asaas: { apiKey: e.ASAAS_API_KEY ?? '', env: e.ASAAS_ENV, webhookToken: e.ASAAS_WEBHOOK_TOKEN ?? '', escrowDays: e.ASAAS_ESCROW_DAYS },
