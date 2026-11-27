@@ -6,7 +6,7 @@
  * provedores reais (e-mail, pagamento, vídeo) estarem configurados.
  */
 const OPEN = new Set([
-  '/', '/privacidade', '/termos', '/api/saude', '/api/lista-de-espera.csv', '/favicon.ico', '/robots.txt',
+  '/', '/privacidade', '/termos', '/manifest.webmanifest', '/apple-icon.png', '/api/saude', '/api/lista-de-espera.csv', '/favicon.ico', '/robots.txt',
   '/professores', // página dos professores (também em "/" neste modo)
   '/icon.svg', // ícone do site (src/app/icon.svg)
   '/entrar', // botão "Entrar": aluno pede aviso da abertura
