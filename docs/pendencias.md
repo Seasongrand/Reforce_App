@@ -118,3 +118,8 @@ O sistema roda inteiro com adaptadores falsos. Cada adaptador real entra quando 
 
 - A MEI foi aberta como "Professor(a) particular" porque o portal não tinha opção mais próxima; o dono não é professor. A Reforce intermedeia aulas entre famílias e professores, atividade que pode não caber no MEI. Antes de começar a faturar, perguntar ao Sebrae (gratuito) ou a um contador se precisa trocar a ocupação ou abrir uma ME.
 
+## Segurança (revisão de 27/11)
+
+- Revisão manual (a ferramenta de varredura automática não estava disponível na sessão): controle de acesso das páginas e ações (família, professor, equipe e painel interno), login por código (5 tentativas, 5 pedidos por hora), cookies de sessão (httpOnly, SameSite=Lax, Secure em produção, token guardado só como hash), webhooks (token e assinatura comparados em tempo constante), arquivos enviados (tipos e tamanho limitados, `nosniff`, documentos cifrados e servidos por link assinado só para a equipe), segredos (nenhum no repositório; senha da equipe com 18 caracteres e quatro tipos), dependências (`npm audit`: nenhuma vulnerabilidade conhecida). Corrigido: faltavam cabeçalhos de segurança (HSTS, proibição de moldura, `nosniff`, `Referrer-Policy`, `Permissions-Policy`), agora em `next.config.ts`.
+- **Ao ligar o worker na Railway (piloto):** definir `NODE_ENV=production` no serviço do worker. O `next start` já define isso para o site, mas o worker roda com `tsx` e, sem a variável, a trava que impede adaptadores falsos de pagamento e vídeo em produção não vale para ele.
+
