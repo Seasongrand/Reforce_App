@@ -14,7 +14,7 @@ import { disputeAction } from '../../actions';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Contestar a aula · Minha conta · Reforce' };
 
-/** Contestar uma aula encerrada, em até 24 horas: o valor fica retido até a equipe decidir. */
+/** Contestar uma aula encerrada, em até 2 horas: o valor fica retido até a equipe decidir. */
 export default async function DisputePage({ params }: { params: Promise<{ booking: string }> }) {
   const guardianId = await requireGuardian();
   const { booking } = await params;

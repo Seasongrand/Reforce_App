@@ -1,7 +1,7 @@
 /**
  * Falta justificada: depois de uma aula em que o aluno faltou, o professor
  * pode devolver o valor ao responsável enquanto o repasse ainda está retido
- * (até 24 horas depois da aula).
+ * (até 2 horas depois da aula).
  */
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import type { Temporal } from 'temporal-polyfill';
@@ -50,7 +50,7 @@ const refundJobs = async () => (await queuedJobs()).filter((j) => j.task === 'pa
 describe('falta justificada: o professor devolve o valor ao aluno', () => {
   it('devolve a aula inteira: repasse devolvido, cobrança devolvida e aviso ao responsável', async () => {
     const l = await noShowLesson();
-    await refundNoShowByTeacher(deps(), { teacherId: l.teacherId, bookingId: l.bookingId }, END.add({ hours: 2 }));
+    await refundNoShowByTeacher(deps(), { teacherId: l.teacherId, bookingId: l.bookingId }, END.add({ hours: 1 }));
     expect(await payoutStatus(l.bookingId)).toBe('refunded');
     expect(await refundJobs()).toEqual([{ task: 'payment.refund', payload: { paymentId: l.paymentId, amountCents: 12100 } }]);
     expect(await q(`SELECT status FROM orders WHERE id = $1`, [l.orderId])).toEqual([{ status: 'refunded' }]);
@@ -83,13 +83,13 @@ describe('falta justificada: o professor devolve o valor ao aluno', () => {
       .rejects.toThrow(/já foi devolvido/);
   });
 
-  it('passadas 24 horas da aula, não dá mais: o valor já é do professor', async () => {
+  it('passadas 2 horas da aula, não dá mais: o valor já é do professor', async () => {
     const l = await noShowLesson();
-    await expect(refundNoShowByTeacher(deps(), { teacherId: l.teacherId, bookingId: l.bookingId }, END.add({ hours: 24 })))
+    await expect(refundNoShowByTeacher(deps(), { teacherId: l.teacherId, bookingId: l.bookingId }, END.add({ hours: 2 })))
       .rejects.toThrow(/prazo/);
     expect(await payoutStatus(l.bookingId)).toBe('held');
-    await releaseDuePayouts(deps(), END.add({ hours: 24 }));
-    await expect(refundNoShowByTeacher(deps(), { teacherId: l.teacherId, bookingId: l.bookingId }, END.add({ hours: 24 })))
+    await releaseDuePayouts(deps(), END.add({ hours: 2 }));
+    await expect(refundNoShowByTeacher(deps(), { teacherId: l.teacherId, bookingId: l.bookingId }, END.add({ hours: 2 })))
       .rejects.toThrow(/prazo/);
     expect(await refundJobs()).toEqual([]);
   });
@@ -98,8 +98,8 @@ describe('falta justificada: o professor devolve o valor ao aluno', () => {
     const l = await noShowLesson();
     const before = (await teacherLessons(appDb(), l.teacherId, END.add({ hours: 1 }))).find((x) => x.bookingId === l.bookingId)!;
     expect(before).toMatchObject({ status: 'no_show', refundCents: 12100, refunded: false });
-    expect(before.refundableUntil?.toString()).toBe(END.add({ hours: 24 }).toString());
-    const late = (await teacherLessons(appDb(), l.teacherId, END.add({ hours: 24 }))).find((x) => x.bookingId === l.bookingId)!;
+    expect(before.refundableUntil?.toString()).toBe(END.add({ hours: 2 }).toString());
+    const late = (await teacherLessons(appDb(), l.teacherId, END.add({ hours: 2 }))).find((x) => x.bookingId === l.bookingId)!;
     expect(late.refundableUntil).toBeNull();
     await refundNoShowByTeacher(deps(), { teacherId: l.teacherId, bookingId: l.bookingId }, END.add({ hours: 1 }));
     const after = (await teacherLessons(appDb(), l.teacherId, END.add({ hours: 1 }))).find((x) => x.bookingId === l.bookingId)!;

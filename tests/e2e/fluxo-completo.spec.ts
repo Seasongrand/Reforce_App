@@ -3,7 +3,7 @@
  * professora se cadastra, é aprovada no painel e configura a agenda; uma
  * família abre o link, reserva, "paga" e recebe a confirmação; uma segunda
  * família não consegue o mesmo horário; a aula acontece na sala falsa, é
- * concluída e o repasse é liberado 24 h depois. Nenhuma reserva duplicada.
+ * concluída e o repasse é liberado 2 h depois. Nenhuma reserva duplicada.
  */
 import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
 import path from 'node:path';
@@ -601,7 +601,7 @@ test('fluxo completo: cadastro, aprovação, agenda, reserva, pagamento, aula e 
   await expect(acct.getByRole('link', { name: /Ana Souza/ })).toContainText('Vamos revisar frações.');
 
 
-  // 8. Fechada a janela de contestação (24 h), o repasse é liberado uma vez.
+  // 8. Fechada a janela de contestação (2 h), o repasse é liberado uma vez.
   await setClock(new Date(endsAt.getTime() + 24 * 60 * 60_000 + 60_000));
   await runSweeps(browser);
   expect(await q(`SELECT status FROM payouts WHERE booking_id = $1`, [booking!.id])).toEqual([{ status: 'released' }]);

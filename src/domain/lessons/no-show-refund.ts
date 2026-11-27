@@ -1,7 +1,7 @@
 /**
  * Falta justificada: depois de uma aula em que o aluno faltou, o professor
  * pode devolver o valor ao responsável enquanto o repasse ainda está retido,
- * isto é, até o fim da janela de contestação (24 horas depois da aula). O
+ * isto é, até o fim da janela de contestação (2 horas depois da aula). O
  * repasse passa a "refunded" (não é mais liberado), a cobrança é devolvida e o
  * responsável é avisado. Depois de liberado, o valor já é do professor.
  */
