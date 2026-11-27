@@ -1,12 +1,26 @@
 /**
- * Catálogo fechado (§2.2): disciplinas e séries são códigos. Os valores
- * iniciais seguem a sugestão do documento (§4) e estão em docs/pendencias.md.
+ * Catálogo fechado (§2.2): disciplinas e séries são códigos. Desde 27/11, por
+ * decisão do dono, a Reforce abre com todas as disciplinas da lista de espera,
+ * com os mesmos ids (src/domain/waitlist.ts). O seed grava este catálogo no
+ * banco a cada publicação (pré-deploy da Railway: db:migrate e db:seed).
  */
 export const SUBJECTS = [
   { id: 1, slug: 'matematica', name: 'Matemática' },
+  { id: 5, slug: 'lingua-portuguesa', name: 'Língua Portuguesa' },
+  { id: 4, slug: 'redacao', name: 'Redação' },
+  { id: 6, slug: 'literatura', name: 'Literatura' },
   { id: 2, slug: 'fisica', name: 'Física' },
   { id: 3, slug: 'quimica', name: 'Química' },
-  { id: 4, slug: 'redacao', name: 'Redação' },
+  { id: 7, slug: 'biologia', name: 'Biologia' },
+  { id: 8, slug: 'ciencias', name: 'Ciências' },
+  { id: 9, slug: 'historia', name: 'História' },
+  { id: 10, slug: 'geografia', name: 'Geografia' },
+  { id: 11, slug: 'filosofia', name: 'Filosofia' },
+  { id: 12, slug: 'sociologia', name: 'Sociologia' },
+  { id: 13, slug: 'ingles', name: 'Inglês' },
+  { id: 14, slug: 'espanhol', name: 'Espanhol' },
+  { id: 15, slug: 'arte', name: 'Arte' },
+  { id: 16, slug: 'educacao-fisica', name: 'Educação Física' },
 ] as const;
 
 export const GRADE_LEVELS = [

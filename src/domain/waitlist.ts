@@ -27,9 +27,8 @@ export const EDUCATION = {
 
 /**
  * Disciplinas da lista de espera: todas as do 6º ano ao pré-vestibular, para
- * conhecer a oferta. Os ids 1 a 4 são os do catálogo do marketplace
- * (src/domain/catalog.ts), que na abertura começa com quatro disciplinas;
- * os demais ficam reservados para quando o catálogo crescer.
+ * conhecer a oferta. Os ids são os mesmos do catálogo do marketplace
+ * (src/domain/catalog.ts), que desde 27/11 tem todas estas disciplinas.
  */
 export const WAITLIST_SUBJECTS = [
   { id: 1, name: 'Matemática' },

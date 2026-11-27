@@ -7,7 +7,7 @@ O que o código trata como configuração provisória, ou que depende de uma dec
 | Tema | Situação no código | O que preciso de você |
 | --- | --- | --- |
 | Cidade de lançamento | Não afeta a Fase 1 (não há busca pública). O raio de atendimento é por professor | Definir a cidade do presencial |
-| Disciplinas | O marketplace abre com o catálogo do documento: Matemática, Física, Química e Redação (`src/domain/catalog.ts`). A lista de espera já aceita as 16 disciplinas do 6º ano ao pré-vestibular (`WAITLIST_SUBJECTS`, mesmos ids para as quatro) | Decidir quais entram na abertura; ampliar o catálogo é editar `catalog.ts` com os ids da lista de espera e rodar `npm run db:seed` |
+| Disciplinas | Desde 27/11, por decisão do dono, o marketplace abre com as 16 disciplinas da lista de espera (`src/domain/catalog.ts`, mesmos ids de `WAITLIST_SUBJECTS`). O pré-deploy da Railway roda `db:seed`, que grava o catálogo no banco | Feito |
 | Séries | 6º ao 9º ano, 1ª a 3ª série do ensino médio e pré-vestibular | Confirmar |
 | Comissão | `COMMISSION_MARKETPLACE_BPS=1500` (15%) e `COMMISSION_TEACHER_LINK_BPS=500` (5%), hipóteses do documento. Na Fase 1, toda família chega pelo link do professor e paga 5%. Desde 17/11, a FAQ dos professores mostra os dois percentuais, lidos destas variáveis | Confirmar; decidir se a taxa cai para famílias recorrentes |
 | Regra de cancelamento | Não há cancelamento nem remarcação pela família (Fase 2). Decidido em 16/11: falta do professor dá reembolso integral automático; falta do aluno paga o professor por inteiro (`STUDENT_NO_SHOW_TEACHER_PCT=100`); aula presencial sem código vai para decisão da equipe | Definir a regra (única ou opções por professor) e o formato da tabela `credits` (§2.2), que ainda não foi criada |

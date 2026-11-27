@@ -12,7 +12,11 @@ describe('db:seed', () => {
     await seed(TEST_DATABASE_URL, { adminEmails: admins });
     await seed(TEST_DATABASE_URL, { adminEmails: admins });
     const { rows: s } = await testPool().query(`SELECT slug FROM subjects ORDER BY id`);
-    expect(s.map((r) => r.slug)).toEqual(['matematica', 'fisica', 'quimica', 'redacao']);
+    // todas as disciplinas do catálogo (16 desde 27/11), em ordem de id
+    expect(s.map((r) => r.slug)).toEqual([
+      'matematica', 'fisica', 'quimica', 'redacao', 'lingua-portuguesa', 'literatura', 'biologia', 'ciencias',
+      'historia', 'geografia', 'filosofia', 'sociologia', 'ingles', 'espanhol', 'arte', 'educacao-fisica',
+    ]);
     const { rows: g } = await testPool().query(`SELECT count(*)::int AS n FROM grade_levels`);
     expect(g[0]!.n).toBe(8);
     const { rows: st } = await testPool().query(`SELECT email, name FROM staff_users ORDER BY email`);
