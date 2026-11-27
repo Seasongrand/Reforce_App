@@ -113,3 +113,8 @@ O sistema roda inteiro com adaptadores falsos. Cada adaptador real entra quando 
 - Identificação da empresa no rodapé: `COMPANY_LEGAL_NAME` e `COMPANY_CNPJ` já estão na Railway (27/11). `COMPANY_ADDRESS` foi tirado a pedido do dono, porque o endereço da MEI é a casa dele; na lista de espera não há venda, e o Decreto 7.962/2013 só pede o endereço físico de quem vende. **Antes de abrir as vendas, `COMPANY_ADDRESS` tem de voltar:** o endereço comercial, se o dono tiver contratado um (e trocado o da MEI), ou o de casa (Avenida Damasceno Vieira, 840, apto 91, Vila Mascote, São Paulo - SP, CEP 04363-040).
 - Promessas do texto que dependem de rotina, não de código: confirmar que os registros de acesso (IP, data e hora) ficam 6 meses (Marco Civil, art. 15) na Railway ou guardá-los; apagar os documentos de verificação quando a conta do professor for encerrada; responder pedidos de titular em até 15 dias.
 - Quem mudar uma regra (prazos, comissão, faltas) ou passar a usar outro fornecedor muda o texto das duas páginas.
+
+## MEI e atividade da Reforce (27/11)
+
+- A MEI foi aberta como "Professor(a) particular" porque o portal não tinha opção mais próxima; o dono não é professor. A Reforce intermedeia aulas entre famílias e professores, atividade que pode não caber no MEI. Antes de começar a faturar, perguntar ao Sebrae (gratuito) ou a um contador se precisa trocar a ocupação ou abrir uma ME.
+
