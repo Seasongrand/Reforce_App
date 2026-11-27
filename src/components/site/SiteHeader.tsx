@@ -2,12 +2,17 @@ import Link from 'next/link';
 import { config } from '@/config';
 import { currentSubject } from '@/server/session';
 import { MobileMenu } from './MobileMenu';
+import { BRAND_MARK_PATH } from './brand';
 
-/** A marca da Reforce (o arco sorteado pela skill de design), a mesma do site público. */
-export function ArcMark({ className = 'size-5' }: { className?: string }) {
+/**
+ * A marca da Reforce (escolha do dono, 27/11): um balão de conversa com o R
+ * vazado e centrado no corpo do balão. A mesma forma está em system.css
+ * (.mark[data-mark="balao"]), em src/app/icon.svg e na imagem de prévia.
+ */
+export function BrandMark({ className = 'size-5' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      <path fill="currentColor" d="M2.5 21.5V12a9.5 9.5 0 0 1 19 0v9.5h-6V12a3.5 3.5 0 0 0-7 0v9.5z" />
+    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
+      <path fill="currentColor" fillRule="evenodd" d={BRAND_MARK_PATH} />
     </svg>
   );
 }
@@ -38,7 +43,7 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-20 border-b border-indigo-950/10 bg-[#fbfaff]">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-5 sm:gap-3 lg:h-[72px] lg:px-8">
         <a href="/" className="inline-flex items-center gap-2 font-display text-xl tracking-tight text-indigo-950">
-          <ArcMark className="size-5 text-indigo-600" />
+          <BrandMark className="size-6 text-indigo-600" />
           Reforce
         </a>
         <nav aria-label="Principal" className="hidden h-full flex-1 items-center justify-center lg:flex">

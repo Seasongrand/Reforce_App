@@ -32,7 +32,7 @@ export function SiteClosing({
           <div className="grid">
             <div className="span-6 stack-4">
               <a className="nav__logo" href="/">
-                <span className="mark" data-mark="arc" aria-hidden="true" />
+                <span className="mark" data-mark="balao" aria-hidden="true" />
                 Reforce
               </a>
               <p className="footer__lede">{about}</p>
